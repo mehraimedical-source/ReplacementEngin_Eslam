@@ -254,6 +254,12 @@ namespace ReplacementEngin_Eslam
             VoiceHint presentation = ParsePresentation(e, text);
             if (presentation != null) yield return presentation;
 
+            VoiceHint fetalSex = ParseFetalSex(e, text);
+            if (fetalSex != null) yield return fetalSex;
+
+            VoiceHint placenta = ParsePlacentaPosition(e, text);
+            if (placenta != null) yield return placenta;
+
             foreach (var entry in dictionary.Entries)
             {
                 if (!entry.Value.Any(a => text.Contains(NormalizeText(a)))) continue;
@@ -284,6 +290,43 @@ namespace ReplacementEngin_Eslam
 
             if (ContainsAny(text, "ترانسورس", "عرضی", "عرضي", "transverse"))
                 return TextHint(e, "Presentation", "Transverse");
+
+            return null;
+        }
+
+        private static VoiceHint ParseFetalSex(InputEvidence e, string text)
+        {
+            if (ContainsAny(text, "جنسیت مشخص نیست", "جنسیت نامشخص", "جنسیت دیده نشد"))
+                return null;
+
+            bool sexContext = ContainsAny(text, "جنسیت", "جنس جنین", "جنین", "بچه");
+            if (!sexContext) return null;
+
+            if (ContainsAny(text, "دختر", "مونث", "مؤنث", "female"))
+                return TextHint(e, "Sex", "Female");
+
+            if (ContainsAny(text, "پسر", "مذکر", "male"))
+                return TextHint(e, "Sex", "Male");
+
+            return null;
+        }
+
+        private static VoiceHint ParsePlacentaPosition(InputEvidence e, string text)
+        {
+            if (!ContainsAny(text, "جفت", "پلاسنتا", "placenta")) return null;
+            if (ContainsAny(text, "محل جفت مشخص نیست", "جفت مشخص نیست")) return null;
+
+            if (ContainsAny(text, "قدامی", "قدامي", "انتریور", "anterior"))
+                return TextHint(e, "PlacentaPosition", "Anterior");
+
+            if (ContainsAny(text, "خلفی", "خلفي", "پوستریور", "posterior"))
+                return TextHint(e, "PlacentaPosition", "Posterior");
+
+            if (ContainsAny(text, "فوندال", "فوندوس", "fundal"))
+                return TextHint(e, "PlacentaPosition", "Fundal");
+
+            if (ContainsAny(text, "لترال", "جانبی", "جانبي", "lateral"))
+                return TextHint(e, "PlacentaPosition", "Lateral");
 
             return null;
         }
