@@ -492,7 +492,7 @@ namespace ReplacementEngin_Eslam
                 }
 
                 var matches = addedTexts
-                    .Select((text, index) => new { Text=text, Index=index })
+                    .Select((text, itemIndex) => new { Text=text, Index=itemIndex })
                     .Where(x => Contains(x.Text, command.TargetText))
                     .ToList();
 
@@ -503,11 +503,11 @@ namespace ReplacementEngin_Eslam
                     continue;
                 }
 
-                int index = matches[0].Index;
+                int matchedIndex = matches[0].Index;
                 if (command.Kind == VoiceCommandKind.DeleteText)
-                    addedTexts.RemoveAt(index);
+                    addedTexts.RemoveAt(matchedIndex);
                 else if (command.Kind == VoiceCommandKind.ReplaceText)
-                    addedTexts[index] = ReplaceFirst(addedTexts[index], command.TargetText, command.NewText);
+                    addedTexts[matchedIndex] = ReplaceFirst(addedTexts[matchedIndex], command.TargetText, command.NewText);
             }
         }
 
