@@ -33,6 +33,8 @@ namespace ReplacementEngin_Eslam
         public string Value { get; internal set; }
         public string Unit { get; internal set; }
         public string GestationalAge { get; internal set; }
+        public string GestationalAgeTolerance { get; internal set; }
+        public string EstimatedDueDate { get; internal set; }
         public ResolutionStatus Status { get; internal set; }
         public string Source { get; internal set; }
     }
@@ -53,6 +55,8 @@ namespace ReplacementEngin_Eslam
         public double Value;
         public string Unit;
         public string GestationalAge;
+        public string GestationalAgeTolerance;
+        public string EstimatedDueDate;
         public string Source;
         public bool IsLabeled;
     }
@@ -269,31 +273,49 @@ namespace ReplacementEngin_Eslam
     internal static class OcrParser
     {
         private static readonly Regex Labeled = new Regex(
-            @"\b(BPD|FL|AC|HC|AFI|FHR|EFW)\b[^0-9]{0,40}(\d+(?:\.\d+)?)\s*(mm|cm|g|bpm)?(?:.*?\b(\d{1,2}w\d{1,2}d)\b)?",
+            @"\b(BPD|FL|AC|HC|AFI|FHR|EFW)\b[^0-9]{0,40}(\d+(?:[\.,]\d+)?)\s*(mm|cm|g|bpm)?(?<tail>[^\r\n\]]*)",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex Ga = new Regex(
+            @"\bGA\s*[:=]?\s*(\d{1,2}w\d{1,2}d)(?:\s*[±+/-]+\s*(\d{1,3}d))?",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex Edd = new Regex(
+            @"\bEDD\s*[:=]?\s*(\d{4}[-/]\d{1,2}[-/]\d{1,2})",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex Generic = new Regex(
-            @"(?:\b\d+\s*)?\bD\b[^0-9]{0,15}(\d+(?:\.\d+)?)\s*(mm|cm)?",
+            @"(?:\b\d+\s*)?\bD\b[^0-9]{0,15}(\d+(?:[\.,]\d+)?)\s*(mm|cm)?",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public static IEnumerable<Measurement> Parse(InputEvidence e)
         {
             var list = new List<Measurement>();
-            foreach (Match m in Labeled.Matches(e.RawText ?? String.Empty))
+            string raw = NormalizeDigits(e.RawText ?? String.Empty);
+
+            foreach (Match m in Labeled.Matches(raw))
             {
                 double value;
-                if (!Double.TryParse(m.Groups[2].Value, System.Globalization.NumberStyles.Any,
+                if (!Double.TryParse(m.Groups[2].Value.Replace(',', '.'),
+                    System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out value)) continue;
+
+                string tail = m.Groups["tail"].Value;
+                Match ga = Ga.Match(tail);
+                Match edd = Edd.Match(tail);
+
                 list.Add(new Measurement {
                     Sequence=e.Sequence, Parameter=m.Groups[1].Value.ToUpperInvariant(), Value=value,
                     Unit=m.Groups[3].Success ? m.Groups[3].Value : String.Empty,
-                    GestationalAge=m.Groups[4].Success ? m.Groups[4].Value : String.Empty,
+                    GestationalAge=ga.Success ? ga.Groups[1].Value : String.Empty,
+                    GestationalAgeTolerance=ga.Success && ga.Groups[2].Success ? "±" + ga.Groups[2].Value : String.Empty,
+                    EstimatedDueDate=edd.Success ? edd.Groups[1].Value.Replace('/', '-') : String.Empty,
                     Source="OCR:" + (e.ImageId ?? e.Sequence.ToString()), IsLabeled=true
                 });
             }
-            foreach (Match m in Generic.Matches(e.RawText ?? String.Empty))
+
+            foreach (Match m in Generic.Matches(raw))
             {
                 double value;
-                if (!Double.TryParse(m.Groups[1].Value, System.Globalization.NumberStyles.Any,
+                if (!Double.TryParse(m.Groups[1].Value.Replace(',', '.'),
+                    System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out value)) continue;
                 list.Add(new Measurement {
                     Sequence=e.Sequence, Parameter="Unknown", Value=value,
@@ -302,6 +324,15 @@ namespace ReplacementEngin_Eslam
                 });
             }
             return list;
+        }
+
+        private static string NormalizeDigits(string s)
+        {
+            const string fa = "۰۱۲۳۴۵۶۷۸۹";
+            const string ar = "٠١٢٣٤٥٦٧٨٩";
+            for (int i = 0; i < 10; i++)
+                s = s.Replace(fa[i], (char)('0' + i)).Replace(ar[i], (char)('0' + i));
+            return s;
         }
     }
 
@@ -317,7 +348,7 @@ namespace ReplacementEngin_Eslam
             {
                 AddOrReplace(output, new ResolvedParameter {
                     Name=m.Parameter, Value=m.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
-                    Unit=m.Unit, GestationalAge=m.GestationalAge, Status=ResolutionStatus.Confirmed, Source=m.Source
+                    Unit=m.Unit, GestationalAge=m.GestationalAge, GestationalAgeTolerance=m.GestationalAgeTolerance, EstimatedDueDate=m.EstimatedDueDate, Status=ResolutionStatus.Confirmed, Source=m.Source
                 });
             }
 
@@ -334,7 +365,7 @@ namespace ReplacementEngin_Eslam
                                       .ThenBy(x => Math.Abs(x.Sequence - m.Sequence)).First();
                     AddOrReplace(output, new ResolvedParameter {
                         Name=h.Parameter, Value=m.Value.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture),
-                        Unit=m.Unit, GestationalAge=m.GestationalAge, Status=ResolutionStatus.Confirmed,
+                        Unit=m.Unit, GestationalAge=m.GestationalAge, GestationalAgeTolerance=m.GestationalAgeTolerance, EstimatedDueDate=m.EstimatedDueDate, Status=ResolutionStatus.Confirmed,
                         Source=m.Source + " + Voice#" + h.Sequence
                     });
                 }
@@ -377,6 +408,8 @@ namespace ReplacementEngin_Eslam
                 result = Replace(result, p.Name + ".Value", p.Value);
                 result = Replace(result, p.Name + ".Unit", p.Unit);
                 result = Replace(result, p.Name + ".GA", p.GestationalAge);
+                result = Replace(result, p.Name + ".GATolerance", p.GestationalAgeTolerance);
+                result = Replace(result, p.Name + ".EDD", p.EstimatedDueDate);
                 result = Replace(result, p.Name, p.Value);
             }
             return result;
