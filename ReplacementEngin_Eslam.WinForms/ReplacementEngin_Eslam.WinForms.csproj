@@ -35,9 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ReplacementEngin_Eslam.csproj">
-      <Project>{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-</Project>
+      <Project>{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}</Project>
       <Name>ReplacementEngin_Eslam</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
