@@ -66,6 +66,7 @@ namespace ReplacementEngin_Eslam
         public long Sequence;
         public string Parameter;
         public double? ExpectedValue;
+        public string TextValue;
         public string RawText;
     }
 
@@ -248,24 +249,73 @@ namespace ReplacementEngin_Eslam
 
         public static IEnumerable<VoiceHint> Parse(InputEvidence e, MedicalDictionary dictionary)
         {
-            string text = NormalizeDigits(e.RawText ?? String.Empty).ToLowerInvariant();
+            string text = NormalizeText(e.RawText ?? String.Empty);
+
+            VoiceHint presentation = ParsePresentation(e, text);
+            if (presentation != null) yield return presentation;
+
             foreach (var entry in dictionary.Entries)
             {
-                if (!entry.Value.Any(a => text.Contains(a.ToLowerInvariant()))) continue;
+                if (!entry.Value.Any(a => text.Contains(NormalizeText(a)))) continue;
                 double? value = null;
                 var m = Number.Match(text);
                 double parsed;
-                if (m.Success && Double.TryParse(m.Groups[1].Value.Replace(',', '.'), System.Globalization.NumberStyles.Any,
+                if (m.Success && Double.TryParse(m.Groups[1].Value.Replace(',', '.'),
+                    System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out parsed)) value = parsed;
-                yield return new VoiceHint { Sequence = e.Sequence, Parameter = entry.Key, ExpectedValue = value, RawText = e.RawText };
+                yield return new VoiceHint {
+                    Sequence = e.Sequence, Parameter = entry.Key,
+                    ExpectedValue = value, RawText = e.RawText
+                };
             }
+        }
+
+        private static VoiceHint ParsePresentation(InputEvidence e, string text)
+        {
+            // Do not confirm explicit negation.
+            if (ContainsAny(text, "سفالیک نیست", "سفاليک نیست", "cephalic نیست"))
+                return null;
+
+            if (ContainsAny(text, "سفالیک", "سفاليک", "cephalic"))
+                return TextHint(e, "Presentation", "Cephalic");
+
+            if (ContainsAny(text, "بریچ", "بريچ", "breech"))
+                return TextHint(e, "Presentation", "Breech");
+
+            if (ContainsAny(text, "ترانسورس", "عرضی", "عرضي", "transverse"))
+                return TextHint(e, "Presentation", "Transverse");
+
+            return null;
+        }
+
+        private static VoiceHint TextHint(InputEvidence e, string parameter, string value)
+        {
+            return new VoiceHint {
+                Sequence = e.Sequence, Parameter = parameter,
+                TextValue = value, RawText = e.RawText
+            };
+        }
+
+        private static bool ContainsAny(string text, params string[] values)
+        {
+            foreach (string value in values)
+                if (text.Contains(NormalizeText(value))) return true;
+            return false;
+        }
+
+        private static string NormalizeText(string s)
+        {
+            s = NormalizeDigits(s).ToLowerInvariant();
+            s = s.Replace('ي', 'ی').Replace('ك', 'ک');
+            return Regex.Replace(s, @"\s+", " ").Trim();
         }
 
         private static string NormalizeDigits(string s)
         {
             const string fa = "۰۱۲۳۴۵۶۷۸۹";
             const string ar = "٠١٢٣٤٥٦٧٨٩";
-            for (int i = 0; i < 10; i++) s = s.Replace(fa[i], (char)('0' + i)).Replace(ar[i], (char)('0' + i));
+            for (int i = 0; i < 10; i++)
+                s = s.Replace(fa[i], (char)('0' + i)).Replace(ar[i], (char)('0' + i));
             return s;
         }
     }
@@ -342,6 +392,17 @@ namespace ReplacementEngin_Eslam
             string template, List<string> diagnostics)
         {
             var output = new List<ResolvedParameter>();
+
+            // Categorical values explicitly stated by voice (for example fetal presentation).
+            foreach (var h in hints.Where(x => !String.IsNullOrEmpty(x.TextValue)))
+            {
+                AddOrReplace(output, new ResolvedParameter {
+                    Name=h.Parameter, Value=h.TextValue, Unit=String.Empty,
+                    GestationalAge=String.Empty, GestationalAgeTolerance=String.Empty,
+                    EstimatedDueDate=String.Empty, Status=ResolutionStatus.Confirmed,
+                    Source="Voice#" + h.Sequence
+                });
+            }
 
             // Explicitly labeled machine measurements are strong evidence.
             foreach (var m in measurements.Where(x => x.IsLabeled))
