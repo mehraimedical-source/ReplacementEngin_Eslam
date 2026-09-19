@@ -17,8 +17,8 @@ namespace ReplacementEngin_Eslam
         public string ReportText { get; internal set; }
         public ResultType Type { get; internal set; }
         public bool HasUnresolvedItems { get; internal set; }
-        public IReadOnlyList<ResolvedParameter> ConfirmedParameters { get; internal set; }
-        public IReadOnlyList<string> Diagnostics { get; internal set; }
+        public IList<ResolvedParameter> ConfirmedParameters { get; internal set; }
+        public IList<string> Diagnostics { get; internal set; }
     }
 
     public sealed class ReplacementResultEventArgs : EventArgs
