@@ -6,10 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace ReplacementEngin_Eslam
 {
+    // نوع نتیجه: موقت در حین دریافت داده‌ها یا نهایی بعد از FinishTask
     public enum ResultType { Intermediate, Final }
+    // وضعیت اطمینان هر پارامتر؛ فقط Confirmed وارد گزارش نهایی می‌شود
     public enum ResolutionStatus { Unresolved, Candidate, Confirmed, Conflict }
+    // نوع ورودی که به موتور می‌رسد: قالب گزارش، متن صدا یا خروجی OCR
     public enum InputKind { NormalText, VoiceText, OcrText }
 
+    // نتیجه‌ای که موتور بعد از هر ورودی به برنامه فراخواننده برمی‌گرداند
     public sealed class ReplacementResult
     {
         public string PatientId { get; internal set; }
@@ -27,6 +31,7 @@ namespace ReplacementEngin_Eslam
         public ReplacementResultEventArgs(ReplacementResult result) { Result = result; }
     }
 
+    // یک پارامتر پزشکی که موتور آن را حل کرده است؛ مانند BPD یا Presentation
     public sealed class ResolvedParameter
     {
         public string Name { get; internal set; }
@@ -39,6 +44,7 @@ namespace ReplacementEngin_Eslam
         public string Source { get; internal set; }
     }
 
+    // نسخه خام هر ورودی را برای پردازش مجدد نگه می‌داریم تا ترتیب ورود مهم نباشد
     internal sealed class InputEvidence
     {
         public long Sequence;
@@ -48,6 +54,7 @@ namespace ReplacementEngin_Eslam
         public DateTime ReceivedAt;
     }
 
+    // اندازه‌گیری استخراج‌شده از OCR به همراه خصوصیات وابسته مثل GA و EDD
     internal sealed class Measurement
     {
         public long Sequence;
@@ -61,6 +68,7 @@ namespace ReplacementEngin_Eslam
         public bool IsLabeled;
     }
 
+    // مفهوم استخراج‌شده از Voice؛ می‌تواند عددی یا متنی/دسته‌ای باشد
     internal sealed class VoiceHint
     {
         public long Sequence;
@@ -70,6 +78,7 @@ namespace ReplacementEngin_Eslam
         public string RawText;
     }
 
+    // تمام وضعیت یک گزارش بیمار در طول یک Task
     internal sealed class PatientTask
     {
         public readonly object Sync = new object();
@@ -85,17 +94,22 @@ namespace ReplacementEngin_Eslam
     }
 
     /// <summary>
-    /// Public facade. CreateTask must be called first. Normal/Voice/OCR inputs may then arrive in any order.
-    /// Each input is processed atomically per task. Different tasks may be processed concurrently.
+    /// هسته اصلی موتور جایگزینی.
+    /// ابتدا برای بیمار CreateTask فراخوانی می‌شود.
+    /// سپس Template، Voice و OCR می‌توانند با هر ترتیبی و چند بار وارد شوند.
+    /// ورودی‌های یک Task با lock سریال می‌شوند ولی Taskهای بیماران مختلف می‌توانند همزمان اجرا شوند.
     /// </summary>
     public sealed class ReplacementEngine
     {
+        // نگهداری Taskهای فعال به صورت Thread-Safe
         private readonly ConcurrentDictionary<string, PatientTask> _tasks =
             new ConcurrentDictionary<string, PatientTask>(StringComparer.OrdinalIgnoreCase);
         private readonly MedicalDictionary _dictionary = new MedicalDictionary();
 
+        // بعد از هر پردازش، نتیجه جدید از طریق این Event نیز اعلام می‌شود
         public event EventHandler<ReplacementResultEventArgs> ResultReady;
 
+        // یک Task مستقل برای بیمار می‌سازد و TaskId یکتا برمی‌گرداند
         public string CreateTask(string patientId)
         {
             if (String.IsNullOrWhiteSpace(patientId)) throw new ArgumentException("patientId is required.", "patientId");
@@ -108,16 +122,19 @@ namespace ReplacementEngin_Eslam
             return task.TaskId;
         }
 
+        // متن عادی در حال حاضر نقش Template گزارش را دارد
         public ReplacementResult SendNormalText(string taskId, string text)
         {
             return AddAndProcess(taskId, InputKind.NormalText, null, text, false);
         }
 
+        // متن خروجی Vosk یا هر Speech-to-Text دیگر را وارد موتور می‌کند
         public ReplacementResult SendVoiceText(string taskId, string text)
         {
             return AddAndProcess(taskId, InputKind.VoiceText, null, text, false);
         }
 
+        // خروجی OCR یک تصویر را همراه شناسه تصویر وارد موتور می‌کند
         public ReplacementResult SendOcrText(string taskId, string imageId, string text)
         {
             return AddAndProcess(taskId, InputKind.OcrText, imageId, text, false);
@@ -170,6 +187,7 @@ namespace ReplacementEngin_Eslam
             return result;
         }
 
+        // تمام Evidenceهای جمع‌شده را از ابتدا تحلیل می‌کند، Resolve می‌کند و گزارش را می‌سازد
         private ReplacementResult ProcessLocked(PatientTask task, bool final)
         {
             task.Diagnostics.Clear();
@@ -221,6 +239,7 @@ namespace ReplacementEngin_Eslam
         }
     }
 
+    // فرهنگ واژه‌های پزشکی و شکل‌های مختلفی که ممکن است Vosk تولید کند
     internal sealed class MedicalDictionary
     {
         private readonly Dictionary<string, string[]> _aliases =
@@ -243,6 +262,7 @@ namespace ReplacementEngin_Eslam
         public IEnumerable<KeyValuePair<string, string[]>> Entries { get { return _aliases; } }
     }
 
+    // متن Voice را نرمال و به Hintهای قابل فهم برای Resolver تبدیل می‌کند
     internal static class VoiceParser
     {
         private static readonly Regex Number = new Regex(@"(?<!\d)(\d+(?:[\.,]\d+)?)", RegexOptions.Compiled);
@@ -276,9 +296,10 @@ namespace ReplacementEngin_Eslam
             }
         }
 
+        // تشخیص Presentation جنین از عبارت‌های فارسی/انگلیسی
         private static VoiceHint ParsePresentation(InputEvidence e, string text)
         {
-            // Do not confirm explicit negation.
+            // اگر پزشک صریحاً گفته «سفالیک نیست»، مقدار Cephalic را ثبت نمی‌کنیم.
             if (ContainsAny(text, "سفالیک نیست", "سفاليک نیست", "cephalic نیست"))
                 return null;
 
@@ -294,6 +315,7 @@ namespace ReplacementEngin_Eslam
             return null;
         }
 
+        // تشخیص جنسیت فقط وقتی متن، زمینه مرتبط با جنین/جنسیت داشته باشد
         private static VoiceHint ParseFetalSex(InputEvidence e, string text)
         {
             if (ContainsAny(text, "جنسیت مشخص نیست", "جنسیت نامشخص", "جنسیت دیده نشد"))
@@ -311,6 +333,7 @@ namespace ReplacementEngin_Eslam
             return null;
         }
 
+        // تشخیص محل جفت؛ بدون وجود کلمه جفت/پلاسنتا چیزی حدس زده نمی‌شود
         private static VoiceHint ParsePlacentaPosition(InputEvidence e, string text)
         {
             if (!ContainsAny(text, "جفت", "پلاسنتا", "placenta")) return null;
@@ -346,6 +369,7 @@ namespace ReplacementEngin_Eslam
             return false;
         }
 
+        // یکسان‌سازی حروف عربی/فارسی، اعداد و فاصله‌ها قبل از مقایسه متن
         private static string NormalizeText(string s)
         {
             s = NormalizeDigits(s).ToLowerInvariant();
@@ -363,6 +387,7 @@ namespace ReplacementEngin_Eslam
         }
     }
 
+    // خروجی PaddleOCR/متن OCR را به Measurementهای ساختاریافته تبدیل می‌کند
     internal static class OcrParser
     {
         private static readonly Regex Labeled = new Regex(
@@ -383,6 +408,7 @@ namespace ReplacementEngin_Eslam
             var list = new List<Measurement>();
             string raw = NormalizeDigits(e.RawText ?? String.Empty);
 
+            // اندازه‌گیری‌های دارای نام صریح مثل BPD/HC/FHR قوی‌تر از اعداد بدون برچسب هستند
             foreach (Match m in Labeled.Matches(raw))
             {
                 double value;
@@ -404,6 +430,7 @@ namespace ReplacementEngin_Eslam
                 });
             }
 
+            // اندازه‌گیری Generic مثل D بدون نام پارامتر، به تنهایی قابل انتساب نیست
             foreach (Match m in Generic.Matches(raw))
             {
                 double value;
@@ -429,6 +456,7 @@ namespace ReplacementEngin_Eslam
         }
     }
 
+    // Evidenceهای OCR و Voice را با هم تطبیق می‌دهد و فقط موارد قابل تأیید را Confirmed می‌کند
     internal static class Resolver
     {
         public static List<ResolvedParameter> Resolve(List<Measurement> measurements, List<VoiceHint> hints,
@@ -436,7 +464,7 @@ namespace ReplacementEngin_Eslam
         {
             var output = new List<ResolvedParameter>();
 
-            // Categorical values explicitly stated by voice (for example fetal presentation).
+            // مقادیر دسته‌ای که Voice صریحاً گفته؛ مثل Presentation، Sex و PlacentaPosition
             foreach (var h in hints.Where(x => !String.IsNullOrEmpty(x.TextValue)))
             {
                 AddOrReplace(output, new ResolvedParameter {
@@ -447,7 +475,7 @@ namespace ReplacementEngin_Eslam
                 });
             }
 
-            // Explicitly labeled machine measurements are strong evidence.
+            // اندازه‌گیری OCR که نام پارامتر را صریح دارد مستقیماً به همان پارامتر نسبت داده می‌شود
             foreach (var m in measurements.Where(x => x.IsLabeled))
             {
                 AddOrReplace(output, new ResolvedParameter {
@@ -456,7 +484,7 @@ namespace ReplacementEngin_Eslam
                 });
             }
 
-            // Generic measurements require a unique voice target with a close numeric value.
+            // عدد OCR بدون برچسب فقط وقتی تأیید می‌شود که دقیقاً یک VoiceHint عددی نزدیک داشته باشد
             foreach (var m in measurements.Where(x => !x.IsLabeled))
             {
                 var candidates = hints.Where(h => h.ExpectedValue.HasValue &&
@@ -488,6 +516,7 @@ namespace ReplacementEngin_Eslam
             return output;
         }
 
+        // تلرانس تطبیق عدد Voice و OCR: حداقل 0.6 یا 8 درصد مقدار
         private static bool NumericClose(double expected, double actual)
         {
             double tolerance = Math.Max(0.6, Math.Abs(expected) * 0.08);
@@ -501,6 +530,7 @@ namespace ReplacementEngin_Eslam
         }
     }
 
+    // پارامترهای Confirmed را داخل Placeholderهای Template جایگزین می‌کند
     internal static class TemplateRenderer
     {
         public static string Render(string template, IEnumerable<ResolvedParameter> parameters)
@@ -509,6 +539,7 @@ namespace ReplacementEngin_Eslam
             string result = template;
             foreach (var p in parameters)
             {
+                // مثال: {BPD.Value} ، {BPD.Unit} ، {BPD.GA} ، {BPD.EDD}
                 result = Replace(result, p.Name + ".Value", p.Value);
                 result = Replace(result, p.Name + ".Unit", p.Unit);
                 result = Replace(result, p.Name + ".GA", p.GestationalAge);
