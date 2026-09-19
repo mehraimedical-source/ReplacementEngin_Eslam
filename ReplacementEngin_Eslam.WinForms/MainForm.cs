@@ -113,11 +113,11 @@ namespace ReplacementEngin_Eslam.WinForms
         private void SendNormal(object sender, EventArgs e) { if(HasTask()) Safe(()=>_engine.SendNormalText(_taskId,_normal.Text)); }
         private void SendVoice(object sender, EventArgs e) { if(HasTask()) Safe(()=>_engine.SendVoiceText(_taskId,_voice.Text)); }
         private void SendOcr(object sender, EventArgs e) { if(HasTask()) Safe(()=>_engine.SendOcrText(_taskId,_imageId.Text,_ocr.Text)); }
-        private void GetCurrent(object sender, EventArgs e) { if(HasTask()) Safe(()=>ShowResult(_engine.GetCurrentResult(_taskId))); }
+        private void GetCurrent(object sender, EventArgs e) { if(HasTask()) Safe(()=>_engine.GetCurrentResult(_taskId)); }
         private void FinishTask(object sender, EventArgs e)
         {
             if(!HasTask()) return;
-            Safe(()=> { var r=_engine.FinishTask(_taskId); ShowResult(r); _status.Text="Completed"; });
+            Safe(()=>_engine.FinishTask(_taskId));
         }
         private void ResetTask(object sender, EventArgs e)
         {
