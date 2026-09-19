@@ -8,6 +8,7 @@
     <RootNamespace>ReplacementEngin_Eslam.WinForms</RootNamespace>
     <AssemblyName>ReplacementEngin_Eslam.WinForms</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkProfile></TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <StartupObject>ReplacementEngin_Eslam.WinForms.Program</StartupObject>
   </PropertyGroup>
@@ -20,8 +21,12 @@
     <OutputPath>bin\Release\</OutputPath><DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" /><Reference Include="System.Core" />
-    <Reference Include="System.Drawing" /><Reference Include="System.Windows.Forms" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
