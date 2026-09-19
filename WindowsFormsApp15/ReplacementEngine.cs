@@ -543,15 +543,29 @@ namespace ReplacementEngin_Eslam
     // خروجی PaddleOCR/متن OCR را به Measurementهای ساختاریافته تبدیل می‌کند
     internal static class OcrParser
     {
+        // اندازه‌گیری‌های دارای نام مشخص را از OCR می‌گیرد؛ مثل BPD 84.24 mm.
+        // گروه 1 نام پارامتر، گروه 2 مقدار عددی و گروه 3 واحد است.
+        // ادامه همان خط در گروه tail نگهداری می‌شود تا اطلاعات تکمیلی مثل GA و EDD از آن استخراج شود.
         private static readonly Regex Labeled = new Regex(
             @"\b(BPD|FL|AC|HC|AFI|FHR|EFW)\b[^0-9]{0,40}(\d+(?:[\.,]\d+)?)\s*(mm|cm|g|bpm)?(?<tail>[^\r\n\]]*)",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        // سن بارداری را با فرم‌هایی مثل GA 33w6d یا GA: 33w6d ± 2d پیدا می‌کند.
+        // گروه 1 سن بارداری (مثلاً 33w6d) و گروه 2 تلرانس اختیاری (مثلاً 2d) است.
         private static readonly Regex Ga = new Regex(
             @"\bGA\s*[:=]?\s*(\d{1,2}w\d{1,2}d)(?:\s*[±+/-]+\s*(\d{1,3}d))?",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        // تاریخ تقریبی زایمان را با فرم‌هایی مثل EDD 2026-11-03 یا EDD: 2026/11/03 استخراج می‌کند.
+        // جداکننده تاریخ می‌تواند - یا / باشد و بعداً / برای یکسان‌سازی به - تبدیل می‌شود.
         private static readonly Regex Edd = new Regex(
             @"\bEDD\s*[:=]?\s*(\d{4}[-/]\d{1,2}[-/]\d{1,2})",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        // اندازه‌گیری عمومی دستگاه بدون نام پارامتر را می‌گیرد؛ مثل D 5.12 mm یا 1 D 44.17 mm.
+        // گروه 1 مقدار عددی و گروه 2 واحد اختیاری mm/cm است.
+        // چون D مشخص نمی‌کند اندازه مربوط به کدام عضو است، این مقدار به تنهایی Confirm نمی‌شود
+        // و Resolver باید آن را با Evidence دیگری مثل Voice تطبیق دهد.
         private static readonly Regex Generic = new Regex(
             @"(?:\b\d+\s*)?\bD\b[^0-9]{0,15}(\d+(?:[\.,]\d+)?)\s*(mm|cm)?",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
