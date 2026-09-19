@@ -496,18 +496,32 @@ namespace ReplacementEngin_Eslam
                     .Where(x => Contains(x.Text, command.TargetText))
                     .ToList();
 
-                if (matches.Count != 1)
+                if (matches.Count == 0)
                 {
                     diagnostics.Add("UNRESOLVED: voice command target '" + command.TargetText +
+                        "' matched 0 added texts.");
+                    continue;
+                }
+
+                // حذف با عبارت کوتاه عمداً همه متن‌های منطبق را حذف می‌کند.
+                // مثال: «جهت بررسی بیشتر رو حذف کن» همه جمله‌های اضافه‌شده با این شروع را پاک می‌کند.
+                if (command.Kind == VoiceCommandKind.DeleteText)
+                {
+                    foreach (var match in matches.OrderByDescending(x => x.Index))
+                        addedTexts.RemoveAt(match.Index);
+                    continue;
+                }
+
+                // برای Replace هنوز ابهام مجاز نیست؛ اگر چند متن منطبق باشند چیزی را حدس نمی‌زنیم.
+                if (matches.Count != 1)
+                {
+                    diagnostics.Add("UNRESOLVED: voice replace target '" + command.TargetText +
                         "' matched " + matches.Count + " added texts.");
                     continue;
                 }
 
                 int matchedIndex = matches[0].Index;
-                if (command.Kind == VoiceCommandKind.DeleteText)
-                    addedTexts.RemoveAt(matchedIndex);
-                else if (command.Kind == VoiceCommandKind.ReplaceText)
-                    addedTexts[matchedIndex] = ReplaceFirst(addedTexts[matchedIndex], command.TargetText, command.NewText);
+                addedTexts[matchedIndex] = ReplaceFirst(addedTexts[matchedIndex], command.TargetText, command.NewText);
             }
         }
 
