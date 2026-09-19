@@ -78,6 +78,18 @@ namespace ReplacementEngin_Eslam
         public string RawText;
     }
 
+    // فرمان متنی استخراج‌شده از Voice
+    internal enum VoiceCommandKind { AddText, DeleteText, ReplaceText }
+
+    internal sealed class VoiceCommand
+    {
+        public long Sequence;
+        public VoiceCommandKind Kind;
+        public string TargetText;
+        public string NewText;
+        public string RawText;
+    }
+
     // تمام وضعیت یک گزارش بیمار در طول یک Task
     internal sealed class PatientTask
     {
@@ -90,6 +102,8 @@ namespace ReplacementEngin_Eslam
         public readonly List<InputEvidence> Evidence = new List<InputEvidence>();
         public readonly List<ResolvedParameter> Confirmed = new List<ResolvedParameter>();
         public readonly List<string> Diagnostics = new List<string>();
+        // متن‌های آزاد اضافه‌شده با فرمان صوتی جدا از Template نگهداری می‌شوند
+        public readonly List<string> AddedTexts = new List<string>();
         public string CurrentReport = String.Empty;
     }
 
@@ -193,19 +207,36 @@ namespace ReplacementEngin_Eslam
             task.Diagnostics.Clear();
             var measurements = new List<Measurement>();
             var hints = new List<VoiceHint>();
+            var commands = new List<VoiceCommand>();
 
             foreach (var e in task.Evidence.OrderBy(x => x.Sequence))
             {
                 if (e.Kind == InputKind.OcrText)
                     measurements.AddRange(OcrParser.Parse(e));
                 else if (e.Kind == InputKind.VoiceText)
-                    hints.AddRange(VoiceParser.Parse(e, _dictionary));
+                {
+                    VoiceCommand command = VoiceCommandParser.Parse(e);
+                    if (command != null) commands.Add(command);
+                    else hints.AddRange(VoiceParser.Parse(e, _dictionary));
+                }
             }
+
+            // چون Evidenceها هر بار از ابتدا پردازش می‌شوند، متن‌های افزوده‌شده نیز دوباره از فرمان‌ها ساخته می‌شوند
+            task.AddedTexts.Clear();
+            VoiceCommandProcessor.Apply(commands, task.AddedTexts, task.Diagnostics);
 
             var resolved = Resolver.Resolve(measurements, hints, task.TemplateText, task.Diagnostics);
             task.Confirmed.Clear();
             task.Confirmed.AddRange(resolved.Where(x => x.Status == ResolutionStatus.Confirmed));
             task.CurrentReport = TemplateRenderer.Render(task.TemplateText, task.Confirmed);
+            if (task.AddedTexts.Count > 0)
+            {
+                string extra = String.Join(Environment.NewLine, task.AddedTexts.ToArray());
+                if (String.IsNullOrWhiteSpace(task.CurrentReport))
+                    task.CurrentReport = extra;
+                else
+                    task.CurrentReport = task.CurrentReport.TrimEnd() + Environment.NewLine + extra;
+            }
 
             return BuildResult(task, final ? ResultType.Final : ResultType.Intermediate);
         }
@@ -384,6 +415,114 @@ namespace ReplacementEngin_Eslam
             for (int i = 0; i < 10; i++)
                 s = s.Replace(fa[i], (char)('0' + i)).Replace(ar[i], (char)('0' + i));
             return s;
+        }
+    }
+
+    // فرمان‌های متن آزاد را از Voice جدا می‌کند تا با پارامترهای پزشکی اشتباه نشوند
+    internal static class VoiceCommandParser
+    {
+        private static readonly Regex Add = new Regex(
+            @"^(?:لطفا\s+)?(?:این\s+جمله\s+رو\s+|این\s+متن\s+رو\s+)?(?:اضافه\s+کن|بنویس|درج\s+کن)\s*[:،,-]?\s*(.+)$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex Delete = new Regex(
+            @"^(?:لطفا\s+)?(.+?)\s+(?:رو|را)\s+(?:حذف\s+کن|پاک\s+کن)$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex Replace = new Regex(
+            @"^(?:لطفا\s+)?(.+?)\s+(?:رو|را)\s+(?:بکن|کن|جایگزین\s+کن\s+با)\s+(.+)$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly Regex ReplaceInstead = new Regex(
+            @"^(?:لطفا\s+)?به\s+جای\s+(.+?)\s+(.+?)\s+(?:بزن|بنویس|قرار\s+بده)$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        public static VoiceCommand Parse(InputEvidence e)
+        {
+            string text = Normalize(e.RawText);
+            Match m = Add.Match(text);
+            if (m.Success)
+                return Command(e, VoiceCommandKind.AddText, null, Clean(m.Groups[1].Value));
+
+            m = Delete.Match(text);
+            if (m.Success)
+                return Command(e, VoiceCommandKind.DeleteText, Clean(m.Groups[1].Value), null);
+
+            m = ReplaceInstead.Match(text);
+            if (m.Success)
+                return Command(e, VoiceCommandKind.ReplaceText, Clean(m.Groups[1].Value), Clean(m.Groups[2].Value));
+
+            m = Replace.Match(text);
+            if (m.Success)
+                return Command(e, VoiceCommandKind.ReplaceText, Clean(m.Groups[1].Value), Clean(m.Groups[2].Value));
+
+            return null;
+        }
+
+        private static VoiceCommand Command(InputEvidence e, VoiceCommandKind kind, string target, string value)
+        {
+            return new VoiceCommand {
+                Sequence=e.Sequence, Kind=kind, TargetText=target, NewText=value, RawText=e.RawText
+            };
+        }
+
+        private static string Normalize(string text)
+        {
+            text = (text ?? String.Empty).Replace('ي', 'ی').Replace('ك', 'ک').Trim();
+            return Regex.Replace(text, @"\s+", " ");
+        }
+
+        private static string Clean(string text)
+        {
+            return (text ?? String.Empty).Trim(' ', ':', '،', ',', '-', '.');
+        }
+    }
+
+    // فرمان‌ها را به ترتیب زمانی اجرا می‌کند. اگر هدف حذف/اصلاح یکتا نباشد چیزی حدس نمی‌زند.
+    internal static class VoiceCommandProcessor
+    {
+        public static void Apply(IEnumerable<VoiceCommand> commands, List<string> addedTexts, List<string> diagnostics)
+        {
+            foreach (VoiceCommand command in commands.OrderBy(x => x.Sequence))
+            {
+                if (command.Kind == VoiceCommandKind.AddText)
+                {
+                    if (!String.IsNullOrWhiteSpace(command.NewText)) addedTexts.Add(command.NewText);
+                    continue;
+                }
+
+                var matches = addedTexts
+                    .Select((text, index) => new { Text=text, Index=index })
+                    .Where(x => Contains(x.Text, command.TargetText))
+                    .ToList();
+
+                if (matches.Count != 1)
+                {
+                    diagnostics.Add("UNRESOLVED: voice command target '" + command.TargetText +
+                        "' matched " + matches.Count + " added texts.");
+                    continue;
+                }
+
+                int index = matches[0].Index;
+                if (command.Kind == VoiceCommandKind.DeleteText)
+                    addedTexts.RemoveAt(index);
+                else if (command.Kind == VoiceCommandKind.ReplaceText)
+                    addedTexts[index] = ReplaceFirst(addedTexts[index], command.TargetText, command.NewText);
+            }
+        }
+
+        private static bool Contains(string source, string value)
+        {
+            if (String.IsNullOrWhiteSpace(source) || String.IsNullOrWhiteSpace(value)) return false;
+            return source.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string ReplaceFirst(string source, string oldValue, string newValue)
+        {
+            int index = source.IndexOf(oldValue, StringComparison.OrdinalIgnoreCase);
+            if (index < 0) return source;
+            return source.Substring(0, index) + (newValue ?? String.Empty) +
+                   source.Substring(index + oldValue.Length);
         }
     }
 
