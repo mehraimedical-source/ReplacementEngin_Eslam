@@ -1,0 +1,27 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplacementEngin_Eslam", "ReplacementEngin_Eslam.csproj", "{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplacementEngin_Eslam.WinForms", "ReplacementEngin_Eslam.WinForms\ReplacementEngin_Eslam.WinForms.csproj", "{7C2A675A-59D9-4A73-82A8-44B9AF5A2711}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}.Debug|Any CPU.ActiveCfg = Debug|AnyCPU
+		{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}.Debug|Any CPU.Build.0 = Debug|AnyCPU
+		{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}.Release|Any CPU.ActiveCfg = Release|AnyCPU
+		{7E15D05B-2E64-4D2D-A7D2-30F3A5DFD6F4}.Release|Any CPU.Build.0 = Release|AnyCPU
+		{7C2A675A-59D9-4A73-82A8-44B9AF5A2711}.Debug|Any CPU.ActiveCfg = Debug|AnyCPU
+		{7C2A675A-59D9-4A73-82A8-44B9AF5A2711}.Debug|Any CPU.Build.0 = Debug|AnyCPU
+		{7C2A675A-59D9-4A73-82A8-44B9AF5A2711}.Release|Any CPU.ActiveCfg = Release|AnyCPU
+		{7C2A675A-59D9-4A73-82A8-44B9AF5A2711}.Release|Any CPU.Build.0 = Release|AnyCPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
