@@ -31,6 +31,13 @@ namespace DicomViewer_ChatGPT
             width=images[0].Width;height=images[0].Height;
             if(images.Any(i=>i.Width!=width||i.Height!=height))throw new ArgumentException("All slices must have the same dimensions.");
             volume=images;depth=images.Length;CalculateVoxelSpacing();
+            // Use DICOM window values only when high precision modality data is available.
+            if(volume.All(i=>i.HasModality16))
+            {
+                double min=Double.MaxValue,max=Double.MinValue;
+                foreach(var s in volume)foreach(short v in s.Modality16){if(v<min)min=v;if(v>max)max=v;}
+                if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
+            }
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;RefreshViews();
         }
 
@@ -174,11 +181,22 @@ namespace DicomViewer_ChatGPT
             int y0=Clamp((int)Math.Floor(fy),0,height-1),y1=Clamp(y0+1,0,height-1);
             int z0=Clamp((int)Math.Floor(fz),0,depth-1),z1=Clamp(z0+1,0,depth-1);
             double tx=fx-x0,ty=fy-y0,tz=fz-z0;
-            double a=Lerp(volume[z0].Gray8[y0*width+x0],volume[z0].Gray8[y0*width+x1],tx);
-            double b=Lerp(volume[z0].Gray8[y1*width+x0],volume[z0].Gray8[y1*width+x1],tx);
-            double c=Lerp(volume[z1].Gray8[y0*width+x0],volume[z1].Gray8[y0*width+x1],tx);
-            double d=Lerp(volume[z1].Gray8[y1*width+x0],volume[z1].Gray8[y1*width+x1],tx);
-            return (byte)Math.Round(Lerp(Lerp(a,b,ty),Lerp(c,d,ty),tz));
+            if(volume[z0].HasModality16&&volume[z1].HasModality16)
+            {
+                double a=Lerp(volume[z0].Modality16[y0*width+x0],volume[z0].Modality16[y0*width+x1],tx);
+                double b=Lerp(volume[z0].Modality16[y1*width+x0],volume[z0].Modality16[y1*width+x1],tx);
+                double c=Lerp(volume[z1].Modality16[y0*width+x0],volume[z1].Modality16[y0*width+x1],tx);
+                double d=Lerp(volume[z1].Modality16[y1*width+x0],volume[z1].Modality16[y1*width+x1],tx);
+                return WindowToByte(Lerp(Lerp(a,b,ty),Lerp(c,d,ty),tz));
+            }
+            else
+            {
+                double a=Lerp(volume[z0].Gray8[y0*width+x0],volume[z0].Gray8[y0*width+x1],tx);
+                double b=Lerp(volume[z0].Gray8[y1*width+x0],volume[z0].Gray8[y1*width+x1],tx);
+                double cc=Lerp(volume[z1].Gray8[y0*width+x0],volume[z1].Gray8[y0*width+x1],tx);
+                double d=Lerp(volume[z1].Gray8[y1*width+x0],volume[z1].Gray8[y1*width+x1],tx);
+                return (byte)Math.Round(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
+            }
         }
 
         private Bounds GetPatientBounds()
@@ -207,6 +225,12 @@ namespace DicomViewer_ChatGPT
         private static double[] Normal(double[] o){return new[]{o[1]*o[5]-o[2]*o[4],o[2]*o[3]-o[0]*o[5],o[0]*o[4]-o[1]*o[3]};}
         private static double Dot(double[] a,double[] b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
         private static double Lerp(double a,double b,double t){return a+(b-a)*t;}
+        private byte WindowToByte(double value)
+        {
+            double low=windowCenter-windowWidth/2.0,high=windowCenter+windowWidth/2.0;
+            if(value<=low)return 0;if(value>=high)return 255;
+            return (byte)Math.Round((value-low)*255.0/(high-low));
+        }
         private static byte LerpByte(byte a,byte b,double t){return (byte)Math.Round(Lerp(a,b,t));}
         private static int PhysicalOutputSize(double physicalLength,double pixelSpacing){return Math.Max(2,(int)Math.Round(Math.Abs(physicalLength)/pixelSpacing)+1);}
         private static int PatientToPixel(double value,double min,double spacing,int count){return Clamp((int)Math.Round((value-min)/spacing),0,count-1);}
