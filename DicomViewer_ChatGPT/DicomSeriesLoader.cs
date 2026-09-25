@@ -77,6 +77,8 @@ namespace DicomViewer_ChatGPT
                         ImagePositionPatient = GetValues(ds, DicomTag.ImagePositionPatient, 3),
                         ImageOrientationPatient = GetValues(ds, DicomTag.ImageOrientationPatient, 6),
                         PixelSpacing = GetValues(ds, DicomTag.PixelSpacing, 2),
+                        SliceThickness = ds.GetSingleValueOrDefault(DicomTag.SliceThickness, 0.0),
+                        SpacingBetweenSlices = ds.GetSingleValueOrDefault(DicomTag.SpacingBetweenSlices, 0.0),
                         SopInstanceUid = ds.GetSingleValueOrDefault(DicomTag.SOPInstanceUID, String.Empty),
                         SeriesInstanceUid = ds.GetSingleValueOrDefault(DicomTag.SeriesInstanceUID, String.Empty)
                     });
