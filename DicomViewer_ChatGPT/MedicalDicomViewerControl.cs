@@ -68,8 +68,8 @@ namespace DicomViewer_ChatGPT
             if(volume==null)return;
             windowCenter=defaultWindowCenter;
             windowWidth=defaultWindowWidth;
-            sampleWindowLevelOnDemand=false;
             PrepareDisplayVolumeOnly();
+            sampleWindowLevelOnDemand=false;
             RefreshAfterRotation();
         }
 
@@ -809,6 +809,16 @@ namespace DicomViewer_ChatGPT
                 int p00=y0*width+x0,p01=y0*width+x1,p10=y1*width+x0,p11=y1*width+x1;
                 double a=Lerp(s0[p00],s0[p01],tx),b=Lerp(s0[p10],s0[p11],tx);
                 double cc=Lerp(s1[p00],s1[p01],tx),d=Lerp(s1[p10],s1[p11],tx);
+                return WindowToByte(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
+            }
+            if(sampleWindowLevelOnDemand)
+            {
+                // اگر Series فقط Gray8 داشته باشد نیز W/L باید روی همان Sampleهای مورد نیاز
+                // اعمال شود؛ در نسخه قبلی این مسیر از displayVolume قدیمی می‌خواند و W/L دیده نمی‌شد.
+                byte[] g0=volume[z0].Gray8,g1=volume[z1].Gray8;
+                int p00=y0*width+x0,p01=y0*width+x1,p10=y1*width+x0,p11=y1*width+x1;
+                double a=Lerp(g0[p00],g0[p01],tx),b=Lerp(g0[p10],g0[p11],tx);
+                double cc=Lerp(g1[p00],g1[p01],tx),d=Lerp(g1[p10],g1[p11],tx);
                 return WindowToByte(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
             }
             double da=Lerp(displayVolume[i00],displayVolume[i01],tx),db=Lerp(displayVolume[i10],displayVolume[i11],tx);
