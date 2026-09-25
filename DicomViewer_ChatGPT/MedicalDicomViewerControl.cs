@@ -236,8 +236,37 @@ namespace DicomViewer_ChatGPT
 
             crosshairPatient=candidate;
             SetIndicesFromPatient(crosshairPatient);
-            SetAllDisplayOrigins(crosshairPatient);
-            RefreshViews();
+
+            // در نمایی که Wheel روی آن انجام شده، Slice جدید بازسازی می‌شود و مرکز تصویر
+            // روی همان نقطه جدید قرار می‌گیرد. در دو نمای دیگر Anatomy ثابت می‌ماند و فقط
+            // محور مربوط به Plane اسکرول‌شده جابه‌جا می‌شود؛ مشابه رفتار RadiAnt.
+            SetDisplayOriginForView(box,crosshairPatient);
+            RefreshAfterMprScroll(box);
+        }
+
+        private void RefreshAfterMprScroll(PictureBox scrolledView)
+        {
+            if(scrolledView==axial)
+            {
+                SetImage(axial,BuildAxialAtDisplayOrigin());
+                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+                SetImage(coronal,BuildCoronalAtDisplayOrigin());
+            }
+            else if(scrolledView==sagittal)
+            {
+                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+                SetImage(axial,BuildAxialAtDisplayOrigin());
+                SetImage(coronal,BuildCoronalAtDisplayOrigin());
+            }
+            else
+            {
+                SetImage(coronal,BuildCoronalAtDisplayOrigin());
+                SetImage(axial,BuildAxialAtDisplayOrigin());
+                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+            }
+
+            UpdateMprTitles();
+            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
         private bool IsPatientPointInsideVolume(double[] q)
