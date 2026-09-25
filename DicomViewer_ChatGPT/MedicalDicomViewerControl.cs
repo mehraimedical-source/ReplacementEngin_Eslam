@@ -42,89 +42,218 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildAxial()
         {
-            Bitmap b=GrayBitmap((byte[])volume[zIndex].Gray8.Clone(),width,height);
-            DrawCrosshair(b,xIndex,yIndex,Color.Cyan,Color.Magenta);return b;
+            if(!HasPatientGeometry()) return BuildSourceAxial();
+
+            Bounds b=GetPatientBounds();
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double z=GetCurrentPatientPoint()[2];
+            int outW=PhysicalOutputSize(b.MaxX-b.MinX,pixel);
+            int outH=PhysicalOutputSize(b.MaxY-b.MinY,pixel);
+            byte[] p=new byte[outW*outH];
+            for(int oy=0;oy<outH;oy++)
+            {
+                double py=b.MinY+oy*pixel;
+                for(int ox=0;ox<outW;ox++)
+                    p[oy*outW+ox]=SamplePatient(b.MinX+ox*pixel,py,z);
+            }
+            Bitmap bmp=GrayBitmap(p,outW,outH);
+            double[] cp=GetCurrentPatientPoint();
+            DrawCrosshair(bmp,PatientToPixel(cp[0],b.MinX,pixel,outW),PatientToPixel(cp[1],b.MinY,pixel,outH),Color.Cyan,Color.Magenta);
+            return bmp;
         }
 
         private Bitmap BuildCoronal()
         {
-            // Resample Z to the same physical pixel size as X.
-            int outW=width;
-            int outH=PhysicalOutputSize(depth,spacingZ,spacingX);
+            if(!HasPatientGeometry()) return BuildLegacyCoronal();
+
+            Bounds b=GetPatientBounds();
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double y=GetCurrentPatientPoint()[1];
+            int outW=PhysicalOutputSize(b.MaxX-b.MinX,pixel);
+            int outH=PhysicalOutputSize(b.MaxZ-b.MinZ,pixel);
             byte[] p=new byte[outW*outH];
             for(int oy=0;oy<outH;oy++)
             {
-                double sourceZ=OutputToSourceZ(oy,outH);
-                int z0=Clamp((int)Math.Floor(sourceZ),0,depth-1);
-                int z1=Clamp(z0+1,0,depth-1);
-                double t=sourceZ-z0;
-                int dst=oy*outW;
-                int src0=yIndex*width;
-                for(int x=0;x<outW;x++)
-                    p[dst+x]=LerpByte(volume[z0].Gray8[src0+x],volume[z1].Gray8[src0+x],t);
+                double pz=b.MaxZ-oy*pixel; // Superior at top.
+                for(int ox=0;ox<outW;ox++)
+                    p[oy*outW+ox]=SamplePatient(b.MinX+ox*pixel,y,pz);
             }
-            Bitmap b=GrayBitmap(p,outW,outH);
-            int crossY=SourceZToOutput(zIndex,outH);
-            DrawCrosshair(b,xIndex,crossY,Color.Cyan,Color.Yellow);
-            return b;
+            Bitmap bmp=GrayBitmap(p,outW,outH);
+            double[] cp=GetCurrentPatientPoint();
+            DrawCrosshair(bmp,PatientToPixel(cp[0],b.MinX,pixel,outW),PatientToPixel(b.MaxZ-cp[2],0,pixel,outH),Color.Cyan,Color.Yellow);
+            return bmp;
         }
 
         private Bitmap BuildSagittal()
         {
-            // Resample Z to the same physical pixel size as Y.
-            int outW=height;
-            int outH=PhysicalOutputSize(depth,spacingZ,spacingY);
+            if(!HasPatientGeometry()) return BuildLegacySagittal();
+
+            Bounds b=GetPatientBounds();
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double x=GetCurrentPatientPoint()[0];
+            int outW=PhysicalOutputSize(b.MaxY-b.MinY,pixel);
+            int outH=PhysicalOutputSize(b.MaxZ-b.MinZ,pixel);
             byte[] p=new byte[outW*outH];
             for(int oy=0;oy<outH;oy++)
             {
-                double sourceZ=OutputToSourceZ(oy,outH);
-                int z0=Clamp((int)Math.Floor(sourceZ),0,depth-1);
-                int z1=Clamp(z0+1,0,depth-1);
-                double t=sourceZ-z0;
-                int dst=oy*outW;
-                for(int y=0;y<outW;y++)
+                double pz=b.MaxZ-oy*pixel; // Superior at top.
+                for(int ox=0;ox<outW;ox++)
+                    p[oy*outW+ox]=SamplePatient(x,b.MinY+ox*pixel,pz); // Anterior -> posterior.
+            }
+            Bitmap bmp=GrayBitmap(p,outW,outH);
+            double[] cp=GetCurrentPatientPoint();
+            DrawCrosshair(bmp,PatientToPixel(cp[1],b.MinY,pixel,outW),PatientToPixel(b.MaxZ-cp[2],0,pixel,outH),Color.Magenta,Color.Yellow);
+            return bmp;
+        }
+
+        private Bitmap BuildSourceAxial()
+        {
+            Bitmap b=GrayBitmap((byte[])volume[zIndex].Gray8.Clone(),width,height);
+            DrawCrosshair(b,xIndex,yIndex,Color.Cyan,Color.Magenta);return b;
+        }
+
+        private Bitmap BuildLegacyCoronal()
+        {
+            int outW=width,outH=PhysicalOutputSize((depth-1)*spacingZ,spacingX);
+            byte[] p=new byte[outW*outH];
+            for(int oy=0;oy<outH;oy++)
+            {
+                double z=(depth-1)*(outH-1-oy)/(double)Math.Max(1,outH-1);
+                int z0=Clamp((int)Math.Floor(z),0,depth-1),z1=Clamp(z0+1,0,depth-1);double t=z-z0;
+                for(int x=0;x<outW;x++)p[oy*outW+x]=LerpByte(volume[z0].Gray8[yIndex*width+x],volume[z1].Gray8[yIndex*width+x],t);
+            }
+            return GrayBitmap(p,outW,outH);
+        }
+
+        private Bitmap BuildLegacySagittal()
+        {
+            int outW=height,outH=PhysicalOutputSize((depth-1)*spacingZ,spacingY);
+            byte[] p=new byte[outW*outH];
+            for(int oy=0;oy<outH;oy++)
+            {
+                double z=(depth-1)*(outH-1-oy)/(double)Math.Max(1,outH-1);
+                int z0=Clamp((int)Math.Floor(z),0,depth-1),z1=Clamp(z0+1,0,depth-1);double t=z-z0;
+                for(int y=0;y<outW;y++)p[oy*outW+y]=LerpByte(volume[z0].Gray8[y*width+xIndex],volume[z1].Gray8[y*width+xIndex],t);
+            }
+            return GrayBitmap(p,outW,outH);
+        }
+
+        private bool HasPatientGeometry()
+        {
+            return volume!=null&&depth>0&&volume[0].ImagePositionPatient!=null&&volume[0].ImagePositionPatient.Length>=3&&
+                volume[0].ImageOrientationPatient!=null&&volume[0].ImageOrientationPatient.Length>=6;
+        }
+
+        private double[] GetCurrentPatientPoint()
+        {
+            double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient;
+            double[] n=Normal(o);
+            double basePos=Dot(p,n);
+            double slicePos=volume[zIndex].ImagePositionPatient!=null?Dot(volume[zIndex].ImagePositionPatient,n):basePos+zIndex*spacingZ;
+            double dz=slicePos-basePos;
+            return new double[]{
+                p[0]+o[0]*xIndex*spacingX+o[3]*yIndex*spacingY+n[0]*dz,
+                p[1]+o[1]*xIndex*spacingX+o[4]*yIndex*spacingY+n[1]*dz,
+                p[2]+o[2]*xIndex*spacingX+o[5]*yIndex*spacingY+n[2]*dz};
+        }
+
+        private byte SamplePatient(double px,double py,double pz)
+        {
+            double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient,n=Normal(o);
+            double dx=px-p[0],dy=py-p[1],dz=pz-p[2];
+            double fx=(dx*o[0]+dy*o[1]+dz*o[2])/spacingX;
+            double fy=(dx*o[3]+dy*o[4]+dz*o[5])/spacingY;
+            double targetPos=px*n[0]+py*n[1]+pz*n[2];
+
+            double first=Dot(volume[0].ImagePositionPatient,n);
+            double last=Dot(volume[depth-1].ImagePositionPatient,n);
+            double fz=(Math.Abs(last-first)>.000001)?(targetPos-first)*(depth-1)/(last-first):0;
+
+            if(fx<0||fy<0||fz<0||fx>width-1||fy>height-1||fz>depth-1)return 0;
+            int x0=Clamp((int)Math.Floor(fx),0,width-1),x1=Clamp(x0+1,0,width-1);
+            int y0=Clamp((int)Math.Floor(fy),0,height-1),y1=Clamp(y0+1,0,height-1);
+            int z0=Clamp((int)Math.Floor(fz),0,depth-1),z1=Clamp(z0+1,0,depth-1);
+            double tx=fx-x0,ty=fy-y0,tz=fz-z0;
+            double a=Lerp(volume[z0].Gray8[y0*width+x0],volume[z0].Gray8[y0*width+x1],tx);
+            double b=Lerp(volume[z0].Gray8[y1*width+x0],volume[z0].Gray8[y1*width+x1],tx);
+            double c=Lerp(volume[z1].Gray8[y0*width+x0],volume[z1].Gray8[y0*width+x1],tx);
+            double d=Lerp(volume[z1].Gray8[y1*width+x0],volume[z1].Gray8[y1*width+x1],tx);
+            return (byte)Math.Round(Lerp(Lerp(a,b,ty),Lerp(c,d,ty),tz));
+        }
+
+        private Bounds GetPatientBounds()
+        {
+            double[] o=volume[0].ImageOrientationPatient,n=Normal(o);
+            Bounds b=new Bounds();
+            b.MinX=b.MinY=b.MinZ=Double.MaxValue;b.MaxX=b.MaxY=b.MaxZ=Double.MinValue;
+            int[] xs={0,width-1},ys={0,height-1},zs={0,depth-1};
+            foreach(int z in zs)
+            {
+                double[] sp=volume[z].ImagePositionPatient??volume[0].ImagePositionPatient;
+                foreach(int y in ys)foreach(int x in xs)
                 {
-                    int src=y*width+xIndex;
-                    p[dst+y]=LerpByte(volume[z0].Gray8[src],volume[z1].Gray8[src],t);
+                    double px=sp[0]+o[0]*x*spacingX+o[3]*y*spacingY;
+                    double py=sp[1]+o[1]*x*spacingX+o[4]*y*spacingY;
+                    double pz=sp[2]+o[2]*x*spacingX+o[5]*y*spacingY;
+                    b.MinX=Math.Min(b.MinX,px);b.MaxX=Math.Max(b.MaxX,px);
+                    b.MinY=Math.Min(b.MinY,py);b.MaxY=Math.Max(b.MaxY,py);
+                    b.MinZ=Math.Min(b.MinZ,pz);b.MaxZ=Math.Max(b.MaxZ,pz);
                 }
             }
-            Bitmap b=GrayBitmap(p,outW,outH);
-            int crossY=SourceZToOutput(zIndex,outH);
-            DrawCrosshair(b,yIndex,crossY,Color.Magenta,Color.Yellow);
             return b;
         }
 
-        private int PhysicalOutputSize(int sourceCount,double sourceSpacing,double targetSpacing)
-        {
-            if(sourceCount<=1)return 1;
-            double physicalLength=(sourceCount-1)*sourceSpacing;
-            return Math.Max(2,(int)Math.Round(physicalLength/targetSpacing)+1);
-        }
-
-        private double OutputToSourceZ(int outputY,int outputHeight)
-        {
-            if(outputHeight<=1||depth<=1)return 0;
-            // Output is displayed superior-to-inferior in the same direction as the old MPR.
-            return (depth-1)*(outputHeight-1-outputY)/(double)(outputHeight-1);
-        }
-
-        private int SourceZToOutput(int sourceZ,int outputHeight)
-        {
-            if(outputHeight<=1||depth<=1)return 0;
-            return Clamp((int)Math.Round((depth-1-sourceZ)*(outputHeight-1)/(double)(depth-1)),0,outputHeight-1);
-        }
-
-        private static byte LerpByte(byte a,byte b,double t)
-        {
-            if(t<=0)return a;if(t>=1)return b;
-            return (byte)Math.Round(a+(b-a)*t);
-        }
+        private sealed class Bounds{public double MinX,MaxX,MinY,MaxY,MinZ,MaxZ;}
+        private static double[] Normal(double[] o){return new[]{o[1]*o[5]-o[2]*o[4],o[2]*o[3]-o[0]*o[5],o[0]*o[4]-o[1]*o[3]};}
+        private static double Dot(double[] a,double[] b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+        private static double Lerp(double a,double b,double t){return a+(b-a)*t;}
+        private static byte LerpByte(byte a,byte b,double t){return (byte)Math.Round(Lerp(a,b,t));}
+        private static int PhysicalOutputSize(double physicalLength,double pixelSpacing){return Math.Max(2,(int)Math.Round(Math.Abs(physicalLength)/pixelSpacing)+1);}
+        private static int PatientToPixel(double value,double min,double spacing,int count){return Clamp((int)Math.Round((value-min)/spacing),0,count-1);}
 
         private Bitmap BuildMip()
         {
+            // Temporary pseudo-colored 3D MIP preview. This keeps the current
+            // stable Gray8 decode path; a true volume renderer will replace it later.
             byte[] p=new byte[width*height];
             for(int z=0;z<depth;z++){byte[] s=volume[z].Gray8;for(int i=0;i<p.Length;i++)if(s[i]>p[i])p[i]=s[i];}
-            return GrayBitmap(p,width,height);
+            return ColorMipBitmap(p,width,height);
+        }
+
+        private static Bitmap ColorMipBitmap(byte[] pixels,int w,int h)
+        {
+            var b=new Bitmap(w,h,PixelFormat.Format24bppRgb);
+            var d=b.LockBits(new Rectangle(0,0,w,h),ImageLockMode.WriteOnly,PixelFormat.Format24bppRgb);
+            try
+            {
+                byte[] row=new byte[Math.Abs(d.Stride)];
+                for(int y=0;y<h;y++)
+                {
+                    Array.Clear(row,0,row.Length);
+                    for(int x=0;x<w;x++)
+                    {
+                        byte v=pixels[y*w+x];
+                        byte r,g,bl;
+                        // Simple CT-style transfer function for the preview:
+                        // low values stay dark, soft tissue is warm, dense structures become ivory/white.
+                        if(v<55){r=(byte)(v/4);g=(byte)(v/6);bl=(byte)(v/8);}
+                        else if(v<150)
+                        {
+                            double t=(v-55)/95.0;
+                            r=(byte)(45+150*t);g=(byte)(25+90*t);bl=(byte)(20+55*t);
+                        }
+                        else
+                        {
+                            double t=(v-150)/105.0;
+                            r=(byte)(195+60*t);g=(byte)(115+140*t);bl=(byte)(75+180*t);
+                        }
+                        int i=x*3;row[i]=bl;row[i+1]=g;row[i+2]=r;
+                    }
+                    Marshal.Copy(row,0,IntPtr.Add(d.Scan0,y*d.Stride),row.Length);
+                }
+            }
+            finally{b.UnlockBits(d);}
+            return b;
         }
 
         private void CalculateVoxelSpacing()
