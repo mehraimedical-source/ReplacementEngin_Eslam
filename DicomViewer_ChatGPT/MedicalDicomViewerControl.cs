@@ -30,6 +30,9 @@ namespace DicomViewer_ChatGPT
         private double originX,originY,originZ,invSpacingX,invSpacingY,voxelZScale,firstProjection;
         private double[] axialDisplayOrigin, sagittalDisplayOrigin, coronalDisplayOrigin;
         private double[] centerDragViewU, centerDragViewV, centerDragDisplayOrigin;
+        private readonly CpuVolumeRenderer volumeRenderer = new CpuVolumeRenderer();
+        private bool dragging3D;
+        private Point last3DMouse;
 
         public MedicalDicomViewerControl()
         {
@@ -38,7 +41,7 @@ namespace DicomViewer_ChatGPT
             axial.MouseWheel += delegate(object s,MouseEventArgs e){if(depth>0){zIndex=Clamp(zIndex+Math.Sign(e.Delta),0,depth-1);RefreshViews();}};
             sagittal.MouseWheel += delegate(object s,MouseEventArgs e){if(width>0){xIndex=Clamp(xIndex+Math.Sign(e.Delta),0,width-1);RefreshViews();}};
             coronal.MouseWheel += delegate(object s,MouseEventArgs e){if(height>0){yIndex=Clamp(yIndex+Math.Sign(e.Delta),0,height-1);RefreshViews();}};
-            HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
+            HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);Hook3D();
         }
 
         private void btnResetAxes_Click(object sender,EventArgs e)
@@ -70,7 +73,8 @@ namespace DicomViewer_ChatGPT
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
             PrepareFastVolume();
-            SetImage(volume3D,BuildMip());
+            volumeRenderer.SetVolume(displayVolume,width,height,depth,spacingX,spacingY,spacingZ);
+            Render3D(false);
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();
             axialDisplayOrigin=sagittalDisplayOrigin=coronalDisplayOrigin=(double[])crosshairPatient.Clone();RefreshViews();
         }
@@ -79,7 +83,7 @@ namespace DicomViewer_ChatGPT
         {
             SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());
             if(crosshairPatient!=null)SetAllDisplayOrigins(crosshairPatient);
-            if(volume3D.Image==null)SetImage(volume3D,BuildMip());
+            if(volume3D.Image==null)Render3D(false);
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
@@ -662,6 +666,50 @@ namespace DicomViewer_ChatGPT
             }
             finally{b.UnlockBits(d);}
             return b;
+        }
+
+        private void Hook3D()
+        {
+            volume3D.MouseEnter += delegate { volume3D.Focus(); };
+            volume3D.MouseDown += delegate(object s,MouseEventArgs e)
+            {
+                if(e.Button!=MouseButtons.Left||!volumeRenderer.Ready)return;
+                dragging3D=true;last3DMouse=e.Location;volume3D.Cursor=Cursors.SizeAll;
+            };
+            volume3D.MouseMove += delegate(object s,MouseEventArgs e)
+            {
+                if(!dragging3D)return;
+                int dx=e.X-last3DMouse.X,dy=e.Y-last3DMouse.Y;
+                if(dx==0&&dy==0)return;
+                last3DMouse=e.Location;volumeRenderer.Rotate(dx,dy);
+                if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=45)
+                {
+                    lastInteractiveRender=DateTime.UtcNow;Render3D(true);
+                }
+            };
+            volume3D.MouseUp += delegate(object s,MouseEventArgs e)
+            {
+                if(!dragging3D)return;
+                dragging3D=false;volume3D.Cursor=Cursors.Default;Render3D(false);
+            };
+            volume3D.MouseWheel += delegate(object s,MouseEventArgs e)
+            {
+                if(!volumeRenderer.Ready)return;
+                volumeRenderer.Zoom(e.Delta);Render3D(false);
+            };
+            volume3D.DoubleClick += delegate
+            {
+                if(!volumeRenderer.Ready)return;
+                volumeRenderer.ResetCamera();Render3D(false);
+            };
+        }
+
+        private void Render3D(bool interactive)
+        {
+            if(!volumeRenderer.Ready)return;
+            int w=Math.Max(160,volume3D.ClientSize.Width),h=Math.Max(160,volume3D.ClientSize.Height);
+            Bitmap image=volumeRenderer.Render(w,h,interactive);
+            if(image!=null)SetImage(volume3D,image);
         }
 
         private void CalculateVoxelSpacing()
