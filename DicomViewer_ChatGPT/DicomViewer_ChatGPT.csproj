@@ -15,6 +15,7 @@
   <ItemGroup>
     <Compile Include="DicomSeriesLoader.cs" />
     <Compile Include="MedicalDicomViewerControl.cs"><SubType>UserControl</SubType></Compile>
+    <Compile Include="MedicalDicomViewerControl.Designer.cs"><DependentUpon>MedicalDicomViewerControl.cs</DependentUpon></Compile>
     <Compile Include="ProcessedDicomImage.cs" />
     <Compile Include="Form1.cs"><SubType>Form</SubType></Compile>
     <Compile Include="Form1.Designer.cs"><DependentUpon>Form1.cs</DependentUpon></Compile>
