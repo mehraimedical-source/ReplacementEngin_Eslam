@@ -123,9 +123,12 @@ namespace DicomViewer_ChatGPT
 
         private static void SetupViewport(System.Windows.Forms.Panel panel, System.Windows.Forms.PictureBox picture, System.Windows.Forms.Label title, string text)
         {
-            panel.BackColor = System.Drawing.Color.Black;
+            // یک حاشیه باریک دور هر سلول، محدوده هر Viewport را مشخص می‌کند.
+            // Padding باعث می‌شود رنگ Panel مثل Border دیده شود و روی خود تصویر اثری ندارد.
+            panel.BackColor = System.Drawing.Color.DimGray;
             panel.Dock = System.Windows.Forms.DockStyle.Fill;
             panel.Margin = new System.Windows.Forms.Padding(1);
+            panel.Padding = new System.Windows.Forms.Padding(1);
             picture.BackColor = System.Drawing.Color.Black;
             picture.Dock = System.Windows.Forms.DockStyle.Fill;
             picture.Name = text.Replace(" ", "") + "Picture";
