@@ -23,8 +23,8 @@ namespace DicomViewer_ChatGPT
             this.btnBrowse = new System.Windows.Forms.Button();
             this.txtFolder = new System.Windows.Forms.TextBox();
             this.toolbarPanel = new System.Windows.Forms.Panel();
-            this.btnResetAxes = new System.Windows.Forms.Button();
             this.btnReset3D = new System.Windows.Forms.Button();
+            this.btnResetAxes = new System.Windows.Forms.Button();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.toolbarPanel.SuspendLayout();
@@ -86,32 +86,15 @@ namespace DicomViewer_ChatGPT
             // 
             // toolbarPanel
             // 
-<<<<<<< HEAD
-=======
-            this.toolbarPanel.Controls.Add(this.btnReset3D);
-            this.toolbarPanel.Controls.Add(this.btnResetAxes);
->>>>>>> 88cf9b23f959f974e5d3d625746e2ca3e42af487
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.toolbarPanel.Controls.Add(this.btnReset3D);
             this.toolbarPanel.Controls.Add(this.btnResetAxes);
             this.toolbarPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.toolbarPanel.Location = new System.Drawing.Point(0, 42);
             this.toolbarPanel.Name = "toolbarPanel";
             this.toolbarPanel.Size = new System.Drawing.Size(1280, 48);
             this.toolbarPanel.TabIndex = 2;
-            // 
-            // btnResetAxes
-            // 
-            this.btnResetAxes.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
-            this.btnResetAxes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnResetAxes.ForeColor = System.Drawing.Color.White;
-            this.btnResetAxes.Location = new System.Drawing.Point(8, 8);
-            this.btnResetAxes.Name = "btnResetAxes";
-            this.btnResetAxes.Size = new System.Drawing.Size(110, 30);
-            this.btnResetAxes.TabIndex = 0;
-            this.btnResetAxes.Text = "Reset Axes";
-            this.btnResetAxes.UseVisualStyleBackColor = false;
-            this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
             // 
             // btnReset3D
             // 
@@ -125,6 +108,19 @@ namespace DicomViewer_ChatGPT
             this.btnReset3D.Text = "Reset 3D";
             this.btnReset3D.UseVisualStyleBackColor = false;
             this.btnReset3D.Click += new System.EventHandler(this.btnReset3D_Click);
+            // 
+            // btnResetAxes
+            // 
+            this.btnResetAxes.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.btnResetAxes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnResetAxes.ForeColor = System.Drawing.Color.White;
+            this.btnResetAxes.Location = new System.Drawing.Point(8, 8);
+            this.btnResetAxes.Name = "btnResetAxes";
+            this.btnResetAxes.Size = new System.Drawing.Size(110, 30);
+            this.btnResetAxes.TabIndex = 0;
+            this.btnResetAxes.Text = "Reset Axes";
+            this.btnResetAxes.UseVisualStyleBackColor = false;
+            this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
             // 
             // dicomViewer
             // 
