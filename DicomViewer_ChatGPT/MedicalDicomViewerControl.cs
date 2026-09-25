@@ -48,18 +48,76 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildCoronal()
         {
-            byte[] p=new byte[width*depth];
-            for(int z=0;z<depth;z++) Buffer.BlockCopy(volume[z].Gray8,yIndex*width,p,(depth-1-z)*width,width);
-            Bitmap b=GrayBitmap(p,width,depth);
-            DrawCrosshair(b,xIndex,depth-1-zIndex,Color.Cyan,Color.Yellow);return b;
+            // Resample Z to the same physical pixel size as X.
+            int outW=width;
+            int outH=PhysicalOutputSize(depth,spacingZ,spacingX);
+            byte[] p=new byte[outW*outH];
+            for(int oy=0;oy<outH;oy++)
+            {
+                double sourceZ=OutputToSourceZ(oy,outH);
+                int z0=Clamp((int)Math.Floor(sourceZ),0,depth-1);
+                int z1=Clamp(z0+1,0,depth-1);
+                double t=sourceZ-z0;
+                int dst=oy*outW;
+                int src0=yIndex*width;
+                for(int x=0;x<outW;x++)
+                    p[dst+x]=LerpByte(volume[z0].Gray8[src0+x],volume[z1].Gray8[src0+x],t);
+            }
+            Bitmap b=GrayBitmap(p,outW,outH);
+            int crossY=SourceZToOutput(zIndex,outH);
+            DrawCrosshair(b,xIndex,crossY,Color.Cyan,Color.Yellow);
+            return b;
         }
 
         private Bitmap BuildSagittal()
         {
-            byte[] p=new byte[height*depth];
-            for(int z=0;z<depth;z++) for(int y=0;y<height;y++) p[(depth-1-z)*height+y]=volume[z].Gray8[y*width+xIndex];
-            Bitmap b=GrayBitmap(p,height,depth);
-            DrawCrosshair(b,yIndex,depth-1-zIndex,Color.Magenta,Color.Yellow);return b;
+            // Resample Z to the same physical pixel size as Y.
+            int outW=height;
+            int outH=PhysicalOutputSize(depth,spacingZ,spacingY);
+            byte[] p=new byte[outW*outH];
+            for(int oy=0;oy<outH;oy++)
+            {
+                double sourceZ=OutputToSourceZ(oy,outH);
+                int z0=Clamp((int)Math.Floor(sourceZ),0,depth-1);
+                int z1=Clamp(z0+1,0,depth-1);
+                double t=sourceZ-z0;
+                int dst=oy*outW;
+                for(int y=0;y<outW;y++)
+                {
+                    int src=y*width+xIndex;
+                    p[dst+y]=LerpByte(volume[z0].Gray8[src],volume[z1].Gray8[src],t);
+                }
+            }
+            Bitmap b=GrayBitmap(p,outW,outH);
+            int crossY=SourceZToOutput(zIndex,outH);
+            DrawCrosshair(b,yIndex,crossY,Color.Magenta,Color.Yellow);
+            return b;
+        }
+
+        private int PhysicalOutputSize(int sourceCount,double sourceSpacing,double targetSpacing)
+        {
+            if(sourceCount<=1)return 1;
+            double physicalLength=(sourceCount-1)*sourceSpacing;
+            return Math.Max(2,(int)Math.Round(physicalLength/targetSpacing)+1);
+        }
+
+        private double OutputToSourceZ(int outputY,int outputHeight)
+        {
+            if(outputHeight<=1||depth<=1)return 0;
+            // Output is displayed superior-to-inferior in the same direction as the old MPR.
+            return (depth-1)*(outputHeight-1-outputY)/(double)(outputHeight-1);
+        }
+
+        private int SourceZToOutput(int sourceZ,int outputHeight)
+        {
+            if(outputHeight<=1||depth<=1)return 0;
+            return Clamp((int)Math.Round((depth-1-sourceZ)*(outputHeight-1)/(double)(depth-1)),0,outputHeight-1);
+        }
+
+        private static byte LerpByte(byte a,byte b,double t)
+        {
+            if(t<=0)return a;if(t>=1)return b;
+            return (byte)Math.Round(a+(b-a)*t);
         }
 
         private Bitmap BuildMip()
