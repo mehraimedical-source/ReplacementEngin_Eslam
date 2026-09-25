@@ -23,6 +23,7 @@ namespace DicomViewer_ChatGPT
         private bool draggingCenter;
         private Point centerDragStartMouse;
         private double[] centerDragStartPatient;
+        private double[] crosshairPatient;
 
         public MedicalDicomViewerControl()
         {
@@ -50,7 +51,7 @@ namespace DicomViewer_ChatGPT
                 foreach(var s in volume)foreach(short v in s.Modality16){if(v<min)min=v;if(v>max)max=v;}
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
-            xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();RefreshViews();
+            xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();RefreshViews();
         }
 
         private void RefreshViews()
@@ -82,7 +83,7 @@ namespace DicomViewer_ChatGPT
                 if(IsNearCenter(box,e.Location))
                 {
                     draggingCenter=true;dragView=box;centerDragStartMouse=e.Location;
-                    centerDragStartPatient=GetCurrentPatientPoint();box.Cursor=Cursors.SizeAll;return;
+                    centerDragStartPatient=(double[])(crosshairPatient??GetCurrentPatientPoint()).Clone();box.Cursor=Cursors.SizeAll;return;
                 }
                 Plane hit=HitTestReferenceLine(box,e.Location);
                 if(hit!=null)
@@ -136,8 +137,13 @@ namespace DicomViewer_ChatGPT
         private bool IsNearCenter(PictureBox box,Point mouse)
         {
             if(box.Image==null)return false;Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return false;
-            double cx=r.Left+r.Width/2.0,cy=r.Top+r.Height/2.0,dx=mouse.X-cx,dy=mouse.Y-cy;
-            return dx*dx+dy*dy<=100;
+            Plane view=PlaneForView(box);double[] center=GetCurrentPatientPoint(),ch=crosshairPatient??center;
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double ix=(box.Image.Width-1)/2.0+Dot(Sub(ch,center),view.U)/pixel;
+            double iy=(box.Image.Height-1)/2.0+Dot(Sub(ch,center),view.V)/pixel;
+            double cx=r.Left+ix*(r.Width-1)/Math.Max(1.0,box.Image.Width-1);
+            double cy=r.Top+iy*(r.Height-1)/Math.Max(1.0,box.Image.Height-1);
+            double dx=mouse.X-cx,dy=mouse.Y-cy;return dx*dx+dy*dy<=100;
         }
 
         private void MoveCenterFromMouse(PictureBox box,Point mouse)
@@ -155,8 +161,7 @@ namespace DicomViewer_ChatGPT
             double scaleY=(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
             double du=(mouse.X-centerDragStartMouse.X)*scaleX*pixel;
             double dv=(mouse.Y-centerDragStartMouse.Y)*scaleY*pixel;
-            double[] target=Add(centerDragStartPatient,Add(Scale(view.U,du),Scale(view.V,dv)));
-            SetIndicesFromPatient(target);
+            crosshairPatient=Add(centerDragStartPatient,Add(Scale(view.U,du),Scale(view.V,dv)));
         }
 
         private void SetIndicesFromPatient(double[] q)
@@ -258,16 +263,18 @@ namespace DicomViewer_ChatGPT
                     data[row+x]=SamplePatientFast(px,py,pz);
             });
             Bitmap bmp=GrayBitmap(data,outW,outH);
-            DrawPlaneLine(bmp,plane,lineA,lineA.Color);
-            DrawPlaneLine(bmp,plane,lineB,lineB.Color);
+            double[] ch=crosshairPatient??center;
+            double cx=(outW-1)/2.0+Dot(Sub(ch,center),plane.U)/renderPixel;
+            double cy=(outH-1)/2.0+Dot(Sub(ch,center),plane.V)/renderPixel;
+            DrawPlaneLine(bmp,plane,lineA,lineA.Color,cx,cy);
+            DrawPlaneLine(bmp,plane,lineB,lineB.Color,cx,cy);
             return bmp;
         }
 
-        private static void DrawPlaneLine(Bitmap bmp,Plane view,Plane other,Color color)
+        private static void DrawPlaneLine(Bitmap bmp,Plane view,Plane other,Color color,double cx,double cy)
         {
             double[] d=IntersectionDirection(view,other);
             double x=Dot(d,view.U),y=Dot(d,view.V),len=Math.Sqrt(bmp.Width*bmp.Width+bmp.Height*bmp.Height);
-            double cx=(bmp.Width-1)/2.0,cy=(bmp.Height-1)/2.0;
             using(Graphics g=Graphics.FromImage(bmp))using(Pen p=new Pen(color,1))
                 g.DrawLine(p,(float)(cx-x*len),(float)(cy-y*len),(float)(cx+x*len),(float)(cy+y*len));
         }
@@ -448,6 +455,7 @@ namespace DicomViewer_ChatGPT
         private static double[] Normalize(double[] a){double l=Math.Sqrt(Dot(a,a));return l<.000001?new[]{0.0,0.0,0.0}:new[]{a[0]/l,a[1]/l,a[2]/l};}
         private static double[] Scale(double[] a,double s){return new[]{a[0]*s,a[1]*s,a[2]*s};}
         private static double[] Add(double[] a,double[] b){return new[]{a[0]+b[0],a[1]+b[1],a[2]+b[2]};}
+        private static double[] Sub(double[] a,double[] b){return new[]{a[0]-b[0],a[1]-b[1],a[2]-b[2]};}
         private static double Lerp(double a,double b,double t){return a+(b-a)*t;}
         private byte WindowToByte(double value)
         {
