@@ -12,6 +12,8 @@ namespace DicomViewer_ChatGPT
         private ProcessedDicomImage[] volume;
         private int width,height,depth,xIndex,yIndex,zIndex;
         private double spacingX=1,spacingY=1,spacingZ=1,windowCenter=40,windowWidth=400;
+        private double axialAngle=0,coronalAngle=0,sagittalAngle=0;
+        private PictureBox rotatingView;
 
         public MedicalDicomViewerControl()
         {
@@ -20,6 +22,7 @@ namespace DicomViewer_ChatGPT
             axial.MouseWheel += delegate(object s,MouseEventArgs e){if(depth>0){zIndex=Clamp(zIndex+Math.Sign(e.Delta),0,depth-1);RefreshViews();}};
             sagittal.MouseWheel += delegate(object s,MouseEventArgs e){if(width>0){xIndex=Clamp(xIndex+Math.Sign(e.Delta),0,width-1);RefreshViews();}};
             coronal.MouseWheel += delegate(object s,MouseEventArgs e){if(height>0){yIndex=Clamp(yIndex+Math.Sign(e.Delta),0,height-1);RefreshViews();}};
+            HookRotation(axial);HookRotation(sagittal);HookRotation(coronal);
         }
 
         public void Active(string[] dicomFiles){Active(DicomSeriesLoader.Load(dicomFiles));}
@@ -38,7 +41,7 @@ namespace DicomViewer_ChatGPT
                 foreach(var s in volume)foreach(short v in s.Modality16){if(v<min)min=v;if(v>max)max=v;}
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
-            xIndex=width/2;yIndex=height/2;zIndex=depth/2;RefreshViews();
+            xIndex=width/2;yIndex=height/2;zIndex=depth/2;axialAngle=coronalAngle=sagittalAngle=0;RefreshViews();
         }
 
         private void RefreshViews()
@@ -47,70 +50,94 @@ namespace DicomViewer_ChatGPT
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
+        private void HookRotation(PictureBox box)
+        {
+            box.MouseDown += delegate(object s,MouseEventArgs e){if(e.Button==MouseButtons.Right)rotatingView=box;};
+            box.MouseUp += delegate(object s,MouseEventArgs e){if(rotatingView==box)rotatingView=null;};
+            box.MouseMove += delegate(object s,MouseEventArgs e)
+            {
+                if(rotatingView!=box||box.Image==null)return;
+                Rectangle r=GetImageRectangle(box);
+                if(!r.Contains(e.Location))return;
+                double cx=r.Left+r.Width/2.0,cy=r.Top+r.Height/2.0;
+                double angle=Math.Atan2(e.Y-cy,e.X-cx);
+                if(box==axial)axialAngle=angle;
+                else if(box==coronal)coronalAngle=angle;
+                else if(box==sagittal)sagittalAngle=angle;
+                RefreshViews();
+            };
+        }
+
+        private static Rectangle GetImageRectangle(PictureBox box)
+        {
+            if(box.Image==null)return box.ClientRectangle;
+            double ir=(double)box.Image.Width/box.Image.Height,br=(double)box.ClientSize.Width/box.ClientSize.Height;
+            if(ir>br){int h=(int)Math.Round(box.ClientSize.Width/ir);return new Rectangle(0,(box.ClientSize.Height-h)/2,box.ClientSize.Width,h);}
+            int w=(int)Math.Round(box.ClientSize.Height*ir);return new Rectangle((box.ClientSize.Width-w)/2,0,w,box.ClientSize.Height);
+        }
+
+        private Bitmap BuildPlane(double[] center,double[] axisU,double[] axisV,double physicalW,double physicalH,double pixel,double angle,Color vertical,Color horizontal)
+        {
+            RotateAxes(ref axisU,ref axisV,angle);
+            int outW=PhysicalOutputSize(physicalW,pixel),outH=PhysicalOutputSize(physicalH,pixel);
+            byte[] data=new byte[outW*outH];
+            double halfW=(outW-1)*pixel/2.0,halfH=(outH-1)*pixel/2.0;
+            for(int y=0;y<outH;y++)
+            {
+                double v=y*pixel-halfH;
+                for(int x=0;x<outW;x++)
+                {
+                    double u=x*pixel-halfW;
+                    data[y*outW+x]=SamplePatient(center[0]+axisU[0]*u+axisV[0]*v,center[1]+axisU[1]*u+axisV[1]*v,center[2]+axisU[2]*u+axisV[2]*v);
+                }
+            }
+            Bitmap bmp=GrayBitmap(data,outW,outH);
+            DrawRotatedCrosshair(bmp,outW/2,outH/2,angle,vertical,horizontal);
+            return bmp;
+        }
+
+        private static void RotateAxes(ref double[] u,ref double[] v,double a)
+        {
+            double ca=Math.Cos(a),sa=Math.Sin(a);
+            double[] nu={u[0]*ca+v[0]*sa,u[1]*ca+v[1]*sa,u[2]*ca+v[2]*sa};
+            double[] nv={-u[0]*sa+v[0]*ca,-u[1]*sa+v[1]*ca,-u[2]*sa+v[2]*ca};
+            u=nu;v=nv;
+        }
+
+        private static void DrawRotatedCrosshair(Bitmap b,int cx,int cy,double angle,Color vertical,Color horizontal)
+        {
+            double ca=Math.Cos(angle),sa=Math.Sin(angle),len=Math.Sqrt(b.Width*b.Width+b.Height*b.Height);
+            using(Graphics g=Graphics.FromImage(b))
+            using(Pen pv=new Pen(vertical,1))
+            using(Pen ph=new Pen(horizontal,1))
+            {
+                g.DrawLine(ph,(float)(cx-len*ca),(float)(cy-len*sa),(float)(cx+len*ca),(float)(cy+len*sa));
+                g.DrawLine(pv,(float)(cx+len*sa),(float)(cy-len*ca),(float)(cx-len*sa),(float)(cy+len*ca));
+            }
+        }
+
         private Bitmap BuildAxial()
         {
             if(!HasPatientGeometry()) return BuildSourceAxial();
-
-            Bounds b=GetPatientBounds();
+            Bounds b=GetPatientBounds();double[] cp=GetCurrentPatientPoint();
             double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double z=GetCurrentPatientPoint()[2];
-            int outW=PhysicalOutputSize(b.MaxX-b.MinX,pixel);
-            int outH=PhysicalOutputSize(b.MaxY-b.MinY,pixel);
-            byte[] p=new byte[outW*outH];
-            for(int oy=0;oy<outH;oy++)
-            {
-                double py=b.MinY+oy*pixel;
-                for(int ox=0;ox<outW;ox++)
-                    p[oy*outW+ox]=SamplePatient(b.MinX+ox*pixel,py,z);
-            }
-            Bitmap bmp=GrayBitmap(p,outW,outH);
-            double[] cp=GetCurrentPatientPoint();
-            DrawCrosshair(bmp,PatientToPixel(cp[0],b.MinX,pixel,outW),PatientToPixel(cp[1],b.MinY,pixel,outH),Color.Cyan,Color.Magenta);
-            return bmp;
+            return BuildPlane(cp,new[]{1.0,0.0,0.0},new[]{0.0,1.0,0.0},b.MaxX-b.MinX,b.MaxY-b.MinY,pixel,axialAngle,Color.Cyan,Color.Magenta);
         }
 
         private Bitmap BuildCoronal()
         {
             if(!HasPatientGeometry()) return BuildLegacyCoronal();
-
-            Bounds b=GetPatientBounds();
+            Bounds b=GetPatientBounds();double[] cp=GetCurrentPatientPoint();
             double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double y=GetCurrentPatientPoint()[1];
-            int outW=PhysicalOutputSize(b.MaxX-b.MinX,pixel);
-            int outH=PhysicalOutputSize(b.MaxZ-b.MinZ,pixel);
-            byte[] p=new byte[outW*outH];
-            for(int oy=0;oy<outH;oy++)
-            {
-                double pz=b.MaxZ-oy*pixel; // Superior at top.
-                for(int ox=0;ox<outW;ox++)
-                    p[oy*outW+ox]=SamplePatient(b.MinX+ox*pixel,y,pz);
-            }
-            Bitmap bmp=GrayBitmap(p,outW,outH);
-            double[] cp=GetCurrentPatientPoint();
-            DrawCrosshair(bmp,PatientToPixel(cp[0],b.MinX,pixel,outW),PatientToPixel(b.MaxZ-cp[2],0,pixel,outH),Color.Cyan,Color.Yellow);
-            return bmp;
+            return BuildPlane(cp,new[]{1.0,0.0,0.0},new[]{0.0,0.0,-1.0},b.MaxX-b.MinX,b.MaxZ-b.MinZ,pixel,coronalAngle,Color.Cyan,Color.Yellow);
         }
 
         private Bitmap BuildSagittal()
         {
             if(!HasPatientGeometry()) return BuildLegacySagittal();
-
-            Bounds b=GetPatientBounds();
+            Bounds b=GetPatientBounds();double[] cp=GetCurrentPatientPoint();
             double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double x=GetCurrentPatientPoint()[0];
-            int outW=PhysicalOutputSize(b.MaxY-b.MinY,pixel);
-            int outH=PhysicalOutputSize(b.MaxZ-b.MinZ,pixel);
-            byte[] p=new byte[outW*outH];
-            for(int oy=0;oy<outH;oy++)
-            {
-                double pz=b.MaxZ-oy*pixel; // Superior at top.
-                for(int ox=0;ox<outW;ox++)
-                    p[oy*outW+ox]=SamplePatient(x,b.MinY+ox*pixel,pz); // Anterior -> posterior.
-            }
-            Bitmap bmp=GrayBitmap(p,outW,outH);
-            double[] cp=GetCurrentPatientPoint();
-            DrawCrosshair(bmp,PatientToPixel(cp[1],b.MinY,pixel,outW),PatientToPixel(b.MaxZ-cp[2],0,pixel,outH),Color.Magenta,Color.Yellow);
-            return bmp;
+            return BuildPlane(cp,new[]{0.0,1.0,0.0},new[]{0.0,0.0,-1.0},b.MaxY-b.MinY,b.MaxZ-b.MinZ,pixel,sagittalAngle,Color.Magenta,Color.Yellow);
         }
 
         private Bitmap BuildSourceAxial()
