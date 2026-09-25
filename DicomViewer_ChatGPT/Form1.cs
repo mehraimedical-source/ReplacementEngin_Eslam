@@ -8,6 +8,11 @@ namespace DicomViewer_ChatGPT
     {
         public Form1() { InitializeComponent(); }
 
+        private void btnResetAxes_Click(object sender, EventArgs e)
+        {
+            dicomViewer.ResetAxes();
+        }
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             txtFolder.Text = @"SR002";
