@@ -16,6 +16,8 @@ namespace DicomViewer_ChatGPT
         private int width, height, depth, sliceStride;
         private double sx = 1, sy = 1, sz = 1;
         private double yaw = -0.55, pitch = -0.25, zoom = 1.0;
+        private bool usePatientCamera;
+        private Vec patientRight, patientDown, patientForward;
 
         public bool Ready { get { return (useHu ? modalityVoxels != null : voxels != null) && width > 0 && height > 0 && depth > 0; } }
 
@@ -38,7 +40,35 @@ namespace DicomViewer_ChatGPT
             ResetCamera();
         }
 
-        public void ResetCamera() { yaw = -0.55; pitch = -0.25; zoom = 1.0; }
+        public void SetPatientOrientation(double[] row, double[] column, double[] sliceDirection)
+        {
+            if(row==null||row.Length<3||column==null||column.Length<3||sliceDirection==null||sliceDirection.Length<3)
+            {
+                usePatientCamera=false;
+                ResetCamera();
+                return;
+            }
+
+            // محورهای Volume در Renderer به ترتیب X/Y/Z هستند، اما جهت واقعی آن‌ها از DICOM می‌آید.
+            Vec vr=Normalize(new Vec(row[0],row[1],row[2]));
+            Vec vc=Normalize(new Vec(column[0],column[1],column[2]));
+            Vec vz=Normalize(new Vec(sliceDirection[0],sliceDirection[1],sliceDirection[2]));
+
+            // نمای استاندارد روبه‌رو در Patient Coordinate System (LPS):
+            // راست صفحه = Left بیمار، پایین صفحه = Inferior و جهت دید = Posterior.
+            Vec screenRight=PatientToVolume(new Vec(1,0,0),vr,vc,vz);
+            Vec screenDown=PatientToVolume(new Vec(0,0,-1),vr,vc,vz);
+
+            patientRight=Normalize(screenRight);
+            // حذف مؤلفه موازی باعث می‌شود Datasetهای Oblique نیز Roll ناخواسته نداشته باشند.
+            screenDown=Subtract(screenDown,Scale(patientRight,Dot(screenDown,patientRight)));
+            patientDown=Normalize(screenDown);
+            patientForward=Normalize(Cross(patientRight,patientDown));
+            usePatientCamera=true;
+            yaw=0;pitch=0;zoom=1.0;
+        }
+
+        public void ResetCamera() { yaw = usePatientCamera ? 0 : -0.55; pitch = usePatientCamera ? 0 : -0.25; zoom = 1.0; }
         public void Rotate(double dx, double dy)
         {
             yaw += dx * .012; pitch += dy * .012;
@@ -68,10 +98,23 @@ namespace DicomViewer_ChatGPT
             double pixel = viewSize / Math.Max(1, Math.Min(outW, outH));
             double step = Math.Min(sx, Math.Min(sy, sz)) * (interactive ? 2.2 : 1.0);
 
-            double cy = Math.Cos(yaw), syaw = Math.Sin(yaw), cp = Math.Cos(pitch), sp = Math.Sin(pitch);
-            Vec right = new Vec(cy, 0, -syaw);
-            Vec up = new Vec(syaw * sp, cp, cy * sp);
-            Vec forward = Normalize(Cross(right, up));
+            Vec right, up, forward;
+            if(usePatientCamera)
+            {
+                // Rotation کاربر روی نمای استانداردی که از DICOM ساخته شده اعمال می‌شود.
+                double cy=Math.Cos(yaw),syaw=Math.Sin(yaw),cp=Math.Cos(pitch),sp=Math.Sin(pitch);
+                right=Normalize(Add(Scale(patientRight,cy),Scale(patientForward,-syaw)));
+                Vec yawForward=Normalize(Add(Scale(patientRight,syaw),Scale(patientForward,cy)));
+                up=Normalize(Add(Scale(patientDown,cp),Scale(yawForward,sp)));
+                forward=Normalize(Cross(right,up));
+            }
+            else
+            {
+                double cy=Math.Cos(yaw),syaw=Math.Sin(yaw),cp=Math.Cos(pitch),sp=Math.Sin(pitch);
+                right=new Vec(cy,0,-syaw);
+                up=new Vec(syaw*sp,cp,cy*sp);
+                forward=Normalize(Cross(right,up));
+            }
             Vec center = new Vec(physX * .5, physY * .5, physZ * .5);
             double halfW = (outW - 1) * pixel * .5, halfH = (outH - 1) * pixel * .5;
 
@@ -172,6 +215,9 @@ namespace DicomViewer_ChatGPT
         private static double Lerp(double a, double b, double t) { return a + (b - a) * t; }
         private struct Vec { public double X, Y, Z; public Vec(double x, double y, double z) { X = x; Y = y; Z = z; } }
         private static Vec Add(Vec a, Vec b) { return new Vec(a.X + b.X, a.Y + b.Y, a.Z + b.Z); }
+        private static Vec Subtract(Vec a, Vec b) { return new Vec(a.X - b.X, a.Y - b.Y, a.Z - b.Z); }
+        private static double Dot(Vec a, Vec b) { return a.X*b.X+a.Y*b.Y+a.Z*b.Z; }
+        private static Vec PatientToVolume(Vec p,Vec row,Vec column,Vec slice) { return new Vec(Dot(p,row),Dot(p,column),Dot(p,slice)); }
         private static Vec Scale(Vec a, double s) { return new Vec(a.X * s, a.Y * s, a.Z * s); }
         private static Vec Cross(Vec a, Vec b) { return new Vec(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X); }
         private static Vec Normalize(Vec a) { double l = Math.Sqrt(a.X * a.X + a.Y * a.Y + a.Z * a.Z); return l < 1e-9 ? new Vec(0, 0, 1) : Scale(a, 1.0 / l); }
