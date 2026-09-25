@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DicomViewer_ChatGPT
@@ -179,19 +180,23 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildPlane(Plane plane,double[] center,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
         {
-            double renderPixel=interactiveRendering?pixel*2.0:pixel;
+            double renderPixel=interactiveRendering?pixel*3.0:pixel;
             int outW=PhysicalOutputSize(physicalW,renderPixel),outH=PhysicalOutputSize(physicalH,renderPixel);
             byte[] data=new byte[outW*outH];
             double halfW=(outW-1)*renderPixel/2.0,halfH=(outH-1)*renderPixel/2.0;
-            for(int y=0;y<outH;y++)
+            // Incremental patient-space stepping avoids rebuilding the 3-D transform
+            // for every output pixel. Rows are independent, so use all CPU cores.
+            double sx=plane.U[0]*renderPixel,sy=plane.U[1]*renderPixel,sz=plane.U[2]*renderPixel;
+            Parallel.For(0,outH,y=>
             {
                 double v=y*renderPixel-halfH;
-                for(int x=0;x<outW;x++)
-                {
-                    double u=x*renderPixel-halfW;
-                    data[y*outW+x]=SamplePatient(center[0]+plane.U[0]*u+plane.V[0]*v,center[1]+plane.U[1]*u+plane.V[1]*v,center[2]+plane.U[2]*u+plane.V[2]*v);
-                }
-            }
+                double px=center[0]-plane.U[0]*halfW+plane.V[0]*v;
+                double py=center[1]-plane.U[1]*halfW+plane.V[1]*v;
+                double pz=center[2]-plane.U[2]*halfW+plane.V[2]*v;
+                int row=y*outW;
+                for(int x=0;x<outW;x++,px+=sx,py+=sy,pz+=sz)
+                    data[row+x]=SamplePatientFast(px,py,pz);
+            });
             Bitmap bmp=GrayBitmap(data,outW,outH);
             DrawPlaneLine(bmp,plane,lineA,lineA.Color);
             DrawPlaneLine(bmp,plane,lineB,lineB.Color);
@@ -284,6 +289,39 @@ namespace DicomViewer_ChatGPT
                 p[0]+o[0]*xIndex*spacingX+o[3]*yIndex*spacingY+n[0]*dz,
                 p[1]+o[1]*xIndex*spacingX+o[4]*yIndex*spacingY+n[1]*dz,
                 p[2]+o[2]*xIndex*spacingX+o[5]*yIndex*spacingY+n[2]*dz};
+        }
+
+        private byte SamplePatientFast(double px,double py,double pz)
+        {
+            // Fast sampler for interactive reslicing. Geometry constants are scalar
+            // fields and no temporary arrays are allocated in this hot path.
+            double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient;
+            double nx=o[1]*o[5]-o[2]*o[4],ny=o[2]*o[3]-o[0]*o[5],nz=o[0]*o[4]-o[1]*o[3];
+            double dx=px-p[0],dy=py-p[1],dz=pz-p[2];
+            double fx=(dx*o[0]+dy*o[1]+dz*o[2])/spacingX;
+            double fy=(dx*o[3]+dy*o[4]+dz*o[5])/spacingY;
+            double first=p[0]*nx+p[1]*ny+p[2]*nz;
+            double lp0=volume[depth-1].ImagePositionPatient[0],lp1=volume[depth-1].ImagePositionPatient[1],lp2=volume[depth-1].ImagePositionPatient[2];
+            double last=lp0*nx+lp1*ny+lp2*nz;
+            double target=px*nx+py*ny+pz*nz;
+            double fz=Math.Abs(last-first)>.000001?(target-first)*(depth-1)/(last-first):0;
+            if(fx<0||fy<0||fz<0||fx>width-1||fy>height-1||fz>depth-1)return 0;
+            int x0=(int)fx,y0=(int)fy,z0=(int)fz;
+            int x1=x0<width-1?x0+1:x0,y1=y0<height-1?y0+1:y0,z1=z0<depth-1?z0+1:z0;
+            double tx=fx-x0,ty=fy-y0,tz=fz-z0;
+            if(volume[z0].HasModality16&&volume[z1].HasModality16)
+            {
+                short[] a0=volume[z0].Modality16,a1=volume[z1].Modality16;
+                int i00=y0*width+x0,i01=y0*width+x1,i10=y1*width+x0,i11=y1*width+x1;
+                double a=Lerp(a0[i00],a0[i01],tx),b=Lerp(a0[i10],a0[i11],tx);
+                double cc=Lerp(a1[i00],a1[i01],tx),d=Lerp(a1[i10],a1[i11],tx);
+                return WindowToByte(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
+            }
+            byte[] g0=volume[z0].Gray8,g1=volume[z1].Gray8;
+            int j00=y0*width+x0,j01=y0*width+x1,j10=y1*width+x0,j11=y1*width+x1;
+            double ga=Lerp(g0[j00],g0[j01],tx),gb=Lerp(g0[j10],g0[j11],tx);
+            double gc=Lerp(g1[j00],g1[j01],tx),gd=Lerp(g1[j10],g1[j11],tx);
+            return (byte)Math.Round(Lerp(Lerp(ga,gb,ty),Lerp(gc,gd,ty),tz));
         }
 
         private byte SamplePatient(double px,double py,double pz)
