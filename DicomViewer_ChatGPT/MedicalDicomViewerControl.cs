@@ -213,9 +213,47 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildMip()
         {
+            // Temporary pseudo-colored 3D MIP preview. This keeps the current
+            // stable Gray8 decode path; a true volume renderer will replace it later.
             byte[] p=new byte[width*height];
             for(int z=0;z<depth;z++){byte[] s=volume[z].Gray8;for(int i=0;i<p.Length;i++)if(s[i]>p[i])p[i]=s[i];}
-            return GrayBitmap(p,width,height);
+            return ColorMipBitmap(p,width,height);
+        }
+
+        private static Bitmap ColorMipBitmap(byte[] pixels,int w,int h)
+        {
+            var b=new Bitmap(w,h,PixelFormat.Format24bppRgb);
+            var d=b.LockBits(new Rectangle(0,0,w,h),ImageLockMode.WriteOnly,PixelFormat.Format24bppRgb);
+            try
+            {
+                byte[] row=new byte[Math.Abs(d.Stride)];
+                for(int y=0;y<h;y++)
+                {
+                    Array.Clear(row,0,row.Length);
+                    for(int x=0;x<w;x++)
+                    {
+                        byte v=pixels[y*w+x];
+                        byte r,g,bl;
+                        // Simple CT-style transfer function for the preview:
+                        // low values stay dark, soft tissue is warm, dense structures become ivory/white.
+                        if(v<55){r=(byte)(v/4);g=(byte)(v/6);bl=(byte)(v/8);}
+                        else if(v<150)
+                        {
+                            double t=(v-55)/95.0;
+                            r=(byte)(45+150*t);g=(byte)(25+90*t);bl=(byte)(20+55*t);
+                        }
+                        else
+                        {
+                            double t=(v-150)/105.0;
+                            r=(byte)(195+60*t);g=(byte)(115+140*t);bl=(byte)(75+180*t);
+                        }
+                        int i=x*3;row[i]=bl;row[i+1]=g;row[i+2]=r;
+                    }
+                    Marshal.Copy(row,0,IntPtr.Add(d.Scan0,y*d.Stride),row.Length);
+                }
+            }
+            finally{b.UnlockBits(d);}
+            return b;
         }
 
         private void CalculateVoxelSpacing()
