@@ -6,7 +6,16 @@ namespace DicomViewer_ChatGPT
 {
     public partial class Form1 : Form
     {
-        public Form1() { InitializeComponent(); }
+        public Form1()
+        {
+            InitializeComponent();
+            // مقادیر WL/WW همزمان با Drag واقعی در Viewer روی Toolbar نمایش داده می‌شوند.
+            dicomViewer.WindowLevelChanged += delegate
+            {
+                lblWindowLevel.Text=String.Format("WL: {0:0}   WW: {1:0}",
+                    dicomViewer.WindowCenter,dicomViewer.WindowWidth);
+            };
+        }
 
         private void btnResetAxes_Click(object sender, EventArgs e)
         {
