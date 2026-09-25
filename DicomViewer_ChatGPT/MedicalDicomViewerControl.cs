@@ -187,18 +187,50 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildAxialAtDisplayOrigin()
         {
-            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlaneWithCrosshair(axialPlane,axialDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxY-b.MinY,p,coronalPlane,sagittalPlane);
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double[] origin=axialDisplayOrigin??GetMprCenter();
+            double[] size=GetPlanePhysicalSize(axialPlane,origin);
+            return BuildPlaneWithCrosshair(axialPlane,origin,size[0],size[1],p,coronalPlane,sagittalPlane);
         }
         private Bitmap BuildCoronalAtDisplayOrigin()
         {
-            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlaneWithCrosshair(coronalPlane,coronalDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,p,axialPlane,sagittalPlane);
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double[] origin=coronalDisplayOrigin??GetMprCenter();
+            double[] size=GetPlanePhysicalSize(coronalPlane,origin);
+            return BuildPlaneWithCrosshair(coronalPlane,origin,size[0],size[1],p,axialPlane,sagittalPlane);
         }
         private Bitmap BuildSagittalAtDisplayOrigin()
         {
-            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlaneWithCrosshair(sagittalPlane,sagittalDisplayOrigin??GetMprCenter(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,p,axialPlane,coronalPlane);
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double[] origin=sagittalDisplayOrigin??GetMprCenter();
+            double[] size=GetPlanePhysicalSize(sagittalPlane,origin);
+            return BuildPlaneWithCrosshair(sagittalPlane,origin,size[0],size[1],p,axialPlane,coronalPlane);
+        }
+
+        private double[] GetPlanePhysicalSize(Plane plane,double[] center)
+        {
+            // اندازه ثابت X/Y/Z برای Plane چرخیده کافی نیست و گوشه‌های Volume بریده می‌شوند.
+            // هشت گوشه واقعی Volume را روی U/V صفحه Project می‌کنیم و اندازه‌ای می‌سازیم
+            // که نسبت به مرکز فعلی نمایش، تمام Volume داخل تصویر باقی بماند.
+            double maxU=0,maxV=0;
+            double[] o=volume[0].ImageOrientationPatient;
+            int[] xs={0,width-1},ys={0,height-1},zs={0,depth-1};
+            foreach(int z in zs)
+            {
+                double[] sp=volume[z].ImagePositionPatient??volume[0].ImagePositionPatient;
+                foreach(int y in ys)foreach(int x in xs)
+                {
+                    double[] q={
+                        sp[0]+o[0]*x*spacingX+o[3]*y*spacingY,
+                        sp[1]+o[1]*x*spacingX+o[4]*y*spacingY,
+                        sp[2]+o[2]*x*spacingX+o[5]*y*spacingY};
+                    double[] d=Sub(q,center);
+                    maxU=Math.Max(maxU,Math.Abs(Dot(d,plane.U)));
+                    maxV=Math.Max(maxV,Math.Abs(Dot(d,plane.V)));
+                }
+            }
+            double margin=Math.Min(spacingX,Math.Min(spacingY,spacingZ))*2.0;
+            return new[]{2.0*maxU+margin,2.0*maxV+margin};
         }
 
         private Bitmap BuildPlaneWithCrosshair(Plane plane,double[] displayOrigin,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
