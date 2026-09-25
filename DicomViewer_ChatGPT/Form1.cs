@@ -34,6 +34,13 @@ namespace DicomViewer_ChatGPT
             lblWindowLevel.Text=String.Format("WL: {0:0}   WW: {1:0}",dicomViewer.WindowCenter,dicomViewer.WindowWidth);
         }
 
+        private void btnDefaultWindowLevel_Click(object sender, EventArgs e)
+        {
+            // W/L را به مقدار اولیه همان Series که هنگام Load محاسبه شده بود برمی‌گرداند.
+            dicomViewer.ResetWindowLevel();
+            lblWindowLevel.Text=String.Format("WL: {0:0}   WW: {1:0}",dicomViewer.WindowCenter,dicomViewer.WindowWidth);
+        }
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             txtFolder.Text = @"SR002";

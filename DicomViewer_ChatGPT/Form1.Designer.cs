@@ -14,6 +14,7 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Label lblAxisWidth;
         private System.Windows.Forms.NumericUpDown numAxisWidth;
         private System.Windows.Forms.Button btnWindowLevel;
+        private System.Windows.Forms.Button btnDefaultWindowLevel;
         private System.Windows.Forms.Label lblWindowLevel;
         private MedicalDicomViewerControl dicomViewer;
 
@@ -28,6 +29,7 @@ namespace DicomViewer_ChatGPT
             this.txtFolder = new System.Windows.Forms.TextBox();
             this.toolbarPanel = new System.Windows.Forms.Panel();
             this.lblWindowLevel = new System.Windows.Forms.Label();
+            this.btnDefaultWindowLevel = new System.Windows.Forms.Button();
             this.btnWindowLevel = new System.Windows.Forms.Button();
             this.numAxisWidth = new System.Windows.Forms.NumericUpDown();
             this.lblAxisWidth = new System.Windows.Forms.Label();
@@ -98,6 +100,7 @@ namespace DicomViewer_ChatGPT
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.toolbarPanel.Controls.Add(this.lblWindowLevel);
+            this.toolbarPanel.Controls.Add(this.btnDefaultWindowLevel);
             this.toolbarPanel.Controls.Add(this.btnWindowLevel);
             this.toolbarPanel.Controls.Add(this.numAxisWidth);
             this.toolbarPanel.Controls.Add(this.lblAxisWidth);
@@ -113,11 +116,24 @@ namespace DicomViewer_ChatGPT
             // 
             this.lblWindowLevel.AutoSize = true;
             this.lblWindowLevel.ForeColor = System.Drawing.Color.Gainsboro;
-            this.lblWindowLevel.Location = new System.Drawing.Point(540, 16);
+            this.lblWindowLevel.Location = new System.Drawing.Point(642, 16);
             this.lblWindowLevel.Name = "lblWindowLevel";
             this.lblWindowLevel.Size = new System.Drawing.Size(73, 13);
             this.lblWindowLevel.TabIndex = 5;
             this.lblWindowLevel.Text = "WL: -   WW: -";
+            // 
+            // btnDefaultWindowLevel
+            // 
+            this.btnDefaultWindowLevel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.btnDefaultWindowLevel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnDefaultWindowLevel.ForeColor = System.Drawing.Color.White;
+            this.btnDefaultWindowLevel.Location = new System.Drawing.Point(540, 8);
+            this.btnDefaultWindowLevel.Name = "btnDefaultWindowLevel";
+            this.btnDefaultWindowLevel.Size = new System.Drawing.Size(92, 30);
+            this.btnDefaultWindowLevel.TabIndex = 5;
+            this.btnDefaultWindowLevel.Text = "Default W/L";
+            this.btnDefaultWindowLevel.UseVisualStyleBackColor = false;
+            this.btnDefaultWindowLevel.Click += new System.EventHandler(this.btnDefaultWindowLevel_Click);
             // 
             // btnWindowLevel
             // 

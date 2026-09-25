@@ -13,6 +13,7 @@ namespace DicomViewer_ChatGPT
         private ProcessedDicomImage[] volume;
         private int width,height,depth,xIndex,yIndex,zIndex;
         private double spacingX=1,spacingY=1,spacingZ=1,windowCenter=40,windowWidth=400;
+        private double defaultWindowCenter=40,defaultWindowWidth=400;
         private Plane axialPlane,coronalPlane,sagittalPlane;
         private PictureBox dragView;
         private Plane dragPlane,dragCompanion;
@@ -59,6 +60,15 @@ namespace DicomViewer_ChatGPT
                 windowLevelDragging=false;
                 axial.Cursor=sagittal.Cursor=coronal.Cursor=value?Cursors.SizeAll:Cursors.Default;
             }
+        }
+
+        public void ResetWindowLevel()
+        {
+            if(volume==null)return;
+            windowCenter=defaultWindowCenter;
+            windowWidth=defaultWindowWidth;
+            PrepareDisplayVolumeOnly();
+            RefreshAfterRotation();
         }
 
         public double WindowCenter { get { return windowCenter; } }
@@ -108,6 +118,9 @@ namespace DicomViewer_ChatGPT
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
             else { windowCenter=127.5; windowWidth=255.0; }
+            // مقدار اولیه W/L همین Series را برای دکمه Default نگه می‌داریم.
+            defaultWindowCenter=windowCenter;
+            defaultWindowWidth=windowWidth;
             PrepareFastVolume();
             if(volume.All(i=>i.HasModality16))
             {
