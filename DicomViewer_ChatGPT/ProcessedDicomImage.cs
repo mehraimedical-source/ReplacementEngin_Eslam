@@ -6,8 +6,8 @@ namespace DicomViewer_ChatGPT
     {
         public int Width { get; set; }
         public int Height { get; set; }
+        public int[] StoredPixels { get; set; }
         public byte[] Gray8 { get; set; }
-        public short[] PixelData16 { get; set; }
         public double RescaleSlope { get; set; }
         public double RescaleIntercept { get; set; }
         public double WindowCenter { get; set; }
@@ -24,7 +24,7 @@ namespace DicomViewer_ChatGPT
         {
             if (Width <= 0 || Height <= 0) throw new ArgumentException("Invalid image dimensions.");
             int n = Width * Height;
-            if ((PixelData16 == null || PixelData16.Length != n) && (Gray8 == null || Gray8.Length != n))
+            if ((StoredPixels == null || StoredPixels.Length != n) && (Gray8 == null || Gray8.Length != n))
                 throw new ArgumentException("A Width*Height pixel buffer is required.");
         }
     }
