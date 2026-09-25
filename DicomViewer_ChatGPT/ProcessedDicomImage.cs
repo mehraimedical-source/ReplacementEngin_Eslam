@@ -10,6 +10,8 @@ namespace DicomViewer_ChatGPT
         public double[] ImagePositionPatient { get; set; }
         public double[] ImageOrientationPatient { get; set; }
         public double[] PixelSpacing { get; set; }
+        public double SliceThickness { get; set; }
+        public double SpacingBetweenSlices { get; set; }
         public string SopInstanceUid { get; set; }
         public string SeriesInstanceUid { get; set; }
 
