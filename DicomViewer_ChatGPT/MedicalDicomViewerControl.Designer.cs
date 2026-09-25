@@ -67,7 +67,7 @@ namespace DicomViewer_ChatGPT
             SetupViewport(this.panelAxial, this.axial, this.lblAxial, "AXIAL");
             SetupViewport(this.panelSagittal, this.sagittal, this.lblSagittal, "SAGITTAL");
             SetupViewport(this.panelCoronal, this.coronal, this.lblCoronal, "CORONAL");
-            SetupViewport(this.panel3D, this.volume3D, this.lbl3D, "3D MIP PREVIEW");
+            SetupViewport(this.panel3D, this.volume3D, this.lbl3D, "3D VOLUME - BONE");
 
             // Match each viewport title to the MPR plane color used by the cross-reference lines.
             // Keep the title bar black; color only the compact area occupied by each word.
