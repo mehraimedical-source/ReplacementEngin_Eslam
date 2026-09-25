@@ -11,6 +11,8 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Panel toolbarPanel;
         private System.Windows.Forms.Button btnResetAxes;
         private System.Windows.Forms.Button btnReset3D;
+        private System.Windows.Forms.Label lblAxisWidth;
+        private System.Windows.Forms.NumericUpDown numAxisWidth;
         private MedicalDicomViewerControl dicomViewer;
 
         protected override void Dispose(bool disposing) { if (disposing && (components != null)) components.Dispose(); base.Dispose(disposing); }
@@ -25,9 +27,12 @@ namespace DicomViewer_ChatGPT
             this.toolbarPanel = new System.Windows.Forms.Panel();
             this.btnReset3D = new System.Windows.Forms.Button();
             this.btnResetAxes = new System.Windows.Forms.Button();
+            this.lblAxisWidth = new System.Windows.Forms.Label();
+            this.numAxisWidth = new System.Windows.Forms.NumericUpDown();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.toolbarPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numAxisWidth)).BeginInit();
             this.SuspendLayout();
             // 
             // topPanel
@@ -88,6 +93,8 @@ namespace DicomViewer_ChatGPT
             // 
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.toolbarPanel.Controls.Add(this.numAxisWidth);
+            this.toolbarPanel.Controls.Add(this.lblAxisWidth);
             this.toolbarPanel.Controls.Add(this.btnReset3D);
             this.toolbarPanel.Controls.Add(this.btnResetAxes);
             this.toolbarPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -122,6 +129,29 @@ namespace DicomViewer_ChatGPT
             this.btnResetAxes.UseVisualStyleBackColor = false;
             this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
             // 
+            // lblAxisWidth
+            // 
+            this.lblAxisWidth.AutoSize = true;
+            this.lblAxisWidth.ForeColor = System.Drawing.Color.White;
+            this.lblAxisWidth.Location = new System.Drawing.Point(250, 16);
+            this.lblAxisWidth.Name = "lblAxisWidth";
+            this.lblAxisWidth.Size = new System.Drawing.Size(89, 13);
+            this.lblAxisWidth.TabIndex = 2;
+            this.lblAxisWidth.Text = "Axis thickness:";
+            // 
+            // numAxisWidth
+            // 
+            this.numAxisWidth.DecimalPlaces = 1;
+            this.numAxisWidth.Increment = new decimal(new int[] { 5, 0, 0, 65536 });
+            this.numAxisWidth.Location = new System.Drawing.Point(345, 13);
+            this.numAxisWidth.Maximum = new decimal(new int[] { 8, 0, 0, 0 });
+            this.numAxisWidth.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numAxisWidth.Name = "numAxisWidth";
+            this.numAxisWidth.Size = new System.Drawing.Size(58, 20);
+            this.numAxisWidth.TabIndex = 3;
+            this.numAxisWidth.Value = new decimal(new int[] { 2, 0, 0, 0 });
+            this.numAxisWidth.ValueChanged += new System.EventHandler(this.numAxisWidth_ValueChanged);
+            // 
             // dicomViewer
             // 
             this.dicomViewer.BackColor = System.Drawing.Color.Black;
@@ -147,6 +177,8 @@ namespace DicomViewer_ChatGPT
             this.topPanel.ResumeLayout(false);
             this.topPanel.PerformLayout();
             this.toolbarPanel.ResumeLayout(false);
+            this.toolbarPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numAxisWidth)).EndInit();
             this.ResumeLayout(false);
 
         }
