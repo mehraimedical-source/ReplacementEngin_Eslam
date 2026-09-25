@@ -90,10 +90,11 @@ namespace DicomViewer_ChatGPT
             if(fixedView!=coronal)SetImage(coronal,BuildCoronal());
 
             crosshairPatient=centerDragStartPatient;
+            Bounds hb=GetPatientBounds();double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
             Bitmap host;
-            if(fixedView==axial)host=BuildAxial();
-            else if(fixedView==sagittal)host=BuildSagittal();
-            else host=BuildCoronal();
+            if(fixedView==axial)host=BuildPlane(axialPlane,centerDragStartPatient,hb.MaxX-hb.MinX,hb.MaxY-hb.MinY,hp,coronalPlane,sagittalPlane,false);
+            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,centerDragStartPatient,hb.MaxY-hb.MinY,hb.MaxZ-hb.MinZ,hp,axialPlane,coronalPlane,false);
+            else host=BuildPlane(coronalPlane,centerDragStartPatient,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
             crosshairPatient=moved;
 
             // Move the baked overlay in the fixed source image to the actual cursor
@@ -322,6 +323,11 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildPlane(Plane plane,double[] center,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
         {
+            return BuildPlane(plane,center,physicalW,physicalH,pixel,lineA,lineB,true);
+        }
+
+        private Bitmap BuildPlane(Plane plane,double[] center,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB,bool drawLines)
+        {
             double renderPixel=pixel;
             int outW=PhysicalOutputSize(physicalW,renderPixel),outH=PhysicalOutputSize(physicalH,renderPixel);
             byte[] data=new byte[outW*outH];
@@ -340,10 +346,13 @@ namespace DicomViewer_ChatGPT
                     data[row+x]=SamplePatientFast(px,py,pz);
             });
             Bitmap bmp=GrayBitmap(data,outW,outH);
-            double cx=(outW-1)/2.0;
-            double cy=(outH-1)/2.0;
-            DrawPlaneLine(bmp,plane,lineA,lineA.Color,cx,cy);
-            DrawPlaneLine(bmp,plane,lineB,lineB.Color,cx,cy);
+            if(drawLines)
+            {
+                double cx=(outW-1)/2.0;
+                double cy=(outH-1)/2.0;
+                DrawPlaneLine(bmp,plane,lineA,lineA.Color,cx,cy);
+                DrawPlaneLine(bmp,plane,lineB,lineB.Color,cx,cy);
+            }
             return bmp;
         }
 
