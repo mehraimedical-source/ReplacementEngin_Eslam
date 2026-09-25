@@ -117,9 +117,13 @@ namespace DicomViewer_ChatGPT
             // crosshair point. During the drag, keep the anatomy in the source view
             // fixed and draw its crosshair at the mouse-relative position.
             double[] moved=(double[])crosshairPatient.Clone();
-            if(fixedView!=axial){SetImage(axial,BuildAxial());axialDisplayOrigin=(double[])moved.Clone();}
-            if(fixedView!=sagittal){SetImage(sagittal,BuildSagittal());sagittalDisplayOrigin=(double[])moved.Clone();}
-            if(fixedView!=coronal){SetImage(coronal,BuildCoronal());coronalDisplayOrigin=(double[])moved.Clone();}
+
+            // هنگام جابه‌جایی نقطه تقاطع، دو View دیگر باید Reslice جدید را نشان دهند
+            // اما نباید برای آوردن Crosshair به مرکز، Anatomy را Recenter کنند.
+            // بنابراین DisplayOrigin قبلی هر View را ثابت نگه می‌داریم.
+            if(fixedView!=axial)SetImage(axial,BuildAxialAtDisplayOrigin());
+            if(fixedView!=sagittal)SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+            if(fixedView!=coronal)SetImage(coronal,BuildCoronalAtDisplayOrigin());
 
             double[] hostOrigin=centerDragDisplayOrigin??DisplayOriginForView(fixedView);
             crosshairPatient=centerDragStartPatient;
