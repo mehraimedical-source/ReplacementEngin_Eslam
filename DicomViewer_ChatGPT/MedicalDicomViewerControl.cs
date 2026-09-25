@@ -254,6 +254,29 @@ namespace DicomViewer_ChatGPT
             lblAxial.Text=String.Format("AXIAL   {0}/{1}",zIndex+1,depth);
             lblSagittal.Text=String.Format("SAGITTAL   {0}/{1}",xIndex+1,width);
             lblCoronal.Text=String.Format("CORONAL   {0}/{1}",yIndex+1,height);
+
+            // این مقادیر روی خود View نوشته می‌شوند تا از روی Screenshot بتوانیم
+            // اختلاف Crosshair، DisplayOrigin و Plane هندسی را بدون حدس بررسی کنیم.
+            UpdateMprDebugLabel(lblAxialDebug,axial,axialPlane);
+            UpdateMprDebugLabel(lblSagittalDebug,sagittal,sagittalPlane);
+            UpdateMprDebugLabel(lblCoronalDebug,coronal,coronalPlane);
+        }
+
+        private void UpdateMprDebugLabel(Label label,PictureBox box,Plane plane)
+        {
+            double[] d=DisplayOriginForView(box);
+            double[] pc=PlaneCenterThroughCrosshair(plane,d);
+            double offset=Dot(Sub(crosshairPatient,d),plane.N);
+            label.Text=String.Format(
+                "C {0:0.0},{1:0.0},{2:0.0}  D {3:0.0},{4:0.0},{5:0.0}\r\nN {6:0.00},{7:0.00},{8:0.00}  off {9:0.0}  PC {10:0.0},{11:0.0},{12:0.0}",
+                crosshairPatient[0],crosshairPatient[1],crosshairPatient[2],
+                d[0],d[1],d[2],
+                plane.N[0],plane.N[1],plane.N[2],offset,
+                pc[0],pc[1],pc[2]);
+            // سمت راست View نگه داشته شود تا با عنوان رنگی تداخل نکند.
+            label.Left=Math.Max(4,box.Parent.ClientSize.Width-label.PreferredWidth-4);
+            label.Top=3;
+            label.BringToFront();
         }
 
         private void HookPlaneLines(PictureBox box)
