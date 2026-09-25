@@ -432,16 +432,19 @@ namespace DicomViewer_ChatGPT
                 windowWidth=Math.Max(1.0,windowLevelStartWidth+(e.X-windowLevelStartMouse.X)*scale);
                 windowCenter=windowLevelStartCenter-(e.Y-windowLevelStartMouse.Y)*scale;
 
-                // بازسازی کل Volume روی تک‌تک MouseMoveها UI Thread را قفل می‌کرد و
-                // نتیجه عملاً فقط هنگام MouseUp دیده می‌شد. Preview را حدود 30fps محدود می‌کنیم.
+                // عددهای WL/WW سبک هستند؛ قبل از Render سنگین فوراً به UI اعلام می‌شوند
+                // تا Label حتی اگر ساخت سه MPR کمی زمان ببرد، بدون تأخیر حرکت کند.
+                status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
+                RaiseWindowLevelChanged();
+                status.Update();
+                Application.DoEvents();
+
+                // فقط خود تصویر را حدود 30fps محدود می‌کنیم.
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
                     lastInteractiveRender=DateTime.UtcNow;
                     sampleWindowLevelOnDemand=true;
                     RefreshAfterRotation();
-                    status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
-                    RaiseWindowLevelChanged();
-                    Application.DoEvents();
                 }
             };
             box.MouseUp += delegate(object s,MouseEventArgs e)
