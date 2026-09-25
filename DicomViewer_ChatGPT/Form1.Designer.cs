@@ -8,6 +8,7 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.Label lblState;
+        private System.Windows.Forms.Panel toolbarPanel;
         private MedicalDicomViewerControl dicomViewer;
 
         protected override void Dispose(bool disposing) { if (disposing && (components != null)) components.Dispose(); base.Dispose(disposing); }
@@ -19,6 +20,7 @@ namespace DicomViewer_ChatGPT
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.txtFolder = new System.Windows.Forms.TextBox();
+            this.toolbarPanel = new System.Windows.Forms.Panel();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.SuspendLayout();
@@ -77,13 +79,23 @@ namespace DicomViewer_ChatGPT
             this.txtFolder.Size = new System.Drawing.Size(1268, 25);
             this.txtFolder.TabIndex = 3;
             // 
+            // toolbarPanel
+            // 
+            this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
+            this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.toolbarPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.toolbarPanel.Location = new System.Drawing.Point(0, 42);
+            this.toolbarPanel.Name = "toolbarPanel";
+            this.toolbarPanel.Size = new System.Drawing.Size(1280, 48);
+            this.toolbarPanel.TabIndex = 2;
+            // 
             // dicomViewer
             // 
             this.dicomViewer.BackColor = System.Drawing.Color.Black;
             this.dicomViewer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dicomViewer.Location = new System.Drawing.Point(0, 42);
+            this.dicomViewer.Location = new System.Drawing.Point(0, 90);
             this.dicomViewer.Name = "dicomViewer";
-            this.dicomViewer.Size = new System.Drawing.Size(1280, 778);
+            this.dicomViewer.Size = new System.Drawing.Size(1280, 730);
             this.dicomViewer.TabIndex = 0;
             // 
             // Form1
@@ -92,6 +104,7 @@ namespace DicomViewer_ChatGPT
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1280, 820);
             this.Controls.Add(this.dicomViewer);
+            this.Controls.Add(this.toolbarPanel);
             this.Controls.Add(this.topPanel);
             this.ForeColor = System.Drawing.Color.White;
             this.MinimumSize = new System.Drawing.Size(900, 650);
