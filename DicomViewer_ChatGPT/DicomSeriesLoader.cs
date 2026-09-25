@@ -1,5 +1,6 @@
 using Dicom;
 using Dicom.Imaging;
+using Dicom.Imaging.Render;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -74,6 +75,7 @@ namespace DicomViewer_ChatGPT
                         Width = bitmap.Width,
                         Height = bitmap.Height,
                         Gray8 = ToGray8(bitmap),
+                        Modality16 = TryGetModality16(ds, bitmap.Width, bitmap.Height),
                         ImagePositionPatient = GetValues(ds, DicomTag.ImagePositionPatient, 3),
                         ImageOrientationPatient = GetValues(ds, DicomTag.ImageOrientationPatient, 6),
                         PixelSpacing = GetValues(ds, DicomTag.PixelSpacing, 2),
@@ -85,6 +87,45 @@ namespace DicomViewer_ChatGPT
                 }
             }
             return result.ToArray();
+        }
+
+        private static short[] TryGetModality16(DicomDataset ds, int width, int height)
+        {
+            try
+            {
+                var pd=DicomPixelData.Create(ds);
+                if(pd.NumberOfFrames!=1)return null;
+                IPixelData px=PixelDataFactory.Create(pd,0);
+                int count=width*height;
+                double slope=ds.GetSingleValueOrDefault(DicomTag.RescaleSlope,1.0);
+                double intercept=ds.GetSingleValueOrDefault(DicomTag.RescaleIntercept,0.0);
+                short[] dst=new short[count];
+
+                if(px is GrayscalePixelDataU16)
+                {
+                    ushort[] src=((GrayscalePixelDataU16)px).Data;
+                    for(int i=0;i<count;i++)dst[i]=ClampShort(src[i]*slope+intercept);
+                    return dst;
+                }
+                if(px is GrayscalePixelDataS16)
+                {
+                    short[] src=((GrayscalePixelDataS16)px).Data;
+                    for(int i=0;i<count;i++)dst[i]=ClampShort(src[i]*slope+intercept);
+                    return dst;
+                }
+            }
+            catch
+            {
+                // Keep the proven RenderImage/Gray8 path as fallback for unsupported pixel formats/codecs.
+            }
+            return null;
+        }
+
+        private static short ClampShort(double value)
+        {
+            if(value<short.MinValue)return short.MinValue;
+            if(value>short.MaxValue)return short.MaxValue;
+            return (short)Math.Round(value);
         }
 
         private static double GetSlicePosition(DicomDataset ds, int fallback)
