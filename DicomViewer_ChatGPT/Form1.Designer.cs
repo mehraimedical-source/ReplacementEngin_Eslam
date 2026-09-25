@@ -13,6 +13,8 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Button btnReset3D;
         private System.Windows.Forms.Label lblAxisWidth;
         private System.Windows.Forms.NumericUpDown numAxisWidth;
+        private System.Windows.Forms.Button btnWindowLevel;
+        private System.Windows.Forms.Label lblWindowLevel;
         private MedicalDicomViewerControl dicomViewer;
 
         protected override void Dispose(bool disposing) { if (disposing && (components != null)) components.Dispose(); base.Dispose(disposing); }
@@ -29,6 +31,8 @@ namespace DicomViewer_ChatGPT
             this.btnResetAxes = new System.Windows.Forms.Button();
             this.lblAxisWidth = new System.Windows.Forms.Label();
             this.numAxisWidth = new System.Windows.Forms.NumericUpDown();
+            this.btnWindowLevel = new System.Windows.Forms.Button();
+            this.lblWindowLevel = new System.Windows.Forms.Label();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.toolbarPanel.SuspendLayout();
@@ -93,6 +97,8 @@ namespace DicomViewer_ChatGPT
             // 
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.toolbarPanel.Controls.Add(this.lblWindowLevel);
+            this.toolbarPanel.Controls.Add(this.btnWindowLevel);
             this.toolbarPanel.Controls.Add(this.numAxisWidth);
             this.toolbarPanel.Controls.Add(this.lblAxisWidth);
             this.toolbarPanel.Controls.Add(this.btnReset3D);
@@ -151,6 +157,29 @@ namespace DicomViewer_ChatGPT
             this.numAxisWidth.TabIndex = 3;
             this.numAxisWidth.Value = new decimal(new int[] { 2, 0, 0, 0 });
             this.numAxisWidth.ValueChanged += new System.EventHandler(this.numAxisWidth_ValueChanged);
+            // 
+            // btnWindowLevel
+            // 
+            this.btnWindowLevel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.btnWindowLevel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnWindowLevel.ForeColor = System.Drawing.Color.White;
+            this.btnWindowLevel.Location = new System.Drawing.Point(425, 8);
+            this.btnWindowLevel.Name = "btnWindowLevel";
+            this.btnWindowLevel.Size = new System.Drawing.Size(105, 30);
+            this.btnWindowLevel.TabIndex = 4;
+            this.btnWindowLevel.Text = "Window / Level";
+            this.btnWindowLevel.UseVisualStyleBackColor = false;
+            this.btnWindowLevel.Click += new System.EventHandler(this.btnWindowLevel_Click);
+            // 
+            // lblWindowLevel
+            // 
+            this.lblWindowLevel.AutoSize = true;
+            this.lblWindowLevel.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblWindowLevel.Location = new System.Drawing.Point(540, 16);
+            this.lblWindowLevel.Name = "lblWindowLevel";
+            this.lblWindowLevel.Size = new System.Drawing.Size(78, 13);
+            this.lblWindowLevel.TabIndex = 5;
+            this.lblWindowLevel.Text = "WL: -   WW: -";
             // 
             // dicomViewer
             // 
