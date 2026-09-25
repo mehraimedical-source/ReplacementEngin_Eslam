@@ -31,7 +31,7 @@ namespace DicomViewer_ChatGPT
             width=images[0].Width;height=images[0].Height;
             if(images.Any(i=>i.Width!=width||i.Height!=height))throw new ArgumentException("All slices must have the same dimensions.");
             volume=images;depth=images.Length;CalculateVoxelSpacing();
-            windowCenter=images[0].WindowCenter;windowWidth=images[0].WindowWidth;if(windowWidth<=1)windowWidth=400;
+            windowCenter=127.5;windowWidth=255.0;
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;RefreshViews();
         }
 
@@ -87,7 +87,6 @@ namespace DicomViewer_ChatGPT
         private double HuAt(int x,int y,int z)
         {
             var s=volume[z];int i=y*width+x;
-            if(s.StoredPixels!=null)return s.StoredPixels[i]*s.RescaleSlope+s.RescaleIntercept;
             return s.Gray8[i];
         }
         private byte Window(double value)
