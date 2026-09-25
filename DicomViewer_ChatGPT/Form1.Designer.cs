@@ -25,6 +25,7 @@ namespace DicomViewer_ChatGPT
             this.btnResetAxes = new System.Windows.Forms.Button();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
+            this.toolbarPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // topPanel
@@ -83,9 +84,9 @@ namespace DicomViewer_ChatGPT
             // 
             // toolbarPanel
             // 
-            this.toolbarPanel.Controls.Add(this.btnResetAxes);
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.toolbarPanel.Controls.Add(this.btnResetAxes);
             this.toolbarPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.toolbarPanel.Location = new System.Drawing.Point(0, 42);
             this.toolbarPanel.Name = "toolbarPanel";
@@ -129,6 +130,7 @@ namespace DicomViewer_ChatGPT
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.topPanel.ResumeLayout(false);
             this.topPanel.PerformLayout();
+            this.toolbarPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
