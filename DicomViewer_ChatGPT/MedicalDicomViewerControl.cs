@@ -9,9 +9,7 @@ namespace DicomViewer_ChatGPT
 {
     public partial class MedicalDicomViewerControl : UserControl
     {
-        private readonly TableLayoutPanel grid;
-        private readonly PictureBox axial, sagittal, coronal, volume3D;
-        private readonly Label status;
+   
         private ProcessedDicomImage[] volume;
         private int width, height, depth, xIndex, yIndex, zIndex;
         private double spacingX = 1.0, spacingY = 1.0, spacingZ = 1.0;
