@@ -40,7 +40,9 @@ namespace DicomViewer_ChatGPT
         {
             InitializeComponent();
             axial.MouseEnter += delegate { axial.Focus(); }; sagittal.MouseEnter += delegate { sagittal.Focus(); }; coronal.MouseEnter += delegate { coronal.Focus(); };
-            HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);Hook3D();
+            HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
+            HookSliceScroll(axial);HookSliceScroll(sagittal);HookSliceScroll(coronal);
+            Hook3D();
         }
 
         public float AxisLineWidth
@@ -335,6 +337,49 @@ namespace DicomViewer_ChatGPT
                     lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshAfterRotation();
                 }
             };
+        }
+
+        private void HookSliceScroll(PictureBox box)
+        {
+            box.MouseWheel += delegate(object s,MouseEventArgs e)
+            {
+                if(volume==null||crosshairPatient==null||!HasPatientGeometry()||e.Delta==0)return;
+
+                // اسکرول هر View فقط Plane همان View را در امتداد Normal خودش جابه‌جا می‌کند.
+                // بنابراین Anatomy همان View به Cut بعدی می‌رود و در دو View دیگر فقط
+                // خط Cross-reference متناظر با آن Plane جابه‌جا می‌شود.
+                Plane plane=PlaneForView(box);
+                int direction=e.Delta>0?1:-1;
+                double step=SliceStepForPlane(plane);
+                double[] candidate=Add(crosshairPatient,Scale(plane.N,direction*step));
+
+                // اجازه نمی‌دهیم Crosshair از محدوده واقعی Volume خارج شود.
+                SetIndicesFromPatient(candidate);
+                double[] clamped=GetCurrentPatientPoint();
+                double normalMove=Dot(Sub(clamped,crosshairPatient),plane.N);
+                if(Math.Abs(normalMove)<.000001)return;
+
+                crosshairPatient=Add(crosshairPatient,Scale(plane.N,normalMove));
+
+                // DisplayOrigin را همراه Plane میزبان در راستای Normal جابه‌جا می‌کنیم؛
+                // مؤلفه‌های U/V ثابت می‌مانند، پس تصویر Pan یا Recenter نمی‌شود.
+                double[] display=DisplayOriginForView(box);
+                SetDisplayOriginForView(box,Add(display,Scale(plane.N,normalMove)));
+
+                RefreshAfterRotation();
+                UpdateMprTitles();
+            };
+        }
+
+        private double SliceStepForPlane(Plane plane)
+        {
+            // فاصله فیزیکی یک Voxel در راستای Normal فعلی Plane.
+            // برای Planeهای استاندارد دقیقاً برابر spacing همان محور است و برای Oblique
+            // یک گام پایدار بر اساس هندسه Voxel می‌دهد.
+            double sx=Dot(plane.N,new[]{rowX,rowY,rowZ})*spacingX;
+            double sy=Dot(plane.N,new[]{colX,colY,colZ})*spacingY;
+            double sz=Dot(plane.N,new[]{normX,normY,normZ})*spacingZ;
+            return Math.Sqrt(sx*sx+sy*sy+sz*sz);
         }
 
         private bool IsNearCenter(PictureBox box,Point mouse)
