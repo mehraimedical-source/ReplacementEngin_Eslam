@@ -294,12 +294,26 @@ namespace DicomViewer_ChatGPT
         {
             // x/y/zIndex مختصات ماتریس Source هستند، نه نام آناتومیک View.
             // بنابراین در Seriesهای Coronal/Sagittal نباید همیشه depth را AXIAL فرض کنیم.
+            // Planeهای Viewer در مختصات Patient تعریف شده‌اند:
+            // Axial normal = S/I ، Coronal normal = A/P ، Sagittal normal = R/L.
+            // محور Source که بیشترین هم‌راستایی را با Normal همان View دارد، شمارنده آن View است.
             double ar=Math.Abs(Dot(plane.N,new[]{rowX,rowY,rowZ}));
             double ac=Math.Abs(Dot(plane.N,new[]{colX,colY,colZ}));
             double an=Math.Abs(Dot(plane.N,new[]{normX,normY,normZ}));
-            if(ar>=ac&&ar>=an)return new[]{xIndex,width};
-            if(ac>=ar&&ac>=an)return new[]{yIndex,height};
-            return new[]{zIndex,depth};
+
+            int index,count;
+            if(ar>=ac&&ar>=an){index=xIndex;count=width;}
+            else if(ac>=ar&&ac>=an){index=yIndex;count=height;}
+            else {index=zIndex;count=depth;}
+
+            // اگر جهت محور Source خلاف جهت مثبت Patient-Space آن Plane باشد،
+            // شماره را برعکس می‌کنیم تا 1..N با جهت واقعی حرکت Plane هماهنگ باشد.
+            double sign;
+            if(ar>=ac&&ar>=an)sign=Dot(plane.N,new[]{rowX,rowY,rowZ});
+            else if(ac>=ar&&ac>=an)sign=Dot(plane.N,new[]{colX,colY,colZ});
+            else sign=Dot(plane.N,new[]{normX,normY,normZ});
+            if(sign<0)index=count-1-index;
+            return new[]{Clamp(index,0,count-1),count};
         }
 
         private void HookPlaneLines(PictureBox box)
