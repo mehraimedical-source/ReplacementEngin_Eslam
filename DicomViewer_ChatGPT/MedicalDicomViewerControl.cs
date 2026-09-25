@@ -20,6 +20,7 @@ namespace DicomViewer_ChatGPT
         private double[] dragNormal0,dragCompanionNormal0,dragU0,dragV0,dragCompanionU0,dragCompanionV0;
         private DateTime lastInteractiveRender=DateTime.MinValue;
         private bool interactiveRendering;
+        private bool draggingCenter;
 
         public MedicalDicomViewerControl()
         {
@@ -76,6 +77,10 @@ namespace DicomViewer_ChatGPT
             box.MouseDown += delegate(object s,MouseEventArgs e)
             {
                 if(e.Button!=MouseButtons.Left||box.Image==null||!HasPatientGeometry())return;
+                if(IsNearCenter(box,e.Location))
+                {
+                    draggingCenter=true;dragView=box;box.Cursor=Cursors.SizeAll;return;
+                }
                 Plane hit=HitTestReferenceLine(box,e.Location);
                 if(hit!=null)
                 {
@@ -86,13 +91,29 @@ namespace DicomViewer_ChatGPT
                     box.Cursor=Cursors.Hand;
                 }
             };
+            box.MouseLeave += delegate { if(dragView==null)box.Cursor=Cursors.Default; };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
-                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;interactiveRendering=false;box.Cursor=Cursors.Default;RefreshViews();}
+                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;interactiveRendering=false;box.Cursor=Cursors.Default;RefreshViews();}
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
-                if(dragView!=box||dragPlane==null||box.Image==null)return;
+                if(box.Image==null)return;
+                if(dragView==null)
+                {
+                    if(IsNearCenter(box,e.Location))box.Cursor=Cursors.SizeAll;
+                    else if(HitTestReferenceLine(box,e.Location)!=null)box.Cursor=Cursors.Hand;
+                    else box.Cursor=Cursors.Default;
+                    return;
+                }
+                if(dragView!=box)return;
+                if(draggingCenter)
+                {
+                    MoveCenterFromMouse(box,e.Location);
+                    if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33){lastInteractiveRender=DateTime.UtcNow;RefreshViews();}
+                    return;
+                }
+                if(dragPlane==null)return;
                 Rectangle r=GetImageRectangle(box);if(!r.Contains(e.Location))return;
                 Plane view=PlaneForView(box);
                 double delta=NormalizeAngle(MouseAngleInImage(box,e.Location)-dragStartAngle);
@@ -107,6 +128,35 @@ namespace DicomViewer_ChatGPT
                     lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshViews();
                 }
             };
+        }
+
+        private bool IsNearCenter(PictureBox box,Point mouse)
+        {
+            if(box.Image==null)return false;Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return false;
+            double cx=r.Left+r.Width/2.0,cy=r.Top+r.Height/2.0,dx=mouse.X-cx,dy=mouse.Y-cy;
+            return dx*dx+dy*dy<=100;
+        }
+
+        private void MoveCenterFromMouse(PictureBox box,Point mouse)
+        {
+            Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return;
+            Plane view=PlaneForView(box);double[] old=GetCurrentPatientPoint();
+            double ix=(mouse.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
+            double iy=(mouse.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double du=(ix-(box.Image.Width-1)/2.0)*pixel,dv=(iy-(box.Image.Height-1)/2.0)*pixel;
+            double[] target=Add(old,Add(Scale(view.U,du),Scale(view.V,dv)));
+            SetIndicesFromPatient(target);
+        }
+
+        private void SetIndicesFromPatient(double[] q)
+        {
+            double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient,n=Normal(o);
+            double dx=q[0]-p[0],dy=q[1]-p[1],dz=q[2]-p[2];
+            xIndex=Clamp((int)Math.Round((dx*o[0]+dy*o[1]+dz*o[2])/spacingX),0,width-1);
+            yIndex=Clamp((int)Math.Round((dx*o[3]+dy*o[4]+dz*o[5])/spacingY),0,height-1);
+            double first=Dot(p,n),last=Dot(volume[depth-1].ImagePositionPatient,n),pos=Dot(q,n);
+            zIndex=Clamp(Math.Abs(last-first)>.000001?(int)Math.Round((pos-first)*(depth-1)/(last-first)):0,0,depth-1);
         }
 
         private Plane HitTestReferenceLine(PictureBox box,Point mouse)
@@ -180,7 +230,7 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildPlane(Plane plane,double[] center,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
         {
-            double renderPixel=interactiveRendering?pixel*3.0:pixel;
+            double renderPixel=pixel;
             int outW=PhysicalOutputSize(physicalW,renderPixel),outH=PhysicalOutputSize(physicalH,renderPixel);
             byte[] data=new byte[outW*outH];
             double halfW=(outW-1)*renderPixel/2.0,halfH=(outH-1)*renderPixel/2.0;
