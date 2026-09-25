@@ -9,6 +9,7 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.Label lblState;
         private System.Windows.Forms.Panel toolbarPanel;
+        private System.Windows.Forms.Button btnResetAxes;
         private MedicalDicomViewerControl dicomViewer;
 
         protected override void Dispose(bool disposing) { if (disposing && (components != null)) components.Dispose(); base.Dispose(disposing); }
@@ -21,6 +22,7 @@ namespace DicomViewer_ChatGPT
             this.btnBrowse = new System.Windows.Forms.Button();
             this.txtFolder = new System.Windows.Forms.TextBox();
             this.toolbarPanel = new System.Windows.Forms.Panel();
+            this.btnResetAxes = new System.Windows.Forms.Button();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.SuspendLayout();
@@ -81,6 +83,7 @@ namespace DicomViewer_ChatGPT
             // 
             // toolbarPanel
             // 
+            this.toolbarPanel.Controls.Add(this.btnResetAxes);
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.toolbarPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -88,6 +91,19 @@ namespace DicomViewer_ChatGPT
             this.toolbarPanel.Name = "toolbarPanel";
             this.toolbarPanel.Size = new System.Drawing.Size(1280, 48);
             this.toolbarPanel.TabIndex = 2;
+            // 
+            // btnResetAxes
+            // 
+            this.btnResetAxes.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.btnResetAxes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnResetAxes.ForeColor = System.Drawing.Color.White;
+            this.btnResetAxes.Location = new System.Drawing.Point(8, 8);
+            this.btnResetAxes.Name = "btnResetAxes";
+            this.btnResetAxes.Size = new System.Drawing.Size(110, 30);
+            this.btnResetAxes.TabIndex = 0;
+            this.btnResetAxes.Text = "Reset Axes";
+            this.btnResetAxes.UseVisualStyleBackColor = false;
+            this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
             // 
             // dicomViewer
             // 
