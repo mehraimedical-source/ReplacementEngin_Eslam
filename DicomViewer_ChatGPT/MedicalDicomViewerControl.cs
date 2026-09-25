@@ -87,7 +87,7 @@ namespace DicomViewer_ChatGPT
         private double HuAt(int x,int y,int z)
         {
             var s=volume[z];int i=y*width+x;
-            if(s.PixelData16!=null)return s.PixelData16[i]*s.RescaleSlope+s.RescaleIntercept;
+            if(s.StoredPixels!=null)return s.StoredPixels[i]*s.RescaleSlope+s.RescaleIntercept;
             return s.Gray8[i];
         }
         private byte Window(double value)
