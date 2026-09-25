@@ -306,7 +306,7 @@ namespace DicomViewer_ChatGPT
                 if(hit!=null)
                 {
                     dragView=box;dragPlane=hit;dragCompanion=OtherReferencePlane(box,hit);
-                    dragStartAngle=MouseAngleInImage(box,e.Location);
+                    dragStartAngle=MouseAngleAroundCrosshair(box,e.Location);
                     dragNormal0=(double[])dragPlane.N.Clone();dragU0=(double[])dragPlane.U.Clone();dragV0=(double[])dragPlane.V.Clone();
                     if(dragCompanion!=null){dragCompanionNormal0=(double[])dragCompanion.N.Clone();dragCompanionU0=(double[])dragCompanion.U.Clone();dragCompanionV0=(double[])dragCompanion.V.Clone();}
                     box.Cursor=Cursors.Hand;
@@ -356,7 +356,7 @@ namespace DicomViewer_ChatGPT
                 if(dragPlane==null)return;
                 Rectangle r=GetImageRectangle(box);if(!r.Contains(e.Location))return;
                 Plane view=PlaneForView(box);
-                double delta=NormalizeAngle(MouseAngleInImage(box,e.Location)-dragStartAngle);
+                double delta=NormalizeAngle(MouseAngleAroundCrosshair(box,e.Location)-dragStartAngle);
                 // RadiAnt-style coupled rotation: both reference planes rotate by
                 // the same delta around the current view normal, so they stay 90 degrees apart.
                 ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
@@ -573,12 +573,20 @@ namespace DicomViewer_ChatGPT
             return a[0]==selected?a[1]:a[0];
         }
 
-        private static double MouseAngleInImage(PictureBox box,Point p)
+        private double MouseAngleAroundCrosshair(PictureBox box,Point p)
         {
             Rectangle r=GetImageRectangle(box);
-            double x=(p.X-r.Left)/(double)Math.Max(1,r.Width)-.5;
-            double y=(p.Y-r.Top)/(double)Math.Max(1,r.Height)-.5;
-            return Math.Atan2(y,x);
+            Plane view=PlaneForView(box);
+            double[] display=DisplayOriginForView(box);
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+
+            // زاویه Rotation باید حول محل واقعی تقاطع Crosshair محاسبه شود، نه مرکز Bitmap.
+            // وقتی Crosshair جابه‌جا شده بود، محاسبه قبلی حول مرکز تصویر باعث زاویه اشتباه Plane می‌شد.
+            double ix=(p.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
+            double iy=(p.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
+            double cx=(box.Image.Width-1)/2.0+Dot(Sub(crosshairPatient,display),view.U)/pixel;
+            double cy=(box.Image.Height-1)/2.0+Dot(Sub(crosshairPatient,display),view.V)/pixel;
+            return Math.Atan2(iy-cy,ix-cx);
         }
 
         private static double NormalizeAngle(double a)
