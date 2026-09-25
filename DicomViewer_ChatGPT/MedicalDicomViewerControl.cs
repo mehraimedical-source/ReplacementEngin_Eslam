@@ -35,6 +35,7 @@ namespace DicomViewer_ChatGPT
         private bool dragging3D;
         private Point last3DMouse;
         private float axisLineWidth=2.0f;
+        private double[] probePatient;
 
         public MedicalDicomViewerControl()
         {
@@ -43,6 +44,7 @@ namespace DicomViewer_ChatGPT
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
             HookSliceScroll(axial);HookSliceScroll(sagittal);HookSliceScroll(coronal);
             HookVoxelProbe(axial);HookVoxelProbe(sagittal);HookVoxelProbe(coronal);
+            HookProbeMarker(axial);HookProbeMarker(sagittal);HookProbeMarker(coronal);
             Hook3D();
         }
 
@@ -56,6 +58,7 @@ namespace DicomViewer_ChatGPT
         {
             if(volume==null||depth==0)return;
             InitializePlanes();
+            probePatient=null;
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;
             crosshairPatient=GetCurrentPatientPoint();SetAllDisplayOrigins(crosshairPatient);
             dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
@@ -366,6 +369,39 @@ namespace DicomViewer_ChatGPT
             };
         }
 
+        private void HookProbeMarker(PictureBox box)
+        {
+            box.Paint += delegate(object s,PaintEventArgs e)
+            {
+                if(probePatient==null||box.Image==null||volume==null)return;
+                Plane plane=PlaneForView(box);
+                double[] display=DisplayOriginForView(box);
+                double[] planeCenter=PlaneCenterThroughCrosshair(plane,display);
+
+                // Marker فقط وقتی نمایش داده می‌شود که نقطه Probe روی Plane فعلی یا
+                // بسیار نزدیک آن باشد؛ در غیر این صورت Projection آن می‌تواند گمراه‌کننده باشد.
+                double distance=Dot(Sub(probePatient,planeCenter),plane.N);
+                double tolerance=Math.Max(spacingX,Math.Max(spacingY,spacingZ))*.6;
+                if(Math.Abs(distance)>tolerance)return;
+
+                double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+                double ix=(box.Image.Width-1)/2.0+Dot(Sub(probePatient,planeCenter),plane.U)/pixel;
+                double iy=(box.Image.Height-1)/2.0+Dot(Sub(probePatient,planeCenter),plane.V)/pixel;
+                Rectangle r=GetImageRectangle(box);
+                float sx=(float)(r.Left+ix*Math.Max(1,r.Width-1)/Math.Max(1,box.Image.Width-1));
+                float sy=(float)(r.Top+iy*Math.Max(1,r.Height-1)/Math.Max(1,box.Image.Height-1));
+                if(!r.Contains(Point.Round(new PointF(sx,sy))))return;
+
+                using(Pen p=new Pen(Color.Lime,2.0f))
+                {
+                    e.Graphics.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    e.Graphics.DrawEllipse(p,sx-6,sy-6,12,12);
+                    e.Graphics.DrawLine(p,sx-10,sy,sx+10,sy);
+                    e.Graphics.DrawLine(p,sx,sy-10,sx,sy+10);
+                }
+            };
+        }
+
         private void HookVoxelProbe(PictureBox box)
         {
             box.MouseDoubleClick += delegate(object s,MouseEventArgs e)
@@ -398,6 +434,9 @@ namespace DicomViewer_ChatGPT
                 int xi=Clamp((int)Math.Round(fx),0,width-1);
                 int yi=Clamp((int)Math.Round(fy),0,height-1);
                 int value=inside&&displayVolume!=null?displayVolume[zi*sliceStride+yi*width+xi]:0;
+
+                probePatient=(double[])q.Clone();
+                axial.Invalidate();sagittal.Invalidate();coronal.Invalidate();
 
                 status.Text=String.Format(
                     "PROBE {0}  Patient({1:0.0},{2:0.0},{3:0.0})  Voxel({4:0.00},{5:0.00},{6:0.00})  Slice {7}/{8}  {9}  Gray={10}",
