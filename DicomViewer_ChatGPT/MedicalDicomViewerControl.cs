@@ -21,6 +21,8 @@ namespace DicomViewer_ChatGPT
         private DateTime lastInteractiveRender=DateTime.MinValue;
         private bool interactiveRendering;
         private bool draggingCenter;
+        private Point centerDragStartMouse;
+        private double[] centerDragStartPatient;
 
         public MedicalDicomViewerControl()
         {
@@ -79,7 +81,8 @@ namespace DicomViewer_ChatGPT
                 if(e.Button!=MouseButtons.Left||box.Image==null||!HasPatientGeometry())return;
                 if(IsNearCenter(box,e.Location))
                 {
-                    draggingCenter=true;dragView=box;box.Cursor=Cursors.SizeAll;return;
+                    draggingCenter=true;dragView=box;centerDragStartMouse=e.Location;
+                    centerDragStartPatient=GetCurrentPatientPoint();box.Cursor=Cursors.SizeAll;return;
                 }
                 Plane hit=HitTestReferenceLine(box,e.Location);
                 if(hit!=null)
@@ -94,7 +97,7 @@ namespace DicomViewer_ChatGPT
             box.MouseLeave += delegate { if(dragView==null)box.Cursor=Cursors.Default; };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
-                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;interactiveRendering=false;box.Cursor=Cursors.Default;RefreshViews();}
+                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;centerDragStartPatient=null;interactiveRendering=false;box.Cursor=Cursors.Default;RefreshViews();}
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
@@ -139,13 +142,16 @@ namespace DicomViewer_ChatGPT
 
         private void MoveCenterFromMouse(PictureBox box,Point mouse)
         {
-            Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return;
-            Plane view=PlaneForView(box);double[] old=GetCurrentPatientPoint();
-            double ix=(mouse.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
-            double iy=(mouse.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double du=(ix-(box.Image.Width-1)/2.0)*pixel,dv=(iy-(box.Image.Height-1)/2.0)*pixel;
-            double[] target=Add(old,Add(Scale(view.U,du),Scale(view.V,dv)));
+            // IMPORTANT: calculate displacement from the fixed MouseDown state.
+            // Using the newly reconstructed image/center on every MouseMove creates
+            // positive feedback (the crosshair runs ahead and all views drift).
+            Rectangle r=GetImageRectangle(box);if(centerDragStartPatient==null||r.Width<2||r.Height<2)return;
+            Plane view=PlaneForView(box);
+            double physicalW=(box.Image.Width-1)*Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double physicalH=(box.Image.Height-1)*Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double du=(mouse.X-centerDragStartMouse.X)*physicalW/Math.Max(1,r.Width-1);
+            double dv=(mouse.Y-centerDragStartMouse.Y)*physicalH/Math.Max(1,r.Height-1);
+            double[] target=Add(centerDragStartPatient,Add(Scale(view.U,du),Scale(view.V,dv)));
             SetIndicesFromPatient(target);
         }
 
