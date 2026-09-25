@@ -3,3 +3,12 @@ C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Deb
 C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.Properties.Resources.resources
 C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.GenerateResource.cache
 C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.CoreCompileInputs.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Debug\Dicom.Native64.dll
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Debug\DicomViewer_ChatGPT.exe.config
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Debug\DicomViewer_ChatGPT.exe
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Debug\DicomViewer_ChatGPT.pdb
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Debug\Dicom.Core.dll
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Debug\Dicom.Core.pdb
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.CopyComplete
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.exe
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.pdb
