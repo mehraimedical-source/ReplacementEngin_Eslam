@@ -93,6 +93,7 @@ namespace DicomViewer_ChatGPT
             this.ClientSize = new System.Drawing.Size(1280, 820);
             this.Controls.Add(this.dicomViewer);
             this.Controls.Add(this.topPanel);
+            this.ForeColor = System.Drawing.Color.White;
             this.MinimumSize = new System.Drawing.Size(900, 650);
             this.Name = "Form1";
             this.Text = "DicomViewer_ChatGPT - MPR / 3D MVP";
