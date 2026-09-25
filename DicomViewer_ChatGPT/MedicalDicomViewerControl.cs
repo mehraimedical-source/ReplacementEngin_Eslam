@@ -35,6 +35,10 @@ namespace DicomViewer_ChatGPT
         private bool dragging3D;
         private Point last3DMouse;
         private float axisLineWidth=2.0f;
+        private bool windowLevelMode;
+        private bool windowLevelDragging;
+        private Point windowLevelStartMouse;
+        private double windowLevelStartCenter,windowLevelStartWidth;
 
         public MedicalDicomViewerControl()
         {
@@ -42,8 +46,23 @@ namespace DicomViewer_ChatGPT
             axial.MouseEnter += delegate { axial.Focus(); }; sagittal.MouseEnter += delegate { sagittal.Focus(); }; coronal.MouseEnter += delegate { coronal.Focus(); };
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
             HookSliceScroll(axial);HookSliceScroll(sagittal);HookSliceScroll(coronal);
+            HookWindowLevel(axial);HookWindowLevel(sagittal);HookWindowLevel(coronal);
             Hook3D();
         }
+
+        public bool WindowLevelMode
+        {
+            get { return windowLevelMode; }
+            set
+            {
+                windowLevelMode=value;
+                windowLevelDragging=false;
+                axial.Cursor=sagittal.Cursor=coronal.Cursor=value?Cursors.SizeAll:Cursors.Default;
+            }
+        }
+
+        public double WindowCenter { get { return windowCenter; } }
+        public double WindowWidth { get { return windowWidth; } }
 
         public float AxisLineWidth
         {
@@ -204,14 +223,7 @@ namespace DicomViewer_ChatGPT
 
         private void PrepareFastVolume()
         {
-            sliceStride=width*height;displayVolume=new byte[sliceStride*depth];
-            for(int z=0;z<depth;z++)
-            {
-                int dst=z*sliceStride;
-                if(volume[z].HasModality16)
-                    for(int i=0;i<sliceStride;i++)displayVolume[dst+i]=WindowToByte(volume[z].Modality16[i]);
-                else Buffer.BlockCopy(volume[z].Gray8,0,displayVolume,dst,sliceStride);
-            }
+            PrepareDisplayVolumeOnly();
             double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient;
             rowX=o[0];rowY=o[1];rowZ=o[2];colX=o[3];colY=o[4];colZ=o[5];
             normX=rowY*colZ-rowZ*colY;normY=rowZ*colX-rowX*colZ;normZ=rowX*colY-rowY*colX;
@@ -340,6 +352,53 @@ namespace DicomViewer_ChatGPT
                     lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshAfterRotation();
                 }
             };
+        }
+
+        private void HookWindowLevel(PictureBox box)
+        {
+            box.MouseDown += delegate(object s,MouseEventArgs e)
+            {
+                if(!windowLevelMode||e.Button!=MouseButtons.Left||volume==null)return;
+                windowLevelDragging=true;
+                windowLevelStartMouse=e.Location;
+                windowLevelStartCenter=windowCenter;
+                windowLevelStartWidth=windowWidth;
+                box.Capture=true;
+            };
+            box.MouseMove += delegate(object s,MouseEventArgs e)
+            {
+                if(!windowLevelMode||!windowLevelDragging||volume==null)return;
+
+                // حرکت افقی Width و حرکت عمودی Level را تغییر می‌دهد.
+                // مقدار پایه متناسب با Width فعلی است تا روی CTهای مختلف حساسیت طبیعی بماند.
+                double scale=Math.Max(1.0,windowLevelStartWidth/300.0);
+                windowWidth=Math.Max(1.0,windowLevelStartWidth+(e.X-windowLevelStartMouse.X)*scale);
+                windowCenter=windowLevelStartCenter-(e.Y-windowLevelStartMouse.Y)*scale;
+
+                PrepareDisplayVolumeOnly();
+                RefreshAfterRotation();
+                status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
+            };
+            box.MouseUp += delegate(object s,MouseEventArgs e)
+            {
+                if(!windowLevelDragging)return;
+                windowLevelDragging=false;
+                box.Capture=false;
+            };
+        }
+
+        private void PrepareDisplayVolumeOnly()
+        {
+            if(volume==null)return;
+            sliceStride=width*height;
+            if(displayVolume==null||displayVolume.Length!=sliceStride*depth)displayVolume=new byte[sliceStride*depth];
+            for(int z=0;z<depth;z++)
+            {
+                int dst=z*sliceStride;
+                if(volume[z].HasModality16)
+                    for(int i=0;i<sliceStride;i++)displayVolume[dst+i]=WindowToByte(volume[z].Modality16[i]);
+                else Buffer.BlockCopy(volume[z].Gray8,0,displayVolume,dst,sliceStride);
+            }
         }
 
         private void HookSliceScroll(PictureBox box)
