@@ -38,11 +38,6 @@ namespace DicomViewer_ChatGPT
         {
             InitializeComponent();
             axial.MouseEnter += delegate { axial.Focus(); }; sagittal.MouseEnter += delegate { sagittal.Focus(); }; coronal.MouseEnter += delegate { coronal.Focus(); };
-            // Scroll واقعی MPR: نقطه مشترک سه نما در راستای Normal همان صفحه حرکت می‌کند.
-            // بنابراین با Scroll هر نما، دو نمای بازسازی‌شده دیگر نیز همزمان به‌روز می‌شوند.
-            axial.MouseWheel += delegate(object s,MouseEventArgs e){ScrollMpr(axial,e.Delta);};
-            sagittal.MouseWheel += delegate(object s,MouseEventArgs e){ScrollMpr(sagittal,e.Delta);};
-            coronal.MouseWheel += delegate(object s,MouseEventArgs e){ScrollMpr(coronal,e.Delta);};
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);Hook3D();
         }
 
@@ -216,88 +211,6 @@ namespace DicomViewer_ChatGPT
             axialPlane=new Plane(new[]{1.0,0.0,0.0},new[]{0.0,1.0,0.0},Color.Yellow);
             coronalPlane=new Plane(new[]{1.0,0.0,0.0},new[]{0.0,0.0,-1.0},Color.Magenta);
             sagittalPlane=new Plane(new[]{0.0,1.0,0.0},new[]{0.0,0.0,-1.0},Color.Cyan);
-        }
-
-        private void ScrollMpr(PictureBox box,int wheelDelta)
-        {
-            if(wheelDelta==0||volume==null||crosshairPatient==null||!HasPatientGeometry())return;
-
-            Plane plane=PlaneForView(box);
-            if(plane==null)return;
-
-            // فاصله هر Step را از اندازه فیزیکی Voxelها می‌گیریم. در صفحات Oblique نیز
-            // حرکت دقیقاً عمود بر صفحه فعلی انجام می‌شود، نه روی X/Y/Z ثابت Volume.
-            double step=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double direction=Math.Sign(wheelDelta);
-            double[] candidate=Add(crosshairPatient,Scale(plane.N,step*direction));
-
-            // اجازه نمی‌دهیم مرکز MPR از حجم واقعی بیمار خارج شود.
-            if(!IsPatientPointInsideVolume(candidate))return;
-
-            crosshairPatient=candidate;
-            SetIndicesFromPatient(crosshairPatient);
-
-            // در نمایی که Wheel روی آن انجام شده، Slice جدید بازسازی می‌شود و مرکز تصویر
-            // روی همان نقطه جدید قرار می‌گیرد. در دو نمای دیگر Anatomy ثابت می‌ماند و فقط
-            // محور مربوط به Plane اسکرول‌شده جابه‌جا می‌شود؛ مشابه رفتار RadiAnt.
-            SetDisplayOriginForView(box,crosshairPatient);
-            RefreshAfterMprScroll(box);
-        }
-
-        private void RefreshAfterMprScroll(PictureBox scrolledView)
-        {
-            // نمای Scroll شده باید Slice جدید را نشان دهد.
-            // دو نمای دیگر از همان DisplayOrigin قبلی دوباره ساخته می‌شوند؛ بنابراین
-            // Anatomy آن‌ها ثابت می‌ماند و فقط محل Cross-reference line تغییر می‌کند.
-            if(scrolledView==axial)SetImage(axial,BuildAxialAtDisplayOrigin());
-            else if(scrolledView==sagittal)SetImage(sagittal,BuildSagittalAtDisplayOrigin());
-            else SetImage(coronal,BuildCoronalAtDisplayOrigin());
-
-            if(scrolledView!=axial)SetImage(axial,BuildFixedViewAfterScroll(axial));
-            if(scrolledView!=sagittal)SetImage(sagittal,BuildFixedViewAfterScroll(sagittal));
-            if(scrolledView!=coronal)SetImage(coronal,BuildFixedViewAfterScroll(coronal));
-
-            UpdateMprTitles();
-            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
-        }
-
-        private Bitmap BuildFixedViewAfterScroll(PictureBox box)
-        {
-            Plane view=PlaneForView(box);
-            double[] origin=DisplayOriginForView(box);
-            Bounds b=GetPatientBounds();
-            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double w,h;
-            Plane a,bp;
-
-            if(box==axial){w=b.MaxX-b.MinX;h=b.MaxY-b.MinY;a=coronalPlane;bp=sagittalPlane;}
-            else if(box==sagittal){w=b.MaxY-b.MinY;h=b.MaxZ-b.MinZ;a=axialPlane;bp=coronalPlane;}
-            else {w=b.MaxX-b.MinX;h=b.MaxZ-b.MinZ;a=axialPlane;bp=sagittalPlane;}
-
-            // تصویر پایه فقط از DisplayOrigin ثابت ساخته می‌شود و به crosshairPatient وابسته نیست.
-            Bitmap bmp=BuildPlane(view,origin,w,h,p,a,bp,false);
-            DrawReferenceLinesAtPatientPoint(bmp,view,origin,a,bp);
-            return bmp;
-        }
-
-        private void DrawReferenceLinesAtPatientPoint(Bitmap bmp,Plane view,double[] displayOrigin,Plane lineA,Plane lineB)
-        {
-            // محل تقاطع صفحات روی تصویر از اختلاف Patient Point و DisplayOrigin محاسبه می‌شود.
-            // در نتیجه هنگام Scroll، خود تصویر ثابت است و فقط خطوط روی آن حرکت می‌کنند.
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double cx=(bmp.Width-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),view.U)/pixel;
-            double cy=(bmp.Height-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),view.V)/pixel;
-            DrawPlaneLine(bmp,view,lineA,lineA.Color,cx,cy);
-            DrawPlaneLine(bmp,view,lineB,lineB.Color,cx,cy);
-        }
-
-        private bool IsPatientPointInsideVolume(double[] q)
-        {
-            double dx=q[0]-originX,dy=q[1]-originY,dz=q[2]-originZ;
-            double fx=(dx*rowX+dy*rowY+dz*rowZ)*invSpacingX;
-            double fy=(dx*colX+dy*colY+dz*colZ)*invSpacingY;
-            double fz=((q[0]*normX+q[1]*normY+q[2]*normZ)-firstProjection)*voxelZScale;
-            return fx>=0&&fy>=0&&fz>=0&&fx<=width-1&&fy<=height-1&&fz<=depth-1;
         }
 
         private void UpdateMprTitles()
