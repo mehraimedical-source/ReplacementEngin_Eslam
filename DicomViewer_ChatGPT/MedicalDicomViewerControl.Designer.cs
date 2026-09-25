@@ -78,13 +78,13 @@ namespace DicomViewer_ChatGPT
             this.status.Text = "Ready";
             this.status.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 
-            this.btnResetAxes.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            this.btnResetAxes.BackColor = System.Drawing.Color.FromArgb(45, 45, 45);
+            this.btnResetAxes.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            this.btnResetAxes.BackColor = System.Drawing.Color.FromArgb(55, 55, 55);
             this.btnResetAxes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnResetAxes.ForeColor = System.Drawing.Color.White;
-            this.btnResetAxes.Location = new System.Drawing.Point(886, 3);
+            this.btnResetAxes.Location = new System.Drawing.Point(884, 677);
             this.btnResetAxes.Name = "btnResetAxes";
-            this.btnResetAxes.Size = new System.Drawing.Size(108, 24);
+            this.btnResetAxes.Size = new System.Drawing.Size(110, 21);
             this.btnResetAxes.TabIndex = 5;
             this.btnResetAxes.Text = "Reset Axes";
             this.btnResetAxes.UseVisualStyleBackColor = false;
@@ -93,8 +93,9 @@ namespace DicomViewer_ChatGPT
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.Controls.Add(this.grid);
-            this.Controls.Add(this.btnResetAxes);
             this.Controls.Add(this.status);
+            this.Controls.Add(this.btnResetAxes);
+            this.btnResetAxes.BringToFront();
             this.Name = "MedicalDicomViewerControl";
             this.Size = new System.Drawing.Size(1000, 700);
 
