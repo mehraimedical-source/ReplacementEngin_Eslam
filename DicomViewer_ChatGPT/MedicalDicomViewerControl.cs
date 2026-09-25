@@ -127,11 +127,12 @@ namespace DicomViewer_ChatGPT
             // View میزبان هنگام Drag نباید حرکت کند؛ فقط خطوط Crosshair روی آن جابه‌جا می‌شوند.
             double[] hostOrigin=centerDragDisplayOrigin??DisplayOriginForView(fixedView);
             double[] hostPlaneCenter=centerDragPlaneCenter??PlaneCenterThroughCrosshair(PlaneForView(fixedView),hostOrigin);
-            Bounds hb=GetPatientBounds();double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            Plane hostView=PlaneForView(fixedView);PlaneExtent he=GetPlaneVolumeExtent(hostView);
             Bitmap host;
-            if(fixedView==axial)host=BuildPlane(axialPlane,hostPlaneCenter,hb.MaxX-hb.MinX,hb.MaxY-hb.MinY,hp,coronalPlane,sagittalPlane,false);
-            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,hostPlaneCenter,hb.MaxY-hb.MinY,hb.MaxZ-hb.MinZ,hp,axialPlane,coronalPlane,false);
-            else host=BuildPlane(coronalPlane,hostPlaneCenter,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
+            if(fixedView==axial)host=BuildPlane(axialPlane,hostPlaneCenter,he.Width,he.Height,hp,coronalPlane,sagittalPlane,false);
+            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,hostPlaneCenter,he.Width,he.Height,hp,axialPlane,coronalPlane,false);
+            else host=BuildPlane(coronalPlane,hostPlaneCenter,he.Width,he.Height,hp,axialPlane,sagittalPlane,false);
 
             DrawMovedCrosshairOnHost(host,fixedView,moved,hostOrigin);
             SetImage(fixedView,host);
@@ -165,21 +166,24 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildAxialAtDisplayOrigin()
         {
-            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
             double[] display=axialDisplayOrigin??GetMprCenter();
-            return BuildPlaneWithCrosshair(axialPlane,PlaneCenterThroughCrosshair(axialPlane,display),b.MaxX-b.MinX,b.MaxY-b.MinY,p,coronalPlane,sagittalPlane,display);
+            PlaneExtent e=GetPlaneVolumeExtent(axialPlane);
+            return BuildPlaneWithCrosshair(axialPlane,PlaneCenterThroughCrosshair(axialPlane,display),e.Width,e.Height,p,coronalPlane,sagittalPlane,display);
         }
         private Bitmap BuildCoronalAtDisplayOrigin()
         {
-            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
             double[] display=coronalDisplayOrigin??GetMprCenter();
-            return BuildPlaneWithCrosshair(coronalPlane,PlaneCenterThroughCrosshair(coronalPlane,display),b.MaxX-b.MinX,b.MaxZ-b.MinZ,p,axialPlane,sagittalPlane,display);
+            PlaneExtent e=GetPlaneVolumeExtent(coronalPlane);
+            return BuildPlaneWithCrosshair(coronalPlane,PlaneCenterThroughCrosshair(coronalPlane,display),e.Width,e.Height,p,axialPlane,sagittalPlane,display);
         }
         private Bitmap BuildSagittalAtDisplayOrigin()
         {
-            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
             double[] display=sagittalDisplayOrigin??GetMprCenter();
-            return BuildPlaneWithCrosshair(sagittalPlane,PlaneCenterThroughCrosshair(sagittalPlane,display),b.MaxY-b.MinY,b.MaxZ-b.MinZ,p,axialPlane,coronalPlane,display);
+            PlaneExtent e=GetPlaneVolumeExtent(sagittalPlane);
+            return BuildPlaneWithCrosshair(sagittalPlane,PlaneCenterThroughCrosshair(sagittalPlane,display),e.Width,e.Height,p,axialPlane,coronalPlane,display);
         }
 
         private double[] PlaneCenterThroughCrosshair(Plane plane,double[] displayOrigin)
@@ -596,22 +600,22 @@ namespace DicomViewer_ChatGPT
         private Bitmap BuildAxial()
         {
             if(!HasPatientGeometry()) return BuildSourceAxial();
-            Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(axialPlane,GetMprCenter(),b.MaxX-b.MinX,b.MaxY-b.MinY,pixel,coronalPlane,sagittalPlane);
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));PlaneExtent e=GetPlaneVolumeExtent(axialPlane);
+            return BuildPlane(axialPlane,GetMprCenter(),e.Width,e.Height,pixel,coronalPlane,sagittalPlane);
         }
 
         private Bitmap BuildCoronal()
         {
             if(!HasPatientGeometry()) return BuildLegacyCoronal();
-            Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(coronalPlane,GetMprCenter(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,pixel,axialPlane,sagittalPlane);
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));PlaneExtent e=GetPlaneVolumeExtent(coronalPlane);
+            return BuildPlane(coronalPlane,GetMprCenter(),e.Width,e.Height,pixel,axialPlane,sagittalPlane);
         }
 
         private Bitmap BuildSagittal()
         {
             if(!HasPatientGeometry()) return BuildLegacySagittal();
-            Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(sagittalPlane,GetMprCenter(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,pixel,axialPlane,coronalPlane);
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));PlaneExtent e=GetPlaneVolumeExtent(sagittalPlane);
+            return BuildPlane(sagittalPlane,GetMprCenter(),e.Width,e.Height,pixel,axialPlane,coronalPlane);
         }
 
         private Bitmap BuildSourceAxial()
@@ -751,6 +755,33 @@ namespace DicomViewer_ChatGPT
                 return (byte)Math.Round(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
             }
         }
+
+        private PlaneExtent GetPlaneVolumeExtent(Plane plane)
+        {
+            // FOV هر MPR را از Projection هشت گوشه واقعی Volume روی محورهای U/V همان
+            // Plane می‌گیریم. بنابراین با Oblique شدن صفحه، طول تصویر هم متناسب با حجم
+            // تغییر می‌کند و دیگر از Bounds ثابت X/Y/Z استفاده نمی‌کنیم.
+            double minU=Double.MaxValue,maxU=Double.MinValue,minV=Double.MaxValue,maxV=Double.MinValue;
+            double[] o=volume[0].ImageOrientationPatient;
+            int[] xs={0,width-1},ys={0,height-1},zs={0,depth-1};
+            foreach(int z in zs)
+            {
+                double[] sp=volume[z].ImagePositionPatient??volume[0].ImagePositionPatient;
+                foreach(int y in ys)foreach(int x in xs)
+                {
+                    double[] q={
+                        sp[0]+o[0]*x*spacingX+o[3]*y*spacingY,
+                        sp[1]+o[1]*x*spacingX+o[4]*y*spacingY,
+                        sp[2]+o[2]*x*spacingX+o[5]*y*spacingY};
+                    double u=Dot(q,plane.U),v=Dot(q,plane.V);
+                    minU=Math.Min(minU,u);maxU=Math.Max(maxU,u);
+                    minV=Math.Min(minV,v);maxV=Math.Max(maxV,v);
+                }
+            }
+            return new PlaneExtent{Width=Math.Max(spacingX,maxU-minU),Height=Math.Max(Math.Min(spacingY,spacingZ),maxV-minV)};
+        }
+
+        private sealed class PlaneExtent{public double Width,Height;}
 
         private Bounds GetPatientBounds()
         {
