@@ -12,8 +12,9 @@ namespace DicomViewer_ChatGPT
         private ProcessedDicomImage[] volume;
         private int width,height,depth,xIndex,yIndex,zIndex;
         private double spacingX=1,spacingY=1,spacingZ=1,windowCenter=40,windowWidth=400;
-        private double axialAngle=0,coronalAngle=0,sagittalAngle=0;
-        private PictureBox rotatingView;
+        private Plane axialPlane,coronalPlane,sagittalPlane;
+        private PictureBox dragView;
+        private Plane dragPlane;
 
         public MedicalDicomViewerControl()
         {
@@ -22,7 +23,7 @@ namespace DicomViewer_ChatGPT
             axial.MouseWheel += delegate(object s,MouseEventArgs e){if(depth>0){zIndex=Clamp(zIndex+Math.Sign(e.Delta),0,depth-1);RefreshViews();}};
             sagittal.MouseWheel += delegate(object s,MouseEventArgs e){if(width>0){xIndex=Clamp(xIndex+Math.Sign(e.Delta),0,width-1);RefreshViews();}};
             coronal.MouseWheel += delegate(object s,MouseEventArgs e){if(height>0){yIndex=Clamp(yIndex+Math.Sign(e.Delta),0,height-1);RefreshViews();}};
-            HookRotation(axial);HookRotation(sagittal);HookRotation(coronal);
+            HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
         }
 
         public void Active(string[] dicomFiles){Active(DicomSeriesLoader.Load(dicomFiles));}
@@ -41,7 +42,7 @@ namespace DicomViewer_ChatGPT
                 foreach(var s in volume)foreach(short v in s.Modality16){if(v<min)min=v;if(v>max)max=v;}
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
-            xIndex=width/2;yIndex=height/2;zIndex=depth/2;axialAngle=coronalAngle=sagittalAngle=0;RefreshViews();
+            xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();RefreshViews();
         }
 
         private void RefreshViews()
@@ -50,22 +51,77 @@ namespace DicomViewer_ChatGPT
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
-        private void HookRotation(PictureBox box)
+        private sealed class Plane
         {
-            box.MouseDown += delegate(object s,MouseEventArgs e){if(e.Button==MouseButtons.Right)rotatingView=box;};
-            box.MouseUp += delegate(object s,MouseEventArgs e){if(rotatingView==box)rotatingView=null;};
+            public double[] U,V,N;
+            public Color Color;
+            public Plane(double[] u,double[] v,Color color){U=u;V=v;N=Normalize(Cross(u,v));Color=color;}
+        }
+
+        private void InitializePlanes()
+        {
+            // Canonical patient planes: axial(Z), coronal(Y), sagittal(X).
+            axialPlane=new Plane(new[]{1.0,0.0,0.0},new[]{0.0,1.0,0.0},Color.Yellow);
+            coronalPlane=new Plane(new[]{1.0,0.0,0.0},new[]{0.0,0.0,-1.0},Color.Magenta);
+            sagittalPlane=new Plane(new[]{0.0,1.0,0.0},new[]{0.0,0.0,-1.0},Color.Cyan);
+        }
+
+        private void HookPlaneLines(PictureBox box)
+        {
+            box.MouseDown += delegate(object s,MouseEventArgs e)
+            {
+                if(e.Button!=MouseButtons.Left||box.Image==null||!HasPatientGeometry())return;
+                Plane hit=HitTestReferenceLine(box,e.Location);
+                if(hit!=null){dragView=box;dragPlane=hit;box.Cursor=Cursors.Hand;}
+            };
+            box.MouseUp += delegate(object s,MouseEventArgs e)
+            {
+                if(dragView==box){dragView=null;dragPlane=null;box.Cursor=Cursors.Default;}
+            };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
-                if(rotatingView!=box||box.Image==null)return;
-                Rectangle r=GetImageRectangle(box);
-                if(!r.Contains(e.Location))return;
-                double cx=r.Left+r.Width/2.0,cy=r.Top+r.Height/2.0;
-                double angle=Math.Atan2(e.Y-cy,e.X-cx);
-                if(box==axial)axialAngle=angle;
-                else if(box==coronal)coronalAngle=angle;
-                else if(box==sagittal)sagittalAngle=angle;
+                if(dragView!=box||dragPlane==null||box.Image==null)return;
+                Rectangle r=GetImageRectangle(box);if(!r.Contains(e.Location))return;
+                double ix=(e.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
+                double iy=(e.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
+                double dx=ix-(box.Image.Width-1)/2.0,dy=iy-(box.Image.Height-1)/2.0;
+                if(dx*dx+dy*dy<25)return;
+                Plane view=PlaneForView(box);
+                // Mouse direction is the desired intersection line in the displayed plane.
+                double[] line=Normalize(Add(Scale(view.U,dx),Scale(view.V,dy)));
+                double[] newNormal=Normalize(Cross(line,view.N));
+                if(Dot(newNormal,dragPlane.N)<0)newNormal=Scale(newNormal,-1);
+                SetPlaneNormalKeepingIntersection(dragPlane,newNormal,line);
                 RefreshViews();
             };
+        }
+
+        private Plane HitTestReferenceLine(PictureBox box,Point mouse)
+        {
+            Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return null;
+            Plane view=PlaneForView(box);if(view==null)return null;
+            double ix=(mouse.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
+            double iy=(mouse.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
+            double cx=(box.Image.Width-1)/2.0,cy=(box.Image.Height-1)/2.0;
+            Plane[] candidates=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
+            Plane best=null;double bestD=8.0;
+            foreach(Plane p in candidates)
+            {
+                double[] dir=IntersectionDirection(view,p);
+                double lx=Dot(dir,view.U),ly=Dot(dir,view.V);
+                double d=Math.Abs((ix-cx)*ly-(iy-cy)*lx)/Math.Max(.0001,Math.Sqrt(lx*lx+ly*ly));
+                if(d<bestD){bestD=d;best=p;}
+            }
+            return best;
+        }
+
+        private Plane PlaneForView(PictureBox box){return box==axial?axialPlane:box==coronal?coronalPlane:sagittalPlane;}
+
+        private static void SetPlaneNormalKeepingIntersection(Plane plane,double[] normal,double[] intersection)
+        {
+            plane.N=Normalize(normal);
+            plane.U=Normalize(intersection);
+            plane.V=Normalize(Cross(plane.N,plane.U));
         }
 
         private static Rectangle GetImageRectangle(PictureBox box)
@@ -76,9 +132,8 @@ namespace DicomViewer_ChatGPT
             int w=(int)Math.Round(box.ClientSize.Height*ir);return new Rectangle((box.ClientSize.Width-w)/2,0,w,box.ClientSize.Height);
         }
 
-        private Bitmap BuildPlane(double[] center,double[] axisU,double[] axisV,double physicalW,double physicalH,double pixel,double angle,Color vertical,Color horizontal)
+        private Bitmap BuildPlane(Plane plane,double[] center,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
         {
-            RotateAxes(ref axisU,ref axisV,angle);
             int outW=PhysicalOutputSize(physicalW,pixel),outH=PhysicalOutputSize(physicalH,pixel);
             byte[] data=new byte[outW*outH];
             double halfW=(outW-1)*pixel/2.0,halfH=(outH-1)*pixel/2.0;
@@ -88,56 +143,50 @@ namespace DicomViewer_ChatGPT
                 for(int x=0;x<outW;x++)
                 {
                     double u=x*pixel-halfW;
-                    data[y*outW+x]=SamplePatient(center[0]+axisU[0]*u+axisV[0]*v,center[1]+axisU[1]*u+axisV[1]*v,center[2]+axisU[2]*u+axisV[2]*v);
+                    data[y*outW+x]=SamplePatient(center[0]+plane.U[0]*u+plane.V[0]*v,center[1]+plane.U[1]*u+plane.V[1]*v,center[2]+plane.U[2]*u+plane.V[2]*v);
                 }
             }
             Bitmap bmp=GrayBitmap(data,outW,outH);
-            DrawRotatedCrosshair(bmp,outW/2,outH/2,angle,vertical,horizontal);
+            DrawPlaneLine(bmp,plane,lineA,lineA.Color);
+            DrawPlaneLine(bmp,plane,lineB,lineB.Color);
             return bmp;
         }
 
-        private static void RotateAxes(ref double[] u,ref double[] v,double a)
+        private static void DrawPlaneLine(Bitmap bmp,Plane view,Plane other,Color color)
         {
-            double ca=Math.Cos(a),sa=Math.Sin(a);
-            double[] nu={u[0]*ca+v[0]*sa,u[1]*ca+v[1]*sa,u[2]*ca+v[2]*sa};
-            double[] nv={-u[0]*sa+v[0]*ca,-u[1]*sa+v[1]*ca,-u[2]*sa+v[2]*ca};
-            u=nu;v=nv;
+            double[] d=IntersectionDirection(view,other);
+            double x=Dot(d,view.U),y=Dot(d,view.V),len=Math.Sqrt(bmp.Width*bmp.Width+bmp.Height*bmp.Height);
+            double cx=(bmp.Width-1)/2.0,cy=(bmp.Height-1)/2.0;
+            using(Graphics g=Graphics.FromImage(bmp))using(Pen p=new Pen(color,1))
+                g.DrawLine(p,(float)(cx-x*len),(float)(cy-y*len),(float)(cx+x*len),(float)(cy+y*len));
         }
 
-        private static void DrawRotatedCrosshair(Bitmap b,int cx,int cy,double angle,Color vertical,Color horizontal)
+        private static double[] IntersectionDirection(Plane a,Plane b)
         {
-            double ca=Math.Cos(angle),sa=Math.Sin(angle),len=Math.Sqrt(b.Width*b.Width+b.Height*b.Height);
-            using(Graphics g=Graphics.FromImage(b))
-            using(Pen pv=new Pen(vertical,1))
-            using(Pen ph=new Pen(horizontal,1))
-            {
-                g.DrawLine(ph,(float)(cx-len*ca),(float)(cy-len*sa),(float)(cx+len*ca),(float)(cy+len*sa));
-                g.DrawLine(pv,(float)(cx+len*sa),(float)(cy-len*ca),(float)(cx-len*sa),(float)(cy+len*ca));
-            }
+            double[] d=Cross(a.N,b.N);
+            double l=Math.Sqrt(Dot(d,d));
+            return l<.000001?new[]{1.0,0.0,0.0}:Scale(d,1.0/l);
         }
 
         private Bitmap BuildAxial()
         {
             if(!HasPatientGeometry()) return BuildSourceAxial();
-            Bounds b=GetPatientBounds();double[] cp=GetCurrentPatientPoint();
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(cp,new[]{1.0,0.0,0.0},new[]{0.0,1.0,0.0},b.MaxX-b.MinX,b.MaxY-b.MinY,pixel,axialAngle,Color.Cyan,Color.Magenta);
+            Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlane(axialPlane,GetCurrentPatientPoint(),b.MaxX-b.MinX,b.MaxY-b.MinY,pixel,coronalPlane,sagittalPlane);
         }
 
         private Bitmap BuildCoronal()
         {
             if(!HasPatientGeometry()) return BuildLegacyCoronal();
-            Bounds b=GetPatientBounds();double[] cp=GetCurrentPatientPoint();
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(cp,new[]{1.0,0.0,0.0},new[]{0.0,0.0,-1.0},b.MaxX-b.MinX,b.MaxZ-b.MinZ,pixel,coronalAngle,Color.Cyan,Color.Yellow);
+            Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlane(coronalPlane,GetCurrentPatientPoint(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,pixel,axialPlane,sagittalPlane);
         }
 
         private Bitmap BuildSagittal()
         {
             if(!HasPatientGeometry()) return BuildLegacySagittal();
-            Bounds b=GetPatientBounds();double[] cp=GetCurrentPatientPoint();
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(cp,new[]{0.0,1.0,0.0},new[]{0.0,0.0,-1.0},b.MaxY-b.MinY,b.MaxZ-b.MinZ,pixel,sagittalAngle,Color.Magenta,Color.Yellow);
+            Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlane(sagittalPlane,GetCurrentPatientPoint(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,pixel,axialPlane,coronalPlane);
         }
 
         private Bitmap BuildSourceAxial()
@@ -251,6 +300,10 @@ namespace DicomViewer_ChatGPT
         private sealed class Bounds{public double MinX,MaxX,MinY,MaxY,MinZ,MaxZ;}
         private static double[] Normal(double[] o){return new[]{o[1]*o[5]-o[2]*o[4],o[2]*o[3]-o[0]*o[5],o[0]*o[4]-o[1]*o[3]};}
         private static double Dot(double[] a,double[] b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];}
+        private static double[] Cross(double[] a,double[] b){return new[]{a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]};}
+        private static double[] Normalize(double[] a){double l=Math.Sqrt(Dot(a,a));return l<.000001?new[]{0.0,0.0,0.0}:new[]{a[0]/l,a[1]/l,a[2]/l};}
+        private static double[] Scale(double[] a,double s){return new[]{a[0]*s,a[1]*s,a[2]*s};}
+        private static double[] Add(double[] a,double[] b){return new[]{a[0]+b[0],a[1]+b[1],a[2]+b[2]};}
         private static double Lerp(double a,double b,double t){return a+(b-a)*t;}
         private byte WindowToByte(double value)
         {
