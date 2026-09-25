@@ -180,7 +180,12 @@ namespace DicomViewer_ChatGPT
             Plane view=PlaneForView(box);if(view==null)return null;
             double ix=(mouse.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
             double iy=(mouse.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
-            double cx=(box.Image.Width-1)/2.0,cy=(box.Image.Height-1)/2.0;
+            // Reference lines pass through the movable patient-space crosshair,
+            // not permanently through the bitmap center.
+            double[] center=GetCurrentPatientPoint(),ch=crosshairPatient??center;
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double cx=(box.Image.Width-1)/2.0+Dot(Sub(ch,center),view.U)/pixel;
+            double cy=(box.Image.Height-1)/2.0+Dot(Sub(ch,center),view.V)/pixel;
             Plane[] candidates=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
             Plane best=null;double bestD=8.0;
             foreach(Plane p in candidates)
