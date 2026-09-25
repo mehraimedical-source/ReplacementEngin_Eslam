@@ -38,9 +38,11 @@ namespace DicomViewer_ChatGPT
         {
             InitializeComponent();
             axial.MouseEnter += delegate { axial.Focus(); }; sagittal.MouseEnter += delegate { sagittal.Focus(); }; coronal.MouseEnter += delegate { coronal.Focus(); };
-            axial.MouseWheel += delegate(object s,MouseEventArgs e){if(depth>0){zIndex=Clamp(zIndex+Math.Sign(e.Delta),0,depth-1);RefreshViews();}};
-            sagittal.MouseWheel += delegate(object s,MouseEventArgs e){if(width>0){xIndex=Clamp(xIndex+Math.Sign(e.Delta),0,width-1);RefreshViews();}};
-            coronal.MouseWheel += delegate(object s,MouseEventArgs e){if(height>0){yIndex=Clamp(yIndex+Math.Sign(e.Delta),0,height-1);RefreshViews();}};
+            // Scroll واقعی MPR: نقطه مشترک سه نما در راستای Normal همان صفحه حرکت می‌کند.
+            // بنابراین با Scroll هر نما، دو نمای بازسازی‌شده دیگر نیز همزمان به‌روز می‌شوند.
+            axial.MouseWheel += delegate(object s,MouseEventArgs e){ScrollMpr(axial,e.Delta);};
+            sagittal.MouseWheel += delegate(object s,MouseEventArgs e){ScrollMpr(sagittal,e.Delta);};
+            coronal.MouseWheel += delegate(object s,MouseEventArgs e){ScrollMpr(coronal,e.Delta);};
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);Hook3D();
         }
 
@@ -102,6 +104,7 @@ namespace DicomViewer_ChatGPT
         {
             SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());
             if(crosshairPatient!=null)SetAllDisplayOrigins(crosshairPatient);
+            UpdateMprTitles();
             if(volume3D.Image==null)Render3D(false);
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
@@ -130,6 +133,7 @@ namespace DicomViewer_ChatGPT
             DrawMovedCrosshairOnHost(host,fixedView,moved,hostOrigin);
             SetImage(fixedView,host);
             SetDisplayOriginForView(fixedView,hostOrigin);
+            UpdateMprTitles();
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
@@ -212,6 +216,49 @@ namespace DicomViewer_ChatGPT
             axialPlane=new Plane(new[]{1.0,0.0,0.0},new[]{0.0,1.0,0.0},Color.Yellow);
             coronalPlane=new Plane(new[]{1.0,0.0,0.0},new[]{0.0,0.0,-1.0},Color.Magenta);
             sagittalPlane=new Plane(new[]{0.0,1.0,0.0},new[]{0.0,0.0,-1.0},Color.Cyan);
+        }
+
+        private void ScrollMpr(PictureBox box,int wheelDelta)
+        {
+            if(wheelDelta==0||volume==null||crosshairPatient==null||!HasPatientGeometry())return;
+
+            Plane plane=PlaneForView(box);
+            if(plane==null)return;
+
+            // فاصله هر Step را از اندازه فیزیکی Voxelها می‌گیریم. در صفحات Oblique نیز
+            // حرکت دقیقاً عمود بر صفحه فعلی انجام می‌شود، نه روی X/Y/Z ثابت Volume.
+            double step=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double direction=Math.Sign(wheelDelta);
+            double[] candidate=Add(crosshairPatient,Scale(plane.N,step*direction));
+
+            // اجازه نمی‌دهیم مرکز MPR از حجم واقعی بیمار خارج شود.
+            if(!IsPatientPointInsideVolume(candidate))return;
+
+            crosshairPatient=candidate;
+            SetIndicesFromPatient(crosshairPatient);
+            SetAllDisplayOrigins(crosshairPatient);
+            RefreshViews();
+        }
+
+        private bool IsPatientPointInsideVolume(double[] q)
+        {
+            double dx=q[0]-originX,dy=q[1]-originY,dz=q[2]-originZ;
+            double fx=(dx*rowX+dy*rowY+dz*rowZ)*invSpacingX;
+            double fy=(dx*colX+dy*colY+dz*colZ)*invSpacingY;
+            double fz=((q[0]*normX+q[1]*normY+q[2]*normZ)-firstProjection)*voxelZScale;
+            return fx>=0&&fy>=0&&fz>=0&&fx<=width-1&&fy<=height-1&&fz<=depth-1;
+        }
+
+        private void UpdateMprTitles()
+        {
+            if(volume==null||crosshairPatient==null)return;
+
+            // شماره‌ها یک‌مبنا نمایش داده می‌شوند تا برای کاربر به شکل 1/N باشند.
+            // در حالت Oblique این اعداد نزدیک‌ترین Voxel متناظر با نقطه مشترک سه صفحه هستند.
+            SetIndicesFromPatient(crosshairPatient);
+            lblAxial.Text=String.Format("AXIAL   {0}/{1}",zIndex+1,depth);
+            lblSagittal.Text=String.Format("SAGITTAL   {0}/{1}",xIndex+1,width);
+            lblCoronal.Text=String.Format("CORONAL   {0}/{1}",yIndex+1,height);
         }
 
         private void HookPlaneLines(PictureBox box)
