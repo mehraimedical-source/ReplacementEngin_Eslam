@@ -35,6 +35,18 @@ namespace DicomViewer_ChatGPT
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
         }
 
+        private void btnResetAxes_Click(object sender,EventArgs e)
+        {
+            if(volume==null||depth==0)return;
+            InitializePlanes();
+            xIndex=width/2;yIndex=height/2;zIndex=depth/2;
+            crosshairPatient=GetCurrentPatientPoint();
+            dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
+            centerDragStartPatient=null;interactiveRendering=false;
+            axial.Cursor=sagittal.Cursor=coronal.Cursor=Cursors.Default;
+            RefreshViews();
+        }
+
         public void Active(string[] dicomFiles){Active(DicomSeriesLoader.Load(dicomFiles));}
         public void ActiveFolder(string folder){var f=DicomSeriesLoader.FindLargestImageSeries(folder);if(f.Length==0)throw new InvalidOperationException("No image DICOM series was found.");Active(f);}
         public void Active(ProcessedDicomImage[] images)
