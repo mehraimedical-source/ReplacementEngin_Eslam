@@ -114,30 +114,15 @@ namespace DicomViewer_ChatGPT
 
         private void RefreshViewsExcept(PictureBox fixedView)
         {
-            // Shared-origin MPR: the two linked views reslice through the new 3-D
-            // crosshair point. During the drag, keep the anatomy in the source view
-            // fixed and draw its crosshair at the mouse-relative position.
+            // نقطه تقاطع فقط محل عبور Planeهای MPR را تعیین می‌کند.
+            // DisplayOrigin فقط محل نمایش Anatomy در پنجره است و با Move کردن Crosshair تغییر نمی‌کند.
             double[] moved=(double[])crosshairPatient.Clone();
 
-            // دو View مرتبط باید واقعاً از موقعیت جدید Crosshair عبور کنند، اما تصویرشان
-            // نباید در راستای داخل صفحه Recenter شود. فقط مؤلفه عمود بر هر Plane را تغییر می‌دهیم.
-            // به این ترتیب Slice عوض می‌شود ولی موقعیت Anatomy روی صفحه ثابت می‌ماند.
-            if(fixedView!=axial)
-            {
-                axialDisplayOrigin=MoveOriginOnlyAlongNormal(axialDisplayOrigin,axialPlane,moved);
-                SetImage(axial,BuildAxialAtDisplayOrigin());
-            }
-            if(fixedView!=sagittal)
-            {
-                sagittalDisplayOrigin=MoveOriginOnlyAlongNormal(sagittalDisplayOrigin,sagittalPlane,moved);
-                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
-            }
-            if(fixedView!=coronal)
-            {
-                coronalDisplayOrigin=MoveOriginOnlyAlongNormal(coronalDisplayOrigin,coronalPlane,moved);
-                SetImage(coronal,BuildCoronalAtDisplayOrigin());
-            }
+            if(fixedView!=axial)SetImage(axial,BuildAxialAtDisplayOrigin());
+            if(fixedView!=sagittal)SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+            if(fixedView!=coronal)SetImage(coronal,BuildCoronalAtDisplayOrigin());
 
+            // View میزبان هنگام Drag نباید حرکت کند؛ فقط خطوط Crosshair روی آن جابه‌جا می‌شوند.
             double[] hostOrigin=centerDragDisplayOrigin??DisplayOriginForView(fixedView);
             crosshairPatient=centerDragStartPatient;
             Bounds hb=GetPatientBounds();double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
@@ -147,23 +132,11 @@ namespace DicomViewer_ChatGPT
             else host=BuildPlane(coronalPlane,hostOrigin,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
             crosshairPatient=moved;
 
-            // Move the baked overlay in the fixed source image to the actual cursor
-            // position without changing the underlying source slice.
             DrawMovedCrosshairOnHost(host,fixedView,moved,hostOrigin);
             SetImage(fixedView,host);
             SetDisplayOriginForView(fixedView,hostOrigin);
             UpdateMprTitles();
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
-        }
-
-        private double[] MoveOriginOnlyAlongNormal(double[] displayOrigin,Plane plane,double[] patientPoint)
-        {
-            if(displayOrigin==null)return (double[])patientPoint.Clone();
-
-            // فقط فاصله Plane تا نقطه جدید را در راستای Normal جبران می‌کنیم.
-            // مؤلفه‌های U/V دست‌نخورده می‌مانند، پس تصویر روی صفحه به چپ/راست یا بالا/پایین نمی‌پرد.
-            double distance=Dot(Sub(patientPoint,displayOrigin),plane.N);
-            return Add(displayOrigin,Scale(plane.N,distance));
         }
 
         private void DrawMovedCrosshairOnHost(Bitmap bmp,PictureBox box,double[] moved,double[] origin)
@@ -189,22 +162,35 @@ namespace DicomViewer_ChatGPT
         private Bitmap BuildAxialAtDisplayOrigin()
         {
             Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlaneWithCrosshair(axialPlane,axialDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxY-b.MinY,p,coronalPlane,sagittalPlane);
+            double[] display=axialDisplayOrigin??GetMprCenter();
+            return BuildPlaneWithCrosshair(axialPlane,PlaneCenterThroughCrosshair(axialPlane,display),b.MaxX-b.MinX,b.MaxY-b.MinY,p,coronalPlane,sagittalPlane,display);
         }
         private Bitmap BuildCoronalAtDisplayOrigin()
         {
             Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlaneWithCrosshair(coronalPlane,coronalDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,p,axialPlane,sagittalPlane);
+            double[] display=coronalDisplayOrigin??GetMprCenter();
+            return BuildPlaneWithCrosshair(coronalPlane,PlaneCenterThroughCrosshair(coronalPlane,display),b.MaxX-b.MinX,b.MaxZ-b.MinZ,p,axialPlane,sagittalPlane,display);
         }
         private Bitmap BuildSagittalAtDisplayOrigin()
         {
             Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlaneWithCrosshair(sagittalPlane,sagittalDisplayOrigin??GetMprCenter(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,p,axialPlane,coronalPlane);
+            double[] display=sagittalDisplayOrigin??GetMprCenter();
+            return BuildPlaneWithCrosshair(sagittalPlane,PlaneCenterThroughCrosshair(sagittalPlane,display),b.MaxY-b.MinY,b.MaxZ-b.MinZ,p,axialPlane,coronalPlane,display);
         }
 
-        private Bitmap BuildPlaneWithCrosshair(Plane plane,double[] displayOrigin,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
+        private double[] PlaneCenterThroughCrosshair(Plane plane,double[] displayOrigin)
         {
-            Bitmap bmp=BuildPlane(plane,displayOrigin,physicalW,physicalH,pixel,lineA,lineB,false);
+            // مرکز هندسی Reslice را فقط در راستای Normal جابه‌جا می‌کنیم تا Plane از
+            // crosshairPatient عبور کند. مؤلفه‌های U/V مربوط به نمایش ثابت می‌مانند.
+            // در نتیجه Move و Rotate مستقل از ترتیب اجرا، یک هندسه یکسان تولید می‌کنند.
+            if(crosshairPatient==null)return displayOrigin;
+            double distance=Dot(Sub(crosshairPatient,displayOrigin),plane.N);
+            return Add(displayOrigin,Scale(plane.N,distance));
+        }
+
+        private Bitmap BuildPlaneWithCrosshair(Plane plane,double[] planeCenter,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB,double[] displayOrigin)
+        {
+            Bitmap bmp=BuildPlane(plane,planeCenter,physicalW,physicalH,pixel,lineA,lineB,false);
             double cx=(bmp.Width-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),plane.U)/pixel;
             double cy=(bmp.Height-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),plane.V)/pixel;
             DrawPlaneLine(bmp,plane,lineA,lineA.Color,cx,cy);
