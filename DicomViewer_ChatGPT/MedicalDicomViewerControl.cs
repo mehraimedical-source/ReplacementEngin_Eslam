@@ -33,12 +33,19 @@ namespace DicomViewer_ChatGPT
         private readonly CpuVolumeRenderer volumeRenderer = new CpuVolumeRenderer();
         private bool dragging3D;
         private Point last3DMouse;
+        private float axisLineWidth=2.0f;
 
         public MedicalDicomViewerControl()
         {
             InitializeComponent();
             axial.MouseEnter += delegate { axial.Focus(); }; sagittal.MouseEnter += delegate { sagittal.Focus(); }; coronal.MouseEnter += delegate { coronal.Focus(); };
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);Hook3D();
+        }
+
+        public float AxisLineWidth
+        {
+            get { return axisLineWidth; }
+            set { axisLineWidth=Math.Max(1.0f,value); if(volume!=null)RefreshAfterRotation(); }
         }
 
         public void ResetAxes()
@@ -144,27 +151,16 @@ namespace DicomViewer_ChatGPT
             DrawPlaneLine(bmp,view,lines[1],lines[1].Color,cx,cy);
         }
 
-        private void KeepCrosshairScreenPositionAfterRotation(Plane plane,double[] oldU,double[] oldV)
+        private void AnchorRotatedPlaneToCrosshair(Plane plane)
         {
             if(crosshairPatient==null||plane==null)return;
 
-            double[] oldOrigin;
-            if(plane==axialPlane)oldOrigin=axialDisplayOrigin;
-            else if(plane==sagittalPlane)oldOrigin=sagittalDisplayOrigin;
-            else if(plane==coronalPlane)oldOrigin=coronalDisplayOrigin;
-            else return;
-            if(oldOrigin==null)return;
-
-            // هنگام چرخاندن یک Plane، نقطه تقاطع باید در همان Pixel قبلی باقی بماند.
-            // اگر DisplayOrigin ثابت بماند ولی U/V بچرخند، تصویر در View مربوطه به چپ/راست
-            // یا بالا/پایین می‌پرد. فاصله Crosshair تا مرکز نمایش را در Basis قبلی حفظ می‌کنیم.
-            double du=Dot(Sub(crosshairPatient,oldOrigin),oldU);
-            double dv=Dot(Sub(crosshairPatient,oldOrigin),oldV);
-            double[] newOrigin=Sub(crosshairPatient,Add(Scale(plane.U,du),Scale(plane.V,dv)));
-
-            if(plane==axialPlane)axialDisplayOrigin=newOrigin;
-            else if(plane==sagittalPlane)sagittalDisplayOrigin=newOrigin;
-            else coronalDisplayOrigin=newOrigin;
+            // در مدل MPR هر صفحه حول نقطه تقاطع مشترک می‌چرخد.
+            // بنابراین مرکز Reslice صفحه چرخیده باید همان Patient Point باشد.
+            double[] origin=(double[])crosshairPatient.Clone();
+            if(plane==axialPlane)axialDisplayOrigin=origin;
+            else if(plane==sagittalPlane)sagittalDisplayOrigin=origin;
+            else if(plane==coronalPlane)coronalDisplayOrigin=origin;
         }
 
         private void RefreshAfterRotation()
@@ -318,12 +314,12 @@ namespace DicomViewer_ChatGPT
                 // RadiAnt-style coupled rotation: both reference planes rotate by
                 // the same delta around the current view normal, so they stay 90 degrees apart.
                 ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
-                KeepCrosshairScreenPositionAfterRotation(dragPlane,dragU0,dragV0);
-                if(dragCompanion!=null)
-                {
-                    ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
-                    KeepCrosshairScreenPositionAfterRotation(dragCompanion,dragCompanionU0,dragCompanionV0);
-                }
+                if(dragCompanion!=null)ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
+
+                // Planeهایی که در View میزبان می‌چرخند باید از همان نقطه سه‌بعدی مشترک عبور کنند.
+                // مرکز نمایش آن Viewها را روی crosshairPatient نگه می‌داریم تا Reslice به اطراف تصویر نپرد.
+                AnchorRotatedPlaneToCrosshair(dragPlane);
+                if(dragCompanion!=null)AnchorRotatedPlaneToCrosshair(dragCompanion);
                 // Keep full resolution; throttle only redundant mouse events.
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
@@ -495,11 +491,11 @@ namespace DicomViewer_ChatGPT
             return bmp;
         }
 
-        private static void DrawPlaneLine(Bitmap bmp,Plane view,Plane other,Color color,double cx,double cy)
+        private void DrawPlaneLine(Bitmap bmp,Plane view,Plane other,Color color,double cx,double cy)
         {
             double[] d=IntersectionDirection(view,other);
             double x=Dot(d,view.U),y=Dot(d,view.V),len=Math.Sqrt(bmp.Width*bmp.Width+bmp.Height*bmp.Height);
-            using(Graphics g=Graphics.FromImage(bmp))using(Pen p=new Pen(color,1))
+            using(Graphics g=Graphics.FromImage(bmp))using(Pen p=new Pen(color,axisLineWidth))
             {
                 // برای جلوگیری از شکستگی ظاهری خطوط مورب، فقط Overlay را AntiAlias می‌کنیم.
                 g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
