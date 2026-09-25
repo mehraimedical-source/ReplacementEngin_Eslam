@@ -90,11 +90,11 @@ namespace DicomViewer_ChatGPT
                         Vec p = Add(start, Scale(forward, t));
                         double fx = p.X / sx, fy = p.Y / sy, fz = p.Z / sz;
                         double value = Sample(fx, fy, fz);
-                        if (useHu) { if (value < 180) continue; }
+                        if (useHu) { if (value < 280) continue; }
                         else if (value < 105) continue;
 
                         double a, r, g, b;
-                        if(useHu) BoneTransferHu(value, out a, out r, out g, out b);
+                        if(useHu) BoneTransferHu(value, step, out a, out r, out g, out b);
                         else BoneTransfer((byte)value, out a, out r, out g, out b);
                         a *= (1.0 - alpha);
                         ar += r * a; ag += g * a; ab += b * a; alpha += a;
@@ -132,15 +132,18 @@ namespace DicomViewer_ChatGPT
             return Lerp(Lerp(a,b,ty),Lerp(c,d,ty),tz);
         }
 
-        private static void BoneTransferHu(double hu,out double a,out double r,out double g,out double b)
+        private static void BoneTransferHu(double hu,double stepMm,out double a,out double r,out double g,out double b)
         {
-            // CT bone preset in modality space. Soft tissue is fully transparent;
-            // cortical/dense bone becomes progressively more opaque.
-            if(hu<180){a=r=g=b=0;return;}
-            double t=Math.Max(0,Math.Min(1,(hu-180.0)/1200.0));
-            a=.025+.24*t*t;
-            double warm=Math.Max(0,Math.Min(1,(hu-180.0)/500.0));
-            r=.88+.12*warm;g=.72+.24*warm;b=.55+.38*warm;
+            // CT bone preset in true modality (HU) space. Keep soft tissue and most
+            // partial-volume voxels transparent, then ramp cancellous -> cortical bone.
+            if(hu<280){a=r=g=b=0;return;}
+            double t=Math.Max(0,Math.Min(1,(hu-280.0)/1200.0));
+            double baseAlpha=.012+.34*t*t;
+            // Normalize opacity to physical ray length. This keeps the final appearance
+            // stable when interactive rendering changes its sampling step.
+            a=1.0-Math.Pow(1.0-baseAlpha,Math.Max(.15,stepMm));
+            double warm=Math.Max(0,Math.Min(1,(hu-280.0)/700.0));
+            r=.90+.10*warm;g=.78+.19*warm;b=.62+.32*warm;
         }
 
         private static void BoneTransfer(byte v, out double a, out double r, out double g, out double b)
