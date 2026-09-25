@@ -174,7 +174,21 @@ namespace DicomViewer_ChatGPT
             box.MouseLeave += delegate { if(dragView==null)box.Cursor=Cursors.Default; };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
-                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;centerDragStartPatient=null;interactiveRendering=false;box.Cursor=Cursors.Default;RefreshViews();}
+                if(dragView==box)
+                {
+                    bool wasCenterDrag=draggingCenter;
+                    PictureBox releasedView=dragView;
+                    if(wasCenterDrag&&crosshairPatient!=null)
+                    {
+                        // Finish at exactly the same visual state as the last MouseMove:
+                        // source anatomy stays fixed, linked views pass through the new point.
+                        SetIndicesFromPatient(crosshairPatient);
+                        RefreshViewsExcept(releasedView);
+                    }
+                    dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
+                    centerDragStartPatient=null;interactiveRendering=false;box.Cursor=Cursors.Default;
+                    if(!wasCenterDrag)RefreshViews();
+                }
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
