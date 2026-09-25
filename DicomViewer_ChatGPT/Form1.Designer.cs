@@ -27,12 +27,12 @@ namespace DicomViewer_ChatGPT
             this.btnBrowse = new System.Windows.Forms.Button();
             this.txtFolder = new System.Windows.Forms.TextBox();
             this.toolbarPanel = new System.Windows.Forms.Panel();
+            this.lblWindowLevel = new System.Windows.Forms.Label();
+            this.btnWindowLevel = new System.Windows.Forms.Button();
+            this.numAxisWidth = new System.Windows.Forms.NumericUpDown();
+            this.lblAxisWidth = new System.Windows.Forms.Label();
             this.btnReset3D = new System.Windows.Forms.Button();
             this.btnResetAxes = new System.Windows.Forms.Button();
-            this.lblAxisWidth = new System.Windows.Forms.Label();
-            this.numAxisWidth = new System.Windows.Forms.NumericUpDown();
-            this.btnWindowLevel = new System.Windows.Forms.Button();
-            this.lblWindowLevel = new System.Windows.Forms.Label();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.toolbarPanel.SuspendLayout();
@@ -109,6 +109,68 @@ namespace DicomViewer_ChatGPT
             this.toolbarPanel.Size = new System.Drawing.Size(1280, 48);
             this.toolbarPanel.TabIndex = 2;
             // 
+            // lblWindowLevel
+            // 
+            this.lblWindowLevel.AutoSize = true;
+            this.lblWindowLevel.ForeColor = System.Drawing.Color.Gainsboro;
+            this.lblWindowLevel.Location = new System.Drawing.Point(540, 16);
+            this.lblWindowLevel.Name = "lblWindowLevel";
+            this.lblWindowLevel.Size = new System.Drawing.Size(73, 13);
+            this.lblWindowLevel.TabIndex = 5;
+            this.lblWindowLevel.Text = "WL: -   WW: -";
+            // 
+            // btnWindowLevel
+            // 
+            this.btnWindowLevel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.btnWindowLevel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnWindowLevel.ForeColor = System.Drawing.Color.White;
+            this.btnWindowLevel.Location = new System.Drawing.Point(425, 8);
+            this.btnWindowLevel.Name = "btnWindowLevel";
+            this.btnWindowLevel.Size = new System.Drawing.Size(105, 30);
+            this.btnWindowLevel.TabIndex = 4;
+            this.btnWindowLevel.Text = "Window / Level";
+            this.btnWindowLevel.UseVisualStyleBackColor = false;
+            this.btnWindowLevel.Click += new System.EventHandler(this.btnWindowLevel_Click);
+            // 
+            // numAxisWidth
+            // 
+            this.numAxisWidth.DecimalPlaces = 1;
+            this.numAxisWidth.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.numAxisWidth.Location = new System.Drawing.Point(345, 13);
+            this.numAxisWidth.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numAxisWidth.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numAxisWidth.Name = "numAxisWidth";
+            this.numAxisWidth.Size = new System.Drawing.Size(58, 20);
+            this.numAxisWidth.TabIndex = 3;
+            this.numAxisWidth.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.numAxisWidth.ValueChanged += new System.EventHandler(this.numAxisWidth_ValueChanged);
+            // 
+            // lblAxisWidth
+            // 
+            this.lblAxisWidth.AutoSize = true;
+            this.lblAxisWidth.ForeColor = System.Drawing.Color.White;
+            this.lblAxisWidth.Location = new System.Drawing.Point(250, 16);
+            this.lblAxisWidth.Name = "lblAxisWidth";
+            this.lblAxisWidth.Size = new System.Drawing.Size(77, 13);
+            this.lblAxisWidth.TabIndex = 2;
+            this.lblAxisWidth.Text = "Axis thickness:";
+            // 
             // btnReset3D
             // 
             this.btnReset3D.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
@@ -135,60 +197,16 @@ namespace DicomViewer_ChatGPT
             this.btnResetAxes.UseVisualStyleBackColor = false;
             this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
             // 
-            // lblAxisWidth
-            // 
-            this.lblAxisWidth.AutoSize = true;
-            this.lblAxisWidth.ForeColor = System.Drawing.Color.White;
-            this.lblAxisWidth.Location = new System.Drawing.Point(250, 16);
-            this.lblAxisWidth.Name = "lblAxisWidth";
-            this.lblAxisWidth.Size = new System.Drawing.Size(89, 13);
-            this.lblAxisWidth.TabIndex = 2;
-            this.lblAxisWidth.Text = "Axis thickness:";
-            // 
-            // numAxisWidth
-            // 
-            this.numAxisWidth.DecimalPlaces = 1;
-            this.numAxisWidth.Increment = new decimal(new int[] { 5, 0, 0, 65536 });
-            this.numAxisWidth.Location = new System.Drawing.Point(345, 13);
-            this.numAxisWidth.Maximum = new decimal(new int[] { 8, 0, 0, 0 });
-            this.numAxisWidth.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            this.numAxisWidth.Name = "numAxisWidth";
-            this.numAxisWidth.Size = new System.Drawing.Size(58, 20);
-            this.numAxisWidth.TabIndex = 3;
-            this.numAxisWidth.Value = new decimal(new int[] { 2, 0, 0, 0 });
-            this.numAxisWidth.ValueChanged += new System.EventHandler(this.numAxisWidth_ValueChanged);
-            // 
-            // btnWindowLevel
-            // 
-            this.btnWindowLevel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
-            this.btnWindowLevel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnWindowLevel.ForeColor = System.Drawing.Color.White;
-            this.btnWindowLevel.Location = new System.Drawing.Point(425, 8);
-            this.btnWindowLevel.Name = "btnWindowLevel";
-            this.btnWindowLevel.Size = new System.Drawing.Size(105, 30);
-            this.btnWindowLevel.TabIndex = 4;
-            this.btnWindowLevel.Text = "Window / Level";
-            this.btnWindowLevel.UseVisualStyleBackColor = false;
-            this.btnWindowLevel.Click += new System.EventHandler(this.btnWindowLevel_Click);
-            // 
-            // lblWindowLevel
-            // 
-            this.lblWindowLevel.AutoSize = true;
-            this.lblWindowLevel.ForeColor = System.Drawing.Color.Gainsboro;
-            this.lblWindowLevel.Location = new System.Drawing.Point(540, 16);
-            this.lblWindowLevel.Name = "lblWindowLevel";
-            this.lblWindowLevel.Size = new System.Drawing.Size(78, 13);
-            this.lblWindowLevel.TabIndex = 5;
-            this.lblWindowLevel.Text = "WL: -   WW: -";
-            // 
             // dicomViewer
             // 
+            this.dicomViewer.AxisLineWidth = 2F;
             this.dicomViewer.BackColor = System.Drawing.Color.Black;
             this.dicomViewer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dicomViewer.Location = new System.Drawing.Point(0, 90);
             this.dicomViewer.Name = "dicomViewer";
             this.dicomViewer.Size = new System.Drawing.Size(1280, 730);
             this.dicomViewer.TabIndex = 0;
+            this.dicomViewer.WindowLevelMode = false;
             // 
             // Form1
             // 
