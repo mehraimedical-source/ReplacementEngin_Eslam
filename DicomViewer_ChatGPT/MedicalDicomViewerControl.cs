@@ -28,6 +28,7 @@ namespace DicomViewer_ChatGPT
         private int sliceStride;
         private double rowX,rowY,rowZ,colX,colY,colZ,normX,normY,normZ;
         private double originX,originY,originZ,invSpacingX,invSpacingY,voxelZScale,firstProjection;
+        private double[] axialDisplayOrigin, sagittalDisplayOrigin, coronalDisplayOrigin;
 
         public MedicalDicomViewerControl()
         {
@@ -44,7 +45,7 @@ namespace DicomViewer_ChatGPT
             if(volume==null||depth==0)return;
             InitializePlanes();
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;
-            crosshairPatient=GetCurrentPatientPoint();
+            crosshairPatient=GetCurrentPatientPoint();SetAllDisplayOrigins(crosshairPatient);
             dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
             centerDragStartPatient=null;interactiveRendering=false;
             axial.Cursor=sagittal.Cursor=coronal.Cursor=Cursors.Default;
@@ -69,12 +70,14 @@ namespace DicomViewer_ChatGPT
             }
             PrepareFastVolume();
             SetImage(volume3D,BuildMip());
-            xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();RefreshViews();
+            xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();
+            axialDisplayOrigin=sagittalDisplayOrigin=coronalDisplayOrigin=(double[])crosshairPatient.Clone();RefreshViews();
         }
 
         private void RefreshViews()
         {
             SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());
+            if(crosshairPatient!=null)SetAllDisplayOrigins(crosshairPatient);
             if(volume3D.Image==null)SetImage(volume3D,BuildMip());
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
@@ -85,9 +88,9 @@ namespace DicomViewer_ChatGPT
             // crosshair point. During the drag, keep the anatomy in the source view
             // fixed and draw its crosshair at the mouse-relative position.
             double[] moved=(double[])crosshairPatient.Clone();
-            if(fixedView!=axial)SetImage(axial,BuildAxial());
-            if(fixedView!=sagittal)SetImage(sagittal,BuildSagittal());
-            if(fixedView!=coronal)SetImage(coronal,BuildCoronal());
+            if(fixedView!=axial){SetImage(axial,BuildAxial());axialDisplayOrigin=(double[])moved.Clone();}
+            if(fixedView!=sagittal){SetImage(sagittal,BuildSagittal());sagittalDisplayOrigin=(double[])moved.Clone();}
+            if(fixedView!=coronal){SetImage(coronal,BuildCoronal());coronalDisplayOrigin=(double[])moved.Clone();}
 
             crosshairPatient=centerDragStartPatient;
             Bounds hb=GetPatientBounds();double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
@@ -101,6 +104,7 @@ namespace DicomViewer_ChatGPT
             // position without changing the underlying source slice.
             DrawMovedCrosshairOnHost(host,fixedView,moved,centerDragStartPatient);
             SetImage(fixedView,host);
+            SetDisplayOriginForView(fixedView,centerDragStartPatient);
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
@@ -231,8 +235,12 @@ namespace DicomViewer_ChatGPT
         private bool IsNearCenter(PictureBox box,Point mouse)
         {
             if(box.Image==null)return false;Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return false;
-            double cx=r.Left+r.Width/2.0;
-            double cy=r.Top+r.Height/2.0;
+            Plane view=PlaneForView(box);double[] d0=DisplayOriginForView(box),ch=crosshairPatient??d0;
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double ix=(box.Image.Width-1)/2.0+Dot(Sub(ch,d0),view.U)/pixel;
+            double iy=(box.Image.Height-1)/2.0+Dot(Sub(ch,d0),view.V)/pixel;
+            double cx=r.Left+ix*(r.Width-1)/Math.Max(1.0,box.Image.Width-1);
+            double cy=r.Top+iy*(r.Height-1)/Math.Max(1.0,box.Image.Height-1);
             double dx=mouse.X-cx,dy=mouse.Y-cy;return dx*dx+dy*dy<=100;
         }
 
@@ -270,9 +278,12 @@ namespace DicomViewer_ChatGPT
             Plane view=PlaneForView(box);if(view==null)return null;
             double ix=(mouse.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
             double iy=(mouse.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
-            // All MPR planes share crosshairPatient as their origin.
-            double cx=(box.Image.Width-1)/2.0;
-            double cy=(box.Image.Height-1)/2.0;
+            // Hit-test where the lines are actually displayed. The source view
+            // may keep its old anatomy origin after a center drag.
+            double[] d0=DisplayOriginForView(box),ch=crosshairPatient??d0;
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double cx=(box.Image.Width-1)/2.0+Dot(Sub(ch,d0),view.U)/pixel;
+            double cy=(box.Image.Height-1)/2.0+Dot(Sub(ch,d0),view.V)/pixel;
             Plane[] candidates=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
             Plane best=null;double bestD=8.0;
             foreach(Plane p in candidates)
@@ -286,6 +297,20 @@ namespace DicomViewer_ChatGPT
         }
 
         private Plane PlaneForView(PictureBox box){return box==axial?axialPlane:box==coronal?coronalPlane:sagittalPlane;}
+        private double[] DisplayOriginForView(PictureBox box)
+        {
+            double[] p=box==axial?axialDisplayOrigin:box==coronal?coronalDisplayOrigin:sagittalDisplayOrigin;
+            return p??GetMprCenter();
+        }
+        private void SetDisplayOriginForView(PictureBox box,double[] p)
+        {
+            double[] q=(double[])p.Clone();
+            if(box==axial)axialDisplayOrigin=q;else if(box==coronal)coronalDisplayOrigin=q;else sagittalDisplayOrigin=q;
+        }
+        private void SetAllDisplayOrigins(double[] p)
+        {
+            axialDisplayOrigin=(double[])p.Clone();coronalDisplayOrigin=(double[])p.Clone();sagittalDisplayOrigin=(double[])p.Clone();
+        }
         private Plane OtherReferencePlane(PictureBox box,Plane selected)
         {
             Plane[] a=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
