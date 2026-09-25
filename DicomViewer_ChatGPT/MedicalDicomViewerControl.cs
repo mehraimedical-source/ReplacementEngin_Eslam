@@ -147,10 +147,14 @@ namespace DicomViewer_ChatGPT
             // positive feedback (the crosshair runs ahead and all views drift).
             Rectangle r=GetImageRectangle(box);if(centerDragStartPatient==null||r.Width<2||r.Height<2)return;
             Plane view=PlaneForView(box);
-            double physicalW=(box.Image.Width-1)*Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double physicalH=(box.Image.Height-1)*Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double du=(mouse.X-centerDragStartMouse.X)*physicalW/Math.Max(1,r.Width-1);
-            double dv=(mouse.Y-centerDragStartMouse.Y)*physicalH/Math.Max(1,r.Height-1);
+            // Map the mouse delta through the actual rendered image rectangle.
+            // PictureBox Zoom can scale X/Y differently from the source pixel count
+            // after rounding, so use image-pixels-per-screen-pixel directly.
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double scaleX=(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
+            double scaleY=(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
+            double du=(mouse.X-centerDragStartMouse.X)*scaleX*pixel;
+            double dv=(mouse.Y-centerDragStartMouse.Y)*scaleY*pixel;
             double[] target=Add(centerDragStartPatient,Add(Scale(view.U,du),Scale(view.V,dv)));
             SetIndicesFromPatient(target);
         }
