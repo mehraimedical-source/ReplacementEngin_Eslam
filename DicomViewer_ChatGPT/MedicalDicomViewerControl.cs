@@ -28,6 +28,7 @@ namespace DicomViewer_ChatGPT
         private int sliceStride;
         private double rowX,rowY,rowZ,colX,colY,colZ,normX,normY,normZ;
         private double originX,originY,originZ,invSpacingX,invSpacingY,voxelZScale,firstProjection;
+        private double[] sliceProjections;
         private double[] axialDisplayOrigin, sagittalDisplayOrigin, coronalDisplayOrigin;
         private double[] centerDragViewU, centerDragViewV, centerDragDisplayOrigin;
         private readonly CpuVolumeRenderer volumeRenderer = new CpuVolumeRenderer();
@@ -187,50 +188,18 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildAxialAtDisplayOrigin()
         {
-            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double[] origin=axialDisplayOrigin??GetMprCenter();
-            double[] size=GetPlanePhysicalSize(axialPlane,origin);
-            return BuildPlaneWithCrosshair(axialPlane,origin,size[0],size[1],p,coronalPlane,sagittalPlane);
+            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlaneWithCrosshair(axialPlane,axialDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxY-b.MinY,p,coronalPlane,sagittalPlane);
         }
         private Bitmap BuildCoronalAtDisplayOrigin()
         {
-            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double[] origin=coronalDisplayOrigin??GetMprCenter();
-            double[] size=GetPlanePhysicalSize(coronalPlane,origin);
-            return BuildPlaneWithCrosshair(coronalPlane,origin,size[0],size[1],p,axialPlane,sagittalPlane);
+            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlaneWithCrosshair(coronalPlane,coronalDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,p,axialPlane,sagittalPlane);
         }
         private Bitmap BuildSagittalAtDisplayOrigin()
         {
-            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double[] origin=sagittalDisplayOrigin??GetMprCenter();
-            double[] size=GetPlanePhysicalSize(sagittalPlane,origin);
-            return BuildPlaneWithCrosshair(sagittalPlane,origin,size[0],size[1],p,axialPlane,coronalPlane);
-        }
-
-        private double[] GetPlanePhysicalSize(Plane plane,double[] center)
-        {
-            // اندازه ثابت X/Y/Z برای Plane چرخیده کافی نیست و گوشه‌های Volume بریده می‌شوند.
-            // هشت گوشه واقعی Volume را روی U/V صفحه Project می‌کنیم و اندازه‌ای می‌سازیم
-            // که نسبت به مرکز فعلی نمایش، تمام Volume داخل تصویر باقی بماند.
-            double maxU=0,maxV=0;
-            double[] o=volume[0].ImageOrientationPatient;
-            int[] xs={0,width-1},ys={0,height-1},zs={0,depth-1};
-            foreach(int z in zs)
-            {
-                double[] sp=volume[z].ImagePositionPatient??volume[0].ImagePositionPatient;
-                foreach(int y in ys)foreach(int x in xs)
-                {
-                    double[] q={
-                        sp[0]+o[0]*x*spacingX+o[3]*y*spacingY,
-                        sp[1]+o[1]*x*spacingX+o[4]*y*spacingY,
-                        sp[2]+o[2]*x*spacingX+o[5]*y*spacingY};
-                    double[] d=Sub(q,center);
-                    maxU=Math.Max(maxU,Math.Abs(Dot(d,plane.U)));
-                    maxV=Math.Max(maxV,Math.Abs(Dot(d,plane.V)));
-                }
-            }
-            double margin=Math.Min(spacingX,Math.Min(spacingY,spacingZ))*2.0;
-            return new[]{2.0*maxU+margin,2.0*maxV+margin};
+            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlaneWithCrosshair(sagittalPlane,sagittalDisplayOrigin??GetMprCenter(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,p,axialPlane,coronalPlane);
         }
 
         private Bitmap BuildPlaneWithCrosshair(Plane plane,double[] displayOrigin,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
@@ -258,8 +227,18 @@ namespace DicomViewer_ChatGPT
             normX=rowY*colZ-rowZ*colY;normY=rowZ*colX-rowX*colZ;normZ=rowX*colY-rowY*colX;
             originX=p[0];originY=p[1];originZ=p[2];invSpacingX=1.0/spacingX;invSpacingY=1.0/spacingY;
             firstProjection=originX*normX+originY*normY+originZ*normZ;
-            double[] lp=volume[depth-1].ImagePositionPatient;
-            double last=lp[0]*normX+lp[1]*normY+lp[2]*normZ;
+
+            // Position واقعی تک‌تک Sliceها را نگه می‌داریم. فرض فاصله کاملاً یکنواخت بین
+            // Slice اول و آخر در بعضی Seriesها باعث می‌شود بخشی از Oblique MPR خارج از Volume دیده شود.
+            sliceProjections=new double[depth];
+            for(int z=0;z<depth;z++)
+            {
+                double[] sp=volume[z].ImagePositionPatient;
+                sliceProjections[z]=sp!=null&&sp.Length>=3
+                    ?sp[0]*normX+sp[1]*normY+sp[2]*normZ
+                    :firstProjection+z*spacingZ;
+            }
+            double last=sliceProjections[depth-1];
             voxelZScale=Math.Abs(last-firstProjection)>.000001?(depth-1)/(last-firstProjection):0;
         }
 
@@ -631,13 +610,42 @@ namespace DicomViewer_ChatGPT
                 p[2]+o[2]*xIndex*spacingX+o[5]*yIndex*spacingY+n[2]*dz};
         }
 
+        private double ProjectionToSliceCoordinate(double projection)
+        {
+            if(sliceProjections==null||sliceProjections.Length<2)
+                return (projection-firstProjection)*voxelZScale;
+
+            bool ascending=sliceProjections[depth-1]>=sliceProjections[0];
+            if((ascending&&projection<=sliceProjections[0])||(!ascending&&projection>=sliceProjections[0]))return 0;
+            if((ascending&&projection>=sliceProjections[depth-1])||(!ascending&&projection<=sliceProjections[depth-1]))return depth-1;
+
+            int lo=0,hi=depth-1;
+            while(hi-lo>1)
+            {
+                int mid=(lo+hi)/2;
+                if((ascending&&sliceProjections[mid]<=projection)||(!ascending&&sliceProjections[mid]>=projection))lo=mid;
+                else hi=mid;
+            }
+
+            double span=sliceProjections[hi]-sliceProjections[lo];
+            if(Math.Abs(span)<.000001)return lo;
+            return lo+(projection-sliceProjections[lo])/span;
+        }
+
         private byte SamplePatientFast(double px,double py,double pz)
         {
             double dx=px-originX,dy=py-originY,dz=pz-originZ;
             double fx=(dx*rowX+dy*rowY+dz*rowZ)*invSpacingX;
             double fy=(dx*colX+dy*colY+dz*colZ)*invSpacingY;
-            double fz=((px*normX+py*normY+pz*normZ)-firstProjection)*voxelZScale;
-            if(fx<0||fy<0||fz<0||fx>width-1||fy>height-1||fz>depth-1)return 0;
+            double targetProjection=px*normX+py*normY+pz*normZ;
+            double fz=ProjectionToSliceCoordinate(targetProjection);
+            if(fx<-.5||fy<-.5||fz<-.5||fx>width-.5||fy>height-.5||fz>depth-.5)return 0;
+
+            // نقاط نزدیک لبه Volume را به آخرین Voxel معتبر Clamp می‌کنیم.
+            // این نیم Voxel برای MPR مورب مهم است و از حذف بافت در مرز FOV جلوگیری می‌کند.
+            fx=Math.Max(0,Math.Min(width-1,fx));
+            fy=Math.Max(0,Math.Min(height-1,fy));
+            fz=Math.Max(0,Math.Min(depth-1,fz));
             int x0=(int)fx,y0=(int)fy,z0=(int)fz;
             int x1=x0<width-1?x0+1:x0,y1=y0<height-1?y0+1:y0,z1=z0<depth-1?z0+1:z0;
             double tx=fx-x0,ty=fy-y0,tz=fz-z0;
