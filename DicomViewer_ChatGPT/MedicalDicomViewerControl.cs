@@ -42,6 +42,7 @@ namespace DicomViewer_ChatGPT
             axial.MouseEnter += delegate { axial.Focus(); }; sagittal.MouseEnter += delegate { sagittal.Focus(); }; coronal.MouseEnter += delegate { coronal.Focus(); };
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
             HookSliceScroll(axial);HookSliceScroll(sagittal);HookSliceScroll(coronal);
+            HookVoxelProbe(axial);HookVoxelProbe(sagittal);HookVoxelProbe(coronal);
             Hook3D();
         }
 
@@ -362,6 +363,46 @@ namespace DicomViewer_ChatGPT
                 {
                     lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshAfterRotation();
                 }
+            };
+        }
+
+        private void HookVoxelProbe(PictureBox box)
+        {
+            box.MouseDoubleClick += delegate(object s,MouseEventArgs e)
+            {
+                if(e.Button!=MouseButtons.Left||volume==null||box.Image==null||!HasPatientGeometry())return;
+                Rectangle r=GetImageRectangle(box);
+                if(!r.Contains(e.Location))return;
+
+                Plane plane=PlaneForView(box);
+                double[] display=DisplayOriginForView(box);
+                double[] planeCenter=PlaneCenterThroughCrosshair(plane,display);
+                double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+
+                // مختصات کلیک را دقیقاً با همان هندسه‌ای که BuildPlane برای Reslice استفاده
+                // می‌کند، از Pixel تصویر به Patient-space برمی‌گردانیم.
+                double ix=(e.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
+                double iy=(e.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
+                double u=(ix-(box.Image.Width-1)/2.0)*pixel;
+                double v=(iy-(box.Image.Height-1)/2.0)*pixel;
+                double[] q=Add(planeCenter,Add(Scale(plane.U,u),Scale(plane.V,v)));
+
+                double dx=q[0]-originX,dy=q[1]-originY,dz=q[2]-originZ;
+                double fx=(dx*rowX+dy*rowY+dz*rowZ)*invSpacingX;
+                double fy=(dx*colX+dy*colY+dz*colZ)*invSpacingY;
+                double projection=q[0]*normX+q[1]*normY+q[2]*normZ;
+                double fz=ProjectionToSliceCoordinate(projection);
+                bool inside=fx>=-.5&&fy>=-.5&&fz>=-.5&&fx<=width-.5&&fy<=height-.5&&fz<=depth-.5;
+
+                int zi=Clamp((int)Math.Round(fz),0,depth-1);
+                int xi=Clamp((int)Math.Round(fx),0,width-1);
+                int yi=Clamp((int)Math.Round(fy),0,height-1);
+                int value=inside&&displayVolume!=null?displayVolume[zi*sliceStride+yi*width+xi]:0;
+
+                status.Text=String.Format(
+                    "PROBE {0}  Patient({1:0.0},{2:0.0},{3:0.0})  Voxel({4:0.00},{5:0.00},{6:0.00})  Slice {7}/{8}  {9}  Gray={10}",
+                    box==axial?"AXIAL":box==sagittal?"SAGITTAL":"CORONAL",
+                    q[0],q[1],q[2],fx,fy,fz,zi+1,depth,inside?"INSIDE":"OUTSIDE",value);
             };
         }
 
