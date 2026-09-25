@@ -81,22 +81,38 @@ namespace DicomViewer_ChatGPT
 
         private void RefreshViewsExcept(PictureBox fixedView)
         {
-            // RadiAnt-style center drag: the image under the mouse is the reference
-            // and remains fixed; the other two MPR views are reconstructed through
-            // the moved patient-space intersection.
+            // Shared-origin MPR: the two linked views reslice through the new 3-D
+            // crosshair point. During the drag, keep the anatomy in the source view
+            // fixed and draw its crosshair at the mouse-relative position.
+            double[] moved=(double[])crosshairPatient.Clone();
             if(fixedView!=axial)SetImage(axial,BuildAxial());
             if(fixedView!=sagittal)SetImage(sagittal,BuildSagittal());
             if(fixedView!=coronal)SetImage(coronal,BuildCoronal());
-            // Redraw the fixed view only to move its crosshair overlay. This currently
-            // requires a bitmap rebuild because overlays are still baked into images.
-            // Preserve its slice center temporarily so the underlying anatomy does not move.
-            int ox=xIndex,oy=yIndex,oz=zIndex;
-            SetIndicesFromPatient(centerDragStartPatient);
-            if(fixedView==axial)SetImage(axial,BuildAxial());
-            else if(fixedView==sagittal)SetImage(sagittal,BuildSagittal());
-            else if(fixedView==coronal)SetImage(coronal,BuildCoronal());
-            xIndex=ox;yIndex=oy;zIndex=oz;
+
+            crosshairPatient=centerDragStartPatient;
+            Bitmap host;
+            if(fixedView==axial)host=BuildAxial();
+            else if(fixedView==sagittal)host=BuildSagittal();
+            else host=BuildCoronal();
+            crosshairPatient=moved;
+
+            // Move the baked overlay in the fixed source image to the actual cursor
+            // position without changing the underlying source slice.
+            DrawMovedCrosshairOnHost(host,fixedView,moved,centerDragStartPatient);
+            SetImage(fixedView,host);
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
+        }
+
+        private void DrawMovedCrosshairOnHost(Bitmap bmp,PictureBox box,double[] moved,double[] origin)
+        {
+            Plane view=PlaneForView(box);double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double cx=(bmp.Width-1)/2.0+Dot(Sub(moved,origin),view.U)/pixel;
+            double cy=(bmp.Height-1)/2.0+Dot(Sub(moved,origin),view.V)/pixel;
+            Plane[] lines=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
+            // Covering the old baked lines perfectly would require a separate overlay layer.
+            // For now redraw the authoritative lines at the moved origin; Paint overlay separation is next.
+            DrawPlaneLine(bmp,view,lines[0],lines[0].Color,cx,cy);
+            DrawPlaneLine(bmp,view,lines[1],lines[1].Color,cx,cy);
         }
 
         private void PrepareFastVolume()
@@ -200,12 +216,8 @@ namespace DicomViewer_ChatGPT
         private bool IsNearCenter(PictureBox box,Point mouse)
         {
             if(box.Image==null)return false;Rectangle r=GetImageRectangle(box);if(!r.Contains(mouse))return false;
-            Plane view=PlaneForView(box);double[] center=GetCurrentPatientPoint(),ch=crosshairPatient??center;
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double ix=(box.Image.Width-1)/2.0+Dot(Sub(ch,center),view.U)/pixel;
-            double iy=(box.Image.Height-1)/2.0+Dot(Sub(ch,center),view.V)/pixel;
-            double cx=r.Left+ix*(r.Width-1)/Math.Max(1.0,box.Image.Width-1);
-            double cy=r.Top+iy*(r.Height-1)/Math.Max(1.0,box.Image.Height-1);
+            double cx=r.Left+r.Width/2.0;
+            double cy=r.Top+r.Height/2.0;
             double dx=mouse.X-cx,dy=mouse.Y-cy;return dx*dx+dy*dy<=100;
         }
 
@@ -243,12 +255,9 @@ namespace DicomViewer_ChatGPT
             Plane view=PlaneForView(box);if(view==null)return null;
             double ix=(mouse.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
             double iy=(mouse.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
-            // Reference lines pass through the movable patient-space crosshair,
-            // not permanently through the bitmap center.
-            double[] center=GetCurrentPatientPoint(),ch=crosshairPatient??center;
-            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            double cx=(box.Image.Width-1)/2.0+Dot(Sub(ch,center),view.U)/pixel;
-            double cy=(box.Image.Height-1)/2.0+Dot(Sub(ch,center),view.V)/pixel;
+            // All MPR planes share crosshairPatient as their origin.
+            double cx=(box.Image.Width-1)/2.0;
+            double cy=(box.Image.Height-1)/2.0;
             Plane[] candidates=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
             Plane best=null;double bestD=8.0;
             foreach(Plane p in candidates)
@@ -331,9 +340,8 @@ namespace DicomViewer_ChatGPT
                     data[row+x]=SamplePatientFast(px,py,pz);
             });
             Bitmap bmp=GrayBitmap(data,outW,outH);
-            double[] ch=crosshairPatient??center;
-            double cx=(outW-1)/2.0+Dot(Sub(ch,center),plane.U)/renderPixel;
-            double cy=(outH-1)/2.0+Dot(Sub(ch,center),plane.V)/renderPixel;
+            double cx=(outW-1)/2.0;
+            double cy=(outH-1)/2.0;
             DrawPlaneLine(bmp,plane,lineA,lineA.Color,cx,cy);
             DrawPlaneLine(bmp,plane,lineB,lineB.Color,cx,cy);
             return bmp;
@@ -358,21 +366,21 @@ namespace DicomViewer_ChatGPT
         {
             if(!HasPatientGeometry()) return BuildSourceAxial();
             Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(axialPlane,GetCurrentPatientPoint(),b.MaxX-b.MinX,b.MaxY-b.MinY,pixel,coronalPlane,sagittalPlane);
+            return BuildPlane(axialPlane,GetMprCenter(),b.MaxX-b.MinX,b.MaxY-b.MinY,pixel,coronalPlane,sagittalPlane);
         }
 
         private Bitmap BuildCoronal()
         {
             if(!HasPatientGeometry()) return BuildLegacyCoronal();
             Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(coronalPlane,GetCurrentPatientPoint(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,pixel,axialPlane,sagittalPlane);
+            return BuildPlane(coronalPlane,GetMprCenter(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,pixel,axialPlane,sagittalPlane);
         }
 
         private Bitmap BuildSagittal()
         {
             if(!HasPatientGeometry()) return BuildLegacySagittal();
             Bounds b=GetPatientBounds();double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
-            return BuildPlane(sagittalPlane,GetCurrentPatientPoint(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,pixel,axialPlane,coronalPlane);
+            return BuildPlane(sagittalPlane,GetMprCenter(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,pixel,axialPlane,coronalPlane);
         }
 
         private Bitmap BuildSourceAxial()
@@ -411,6 +419,11 @@ namespace DicomViewer_ChatGPT
         {
             return volume!=null&&depth>0&&volume[0].ImagePositionPatient!=null&&volume[0].ImagePositionPatient.Length>=3&&
                 volume[0].ImageOrientationPatient!=null&&volume[0].ImageOrientationPatient.Length>=6;
+        }
+
+        private double[] GetMprCenter()
+        {
+            return crosshairPatient??GetCurrentPatientPoint();
         }
 
         private double[] GetCurrentPatientPoint()
