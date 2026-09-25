@@ -30,7 +30,7 @@ namespace DicomViewer_ChatGPT
         private double originX,originY,originZ,invSpacingX,invSpacingY,voxelZScale,firstProjection;
         private double[] sliceProjections;
         private double[] axialDisplayOrigin, sagittalDisplayOrigin, coronalDisplayOrigin;
-        private double[] centerDragViewU, centerDragViewV, centerDragDisplayOrigin;
+        private double[] centerDragViewU, centerDragViewV, centerDragDisplayOrigin, centerDragPlaneCenter;
         private readonly CpuVolumeRenderer volumeRenderer = new CpuVolumeRenderer();
         private bool dragging3D;
         private Point last3DMouse;
@@ -56,7 +56,7 @@ namespace DicomViewer_ChatGPT
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;
             crosshairPatient=GetCurrentPatientPoint();SetAllDisplayOrigins(crosshairPatient);
             dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
-            centerDragStartPatient=null;centerDragViewU=null;centerDragViewV=null;centerDragDisplayOrigin=null;interactiveRendering=false;
+            centerDragStartPatient=null;centerDragViewU=null;centerDragViewV=null;centerDragDisplayOrigin=null;centerDragPlaneCenter=null;interactiveRendering=false;
             axial.Cursor=sagittal.Cursor=coronal.Cursor=Cursors.Default;
             RefreshViews();
         }
@@ -124,13 +124,12 @@ namespace DicomViewer_ChatGPT
 
             // View میزبان هنگام Drag نباید حرکت کند؛ فقط خطوط Crosshair روی آن جابه‌جا می‌شوند.
             double[] hostOrigin=centerDragDisplayOrigin??DisplayOriginForView(fixedView);
-            crosshairPatient=centerDragStartPatient;
+            double[] hostPlaneCenter=centerDragPlaneCenter??PlaneCenterThroughCrosshair(PlaneForView(fixedView),hostOrigin);
             Bounds hb=GetPatientBounds();double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
             Bitmap host;
-            if(fixedView==axial)host=BuildPlane(axialPlane,hostOrigin,hb.MaxX-hb.MinX,hb.MaxY-hb.MinY,hp,coronalPlane,sagittalPlane,false);
-            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,hostOrigin,hb.MaxY-hb.MinY,hb.MaxZ-hb.MinZ,hp,axialPlane,coronalPlane,false);
-            else host=BuildPlane(coronalPlane,hostOrigin,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
-            crosshairPatient=moved;
+            if(fixedView==axial)host=BuildPlane(axialPlane,hostPlaneCenter,hb.MaxX-hb.MinX,hb.MaxY-hb.MinY,hp,coronalPlane,sagittalPlane,false);
+            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,hostPlaneCenter,hb.MaxY-hb.MinY,hb.MaxZ-hb.MinZ,hp,axialPlane,coronalPlane,false);
+            else host=BuildPlane(coronalPlane,hostPlaneCenter,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
 
             DrawMovedCrosshairOnHost(host,fixedView,moved,hostOrigin);
             SetImage(fixedView,host);
@@ -265,7 +264,11 @@ namespace DicomViewer_ChatGPT
                     draggingCenter=true;dragView=box;centerDragStartMouse=e.Location;
                     centerDragStartPatient=(double[])(crosshairPatient??GetCurrentPatientPoint()).Clone();
                     Plane cv=PlaneForView(box);centerDragViewU=(double[])cv.U.Clone();centerDragViewV=(double[])cv.V.Clone();
-                    centerDragDisplayOrigin=(double[])DisplayOriginForView(box).Clone();box.Cursor=Cursors.SizeAll;return;
+                    centerDragDisplayOrigin=(double[])DisplayOriginForView(box).Clone();
+                    // مرکز هندسی واقعی Plane در لحظه MouseDown را ثابت نگه می‌داریم.
+                    // در Plane مورب، DisplayOrigin لزوماً روی همان Plane نیست.
+                    centerDragPlaneCenter=PlaneCenterThroughCrosshair(cv,centerDragDisplayOrigin);
+                    box.Cursor=Cursors.SizeAll;return;
                 }
                 Plane hit=HitTestReferenceLine(box,e.Location);
                 if(hit!=null)
