@@ -12,6 +12,9 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Label lblSagittal;
         private System.Windows.Forms.Label lblCoronal;
         private System.Windows.Forms.Label lbl3D;
+        private System.Windows.Forms.Label lblAxialDebug;
+        private System.Windows.Forms.Label lblSagittalDebug;
+        private System.Windows.Forms.Label lblCoronalDebug;
         private System.Windows.Forms.PictureBox axial;
         private System.Windows.Forms.PictureBox sagittal;
         private System.Windows.Forms.PictureBox coronal;
@@ -29,6 +32,9 @@ namespace DicomViewer_ChatGPT
             this.lblSagittal = new System.Windows.Forms.Label();
             this.lblCoronal = new System.Windows.Forms.Label();
             this.lbl3D = new System.Windows.Forms.Label();
+            this.lblAxialDebug = new System.Windows.Forms.Label();
+            this.lblSagittalDebug = new System.Windows.Forms.Label();
+            this.lblCoronalDebug = new System.Windows.Forms.Label();
             this.axial = new System.Windows.Forms.PictureBox();
             this.sagittal = new System.Windows.Forms.PictureBox();
             this.coronal = new System.Windows.Forms.PictureBox();
@@ -89,9 +95,18 @@ namespace DicomViewer_ChatGPT
             this.lblCoronal.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.lblCoronal.BackColor = System.Drawing.Color.Magenta;
             this.lblCoronal.ForeColor = System.Drawing.Color.White;
+            SetupDebugLabel(this.lblAxialDebug);
+            SetupDebugLabel(this.lblSagittalDebug);
+            SetupDebugLabel(this.lblCoronalDebug);
+            this.panelAxial.Controls.Add(this.lblAxialDebug);
+            this.panelSagittal.Controls.Add(this.lblSagittalDebug);
+            this.panelCoronal.Controls.Add(this.lblCoronalDebug);
             this.lblAxial.BringToFront();
             this.lblSagittal.BringToFront();
             this.lblCoronal.BringToFront();
+            this.lblAxialDebug.BringToFront();
+            this.lblSagittalDebug.BringToFront();
+            this.lblCoronalDebug.BringToFront();
 
             this.status.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             this.status.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -119,6 +134,19 @@ namespace DicomViewer_ChatGPT
             ((System.ComponentModel.ISupportInitialize)(this.coronal)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.volume3D)).EndInit();
             this.ResumeLayout(false);
+        }
+
+        private static void SetupDebugLabel(System.Windows.Forms.Label label)
+        {
+            // اطلاعات هندسی کوتاه برای تشخیص اختلاف MPR از روی Screenshot.
+            label.AutoSize = true;
+            label.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            label.BackColor = System.Drawing.Color.FromArgb(150, 0, 0, 0);
+            label.ForeColor = System.Drawing.Color.Gainsboro;
+            label.Font = new System.Drawing.Font("Consolas", 7F);
+            label.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            label.Location = new System.Drawing.Point(250, 3);
+            label.TextAlign = System.Drawing.ContentAlignment.TopLeft;
         }
 
         private static void SetupViewport(System.Windows.Forms.Panel panel, System.Windows.Forms.PictureBox picture, System.Windows.Forms.Label title, string text)
