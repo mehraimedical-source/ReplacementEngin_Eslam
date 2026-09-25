@@ -1,0 +1,11 @@
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\bin\Debug\RegeX_Sample.exe.config
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\bin\Debug\RegeX_Sample.exe
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\bin\Debug\RegeX_Sample.pdb
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.csproj.AssemblyReference.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.csproj.SuggestedBindingRedirects.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.Form1.resources
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.Properties.Resources.resources
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.csproj.GenerateResource.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.csproj.CoreCompileInputs.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.exe
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\RegeX_Sample\obj\Debug\RegeX_Sample.pdb

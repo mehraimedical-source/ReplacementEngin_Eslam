@@ -4,6 +4,10 @@ VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp15", "WindowsFormsApp15\WindowsFormsApp15.csproj", "{CB798E5A-E39F-4DDE-8D6E-D41DB0A1B668}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegeX_Sample_Eslam", "RegeX_Sample\RegeX_Sample_Eslam.csproj", "{2B41A4A4-1772-46F9-8F2A-3C7F4A5C4A1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer_ChatGPT", "DicomViewer_ChatGPT\DicomViewer_ChatGPT.csproj", "{020C6777-EA64-49AB-B45D-5FAD43126C52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,6 +18,14 @@ Global
 		{CB798E5A-E39F-4DDE-8D6E-D41DB0A1B668}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB798E5A-E39F-4DDE-8D6E-D41DB0A1B668}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB798E5A-E39F-4DDE-8D6E-D41DB0A1B668}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B41A4A4-1772-46F9-8F2A-3C7F4A5C4A1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B41A4A4-1772-46F9-8F2A-3C7F4A5C4A1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B41A4A4-1772-46F9-8F2A-3C7F4A5C4A1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B41A4A4-1772-46F9-8F2A-3C7F4A5C4A1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
