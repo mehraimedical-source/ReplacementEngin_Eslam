@@ -11,16 +11,30 @@ namespace DicomViewer_ChatGPT
     internal sealed class CpuVolumeRenderer
     {
         private byte[] voxels;
+        private short[] modalityVoxels;
+        private bool useHu;
         private int width, height, depth, sliceStride;
         private double sx = 1, sy = 1, sz = 1;
         private double yaw = -0.55, pitch = -0.25, zoom = 1.0;
 
-        public bool Ready { get { return voxels != null && voxels.Length == width * height * depth; } }
+        public bool Ready { get { return (useHu ? modalityVoxels != null : voxels != null) && width > 0 && height > 0 && depth > 0; } }
 
         public void SetVolume(byte[] data, int w, int h, int d, double spacingX, double spacingY, double spacingZ)
         {
-            voxels = data; width = w; height = h; depth = d; sliceStride = w * h;
-            sx = Math.Max(.0001, spacingX); sy = Math.Max(.0001, spacingY); sz = Math.Max(.0001, spacingZ);
+            voxels = data; modalityVoxels = null; useHu = false;
+            SetGeometry(w,h,d,spacingX,spacingY,spacingZ);
+        }
+
+        public void SetCtVolume(short[] huData, int w, int h, int d, double spacingX, double spacingY, double spacingZ)
+        {
+            modalityVoxels = huData; voxels = null; useHu = true;
+            SetGeometry(w,h,d,spacingX,spacingY,spacingZ);
+        }
+
+        private void SetGeometry(int w,int h,int d,double spacingX,double spacingY,double spacingZ)
+        {
+            width=w;height=h;depth=d;sliceStride=w*h;
+            sx=Math.Max(.0001,spacingX);sy=Math.Max(.0001,spacingY);sz=Math.Max(.0001,spacingZ);
             ResetCamera();
         }
 
@@ -75,11 +89,13 @@ namespace DicomViewer_ChatGPT
                     {
                         Vec p = Add(start, Scale(forward, t));
                         double fx = p.X / sx, fy = p.Y / sy, fz = p.Z / sz;
-                        byte value = Sample(fx, fy, fz);
-                        if (value < 105) continue;
+                        double value = Sample(fx, fy, fz);
+                        if (useHu) { if (value < 180) continue; }
+                        else if (value < 105) continue;
 
                         double a, r, g, b;
-                        BoneTransfer(value, out a, out r, out g, out b);
+                        if(useHu) BoneTransferHu(value, out a, out r, out g, out b);
+                        else BoneTransfer((byte)value, out a, out r, out g, out b);
                         a *= (1.0 - alpha);
                         ar += r * a; ag += g * a; ab += b * a; alpha += a;
                     }
@@ -91,18 +107,40 @@ namespace DicomViewer_ChatGPT
             return BitmapFromBgr(rgb, outW, outH);
         }
 
-        private byte Sample(double x, double y, double z)
+        private double Sample(double x, double y, double z)
         {
-            if (x < 0 || y < 0 || z < 0 || x > width - 1 || y > height - 1 || z > depth - 1) return 0;
-            int x0 = (int)x, y0 = (int)y, z0 = (int)z;
-            int x1 = x0 < width - 1 ? x0 + 1 : x0, y1 = y0 < height - 1 ? y0 + 1 : y0, z1 = z0 < depth - 1 ? z0 + 1 : z0;
-            double tx = x - x0, ty = y - y0, tz = z - z0;
-            int b0 = z0 * sliceStride, b1 = z1 * sliceStride;
-            double a = Lerp(voxels[b0 + y0 * width + x0], voxels[b0 + y0 * width + x1], tx);
-            double b = Lerp(voxels[b0 + y1 * width + x0], voxels[b0 + y1 * width + x1], tx);
-            double c = Lerp(voxels[b1 + y0 * width + x0], voxels[b1 + y0 * width + x1], tx);
-            double d = Lerp(voxels[b1 + y1 * width + x0], voxels[b1 + y1 * width + x1], tx);
-            return (byte)Math.Round(Lerp(Lerp(a, b, ty), Lerp(c, d, ty), tz));
+            if (x < 0 || y < 0 || z < 0 || x > width - 1 || y > height - 1 || z > depth - 1) return useHu ? -1024 : 0;
+            int x0=(int)x,y0=(int)y,z0=(int)z;
+            int x1=x0<width-1?x0+1:x0,y1=y0<height-1?y0+1:y0,z1=z0<depth-1?z0+1:z0;
+            double tx=x-x0,ty=y-y0,tz=z-z0;
+            int b0=z0*sliceStride,b1=z1*sliceStride;
+            double a,b,c,d;
+            if(useHu)
+            {
+                a=Lerp(modalityVoxels[b0+y0*width+x0],modalityVoxels[b0+y0*width+x1],tx);
+                b=Lerp(modalityVoxels[b0+y1*width+x0],modalityVoxels[b0+y1*width+x1],tx);
+                c=Lerp(modalityVoxels[b1+y0*width+x0],modalityVoxels[b1+y0*width+x1],tx);
+                d=Lerp(modalityVoxels[b1+y1*width+x0],modalityVoxels[b1+y1*width+x1],tx);
+            }
+            else
+            {
+                a=Lerp(voxels[b0+y0*width+x0],voxels[b0+y0*width+x1],tx);
+                b=Lerp(voxels[b0+y1*width+x0],voxels[b0+y1*width+x1],tx);
+                c=Lerp(voxels[b1+y0*width+x0],voxels[b1+y0*width+x1],tx);
+                d=Lerp(voxels[b1+y1*width+x0],voxels[b1+y1*width+x1],tx);
+            }
+            return Lerp(Lerp(a,b,ty),Lerp(c,d,ty),tz);
+        }
+
+        private static void BoneTransferHu(double hu,out double a,out double r,out double g,out double b)
+        {
+            // CT bone preset in modality space. Soft tissue is fully transparent;
+            // cortical/dense bone becomes progressively more opaque.
+            if(hu<180){a=r=g=b=0;return;}
+            double t=Math.Max(0,Math.Min(1,(hu-180.0)/1200.0));
+            a=.025+.24*t*t;
+            double warm=Math.Max(0,Math.Min(1,(hu-180.0)/500.0));
+            r=.88+.12*warm;g=.72+.24*warm;b=.55+.38*warm;
         }
 
         private static void BoneTransfer(byte v, out double a, out double r, out double g, out double b)
