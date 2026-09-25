@@ -70,10 +70,20 @@ namespace DicomViewer_ChatGPT
             SetupViewport(this.panel3D, this.volume3D, this.lbl3D, "3D MIP PREVIEW");
 
             // Match each viewport title to the MPR plane color used by the cross-reference lines.
+            // Keep the title bar black; color only the compact area occupied by each word.
+            this.lblAxial.Dock = System.Windows.Forms.DockStyle.None;
+            this.lblAxial.AutoSize = true;
+            this.lblAxial.Location = new System.Drawing.Point(4, 2);
             this.lblAxial.BackColor = System.Drawing.Color.Yellow;
             this.lblAxial.ForeColor = System.Drawing.Color.Black;
+            this.lblSagittal.Dock = System.Windows.Forms.DockStyle.None;
+            this.lblSagittal.AutoSize = true;
+            this.lblSagittal.Location = new System.Drawing.Point(4, 2);
             this.lblSagittal.BackColor = System.Drawing.Color.Cyan;
             this.lblSagittal.ForeColor = System.Drawing.Color.Black;
+            this.lblCoronal.Dock = System.Windows.Forms.DockStyle.None;
+            this.lblCoronal.AutoSize = true;
+            this.lblCoronal.Location = new System.Drawing.Point(4, 2);
             this.lblCoronal.BackColor = System.Drawing.Color.Magenta;
             this.lblCoronal.ForeColor = System.Drawing.Color.White;
 
