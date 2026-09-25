@@ -246,27 +246,49 @@ namespace DicomViewer_ChatGPT
 
         private void RefreshAfterMprScroll(PictureBox scrolledView)
         {
-            if(scrolledView==axial)
-            {
-                SetImage(axial,BuildAxialAtDisplayOrigin());
-                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
-                SetImage(coronal,BuildCoronalAtDisplayOrigin());
-            }
-            else if(scrolledView==sagittal)
-            {
-                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
-                SetImage(axial,BuildAxialAtDisplayOrigin());
-                SetImage(coronal,BuildCoronalAtDisplayOrigin());
-            }
-            else
-            {
-                SetImage(coronal,BuildCoronalAtDisplayOrigin());
-                SetImage(axial,BuildAxialAtDisplayOrigin());
-                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
-            }
+            // نمای Scroll شده باید Slice جدید را نشان دهد.
+            // دو نمای دیگر از همان DisplayOrigin قبلی دوباره ساخته می‌شوند؛ بنابراین
+            // Anatomy آن‌ها ثابت می‌ماند و فقط محل Cross-reference line تغییر می‌کند.
+            if(scrolledView==axial)SetImage(axial,BuildAxialAtDisplayOrigin());
+            else if(scrolledView==sagittal)SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+            else SetImage(coronal,BuildCoronalAtDisplayOrigin());
+
+            if(scrolledView!=axial)SetImage(axial,BuildFixedViewAfterScroll(axial));
+            if(scrolledView!=sagittal)SetImage(sagittal,BuildFixedViewAfterScroll(sagittal));
+            if(scrolledView!=coronal)SetImage(coronal,BuildFixedViewAfterScroll(coronal));
 
             UpdateMprTitles();
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
+        }
+
+        private Bitmap BuildFixedViewAfterScroll(PictureBox box)
+        {
+            Plane view=PlaneForView(box);
+            double[] origin=DisplayOriginForView(box);
+            Bounds b=GetPatientBounds();
+            double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double w,h;
+            Plane a,bp;
+
+            if(box==axial){w=b.MaxX-b.MinX;h=b.MaxY-b.MinY;a=coronalPlane;bp=sagittalPlane;}
+            else if(box==sagittal){w=b.MaxY-b.MinY;h=b.MaxZ-b.MinZ;a=axialPlane;bp=coronalPlane;}
+            else {w=b.MaxX-b.MinX;h=b.MaxZ-b.MinZ;a=axialPlane;bp=sagittalPlane;}
+
+            // تصویر پایه فقط از DisplayOrigin ثابت ساخته می‌شود و به crosshairPatient وابسته نیست.
+            Bitmap bmp=BuildPlane(view,origin,w,h,p,a,bp,false);
+            DrawReferenceLinesAtPatientPoint(bmp,view,origin,a,bp);
+            return bmp;
+        }
+
+        private void DrawReferenceLinesAtPatientPoint(Bitmap bmp,Plane view,double[] displayOrigin,Plane lineA,Plane lineB)
+        {
+            // محل تقاطع صفحات روی تصویر از اختلاف Patient Point و DisplayOrigin محاسبه می‌شود.
+            // در نتیجه هنگام Scroll، خود تصویر ثابت است و فقط خطوط روی آن حرکت می‌کنند.
+            double pixel=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            double cx=(bmp.Width-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),view.U)/pixel;
+            double cy=(bmp.Height-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),view.V)/pixel;
+            DrawPlaneLine(bmp,view,lineA,lineA.Color,cx,cy);
+            DrawPlaneLine(bmp,view,lineB,lineB.Color,cx,cy);
         }
 
         private bool IsPatientPointInsideVolume(double[] q)
