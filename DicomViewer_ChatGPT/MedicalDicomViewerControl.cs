@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace DicomViewer_ChatGPT
 {
-    public sealed class MedicalDicomViewerControl : UserControl
+    public partial class MedicalDicomViewerControl : UserControl
     {
         private readonly TableLayoutPanel grid;
         private readonly PictureBox axial, sagittal, coronal, volume3D;
@@ -18,21 +18,11 @@ namespace DicomViewer_ChatGPT
 
         public MedicalDicomViewerControl()
         {
-            BackColor = Color.Black;
-            grid = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, BackColor = Color.Black };
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
-            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            InitializeComponent();
 
-            axial = MakeView("AXIAL");
-            sagittal = MakeView("SAGITTAL");
-            coronal = MakeView("CORONAL");
-            volume3D = MakeView("3D MIP PREVIEW");
-
-            status = new Label { Dock = DockStyle.Bottom, Height = 24, ForeColor = Color.Gainsboro, BackColor = Color.FromArgb(30,30,30), TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(8,0,0,0) };
-            Controls.Add(grid);
-            Controls.Add(status);
+            axial.MouseEnter += delegate { axial.Focus(); };
+            sagittal.MouseEnter += delegate { sagittal.Focus(); };
+            coronal.MouseEnter += delegate { coronal.Focus(); };
 
             axial.MouseWheel += delegate(object s, MouseEventArgs e) { if (depth > 0) { zIndex = Clamp(zIndex + Math.Sign(e.Delta), 0, depth - 1); RefreshViews(); } };
             sagittal.MouseWheel += delegate(object s, MouseEventArgs e) { if (width > 0) { xIndex = Clamp(xIndex + Math.Sign(e.Delta), 0, width - 1); RefreshViews(); } };
@@ -58,16 +48,6 @@ namespace DicomViewer_ChatGPT
             string[] files = DicomSeriesLoader.FindLargestImageSeries(folder);
             if (files.Length == 0) throw new InvalidOperationException("No image DICOM series was found in this folder.");
             Active(files);
-        }
-
-        private PictureBox MakeView(string name)
-        {
-            var host = new Panel { Dock = DockStyle.Fill, BackColor = Color.Black, Margin = new Padding(1) };
-            var title = new Label { Text = name, Dock = DockStyle.Top, Height = 20, ForeColor = Color.LimeGreen, BackColor = Color.Black, Padding = new Padding(4,2,0,0) };
-            var box = new PictureBox { Dock = DockStyle.Fill, BackColor = Color.Black, SizeMode = PictureBoxSizeMode.Zoom, TabStop = true };
-            host.Controls.Add(box); host.Controls.Add(title); grid.Controls.Add(host);
-            box.MouseEnter += delegate { box.Focus(); };
-            return box;
         }
 
         private void RefreshViews()
