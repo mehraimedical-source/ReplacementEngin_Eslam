@@ -29,6 +29,7 @@ namespace DicomViewer_ChatGPT
         private double rowX,rowY,rowZ,colX,colY,colZ,normX,normY,normZ;
         private double originX,originY,originZ,invSpacingX,invSpacingY,voxelZScale,firstProjection;
         private double[] axialDisplayOrigin, sagittalDisplayOrigin, coronalDisplayOrigin;
+        private double[] centerDragViewU, centerDragViewV, centerDragDisplayOrigin;
 
         public MedicalDicomViewerControl()
         {
@@ -47,7 +48,7 @@ namespace DicomViewer_ChatGPT
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;
             crosshairPatient=GetCurrentPatientPoint();SetAllDisplayOrigins(crosshairPatient);
             dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
-            centerDragStartPatient=null;interactiveRendering=false;
+            centerDragStartPatient=null;centerDragViewU=null;centerDragViewV=null;centerDragDisplayOrigin=null;interactiveRendering=false;
             axial.Cursor=sagittal.Cursor=coronal.Cursor=Cursors.Default;
             RefreshViews();
         }
@@ -92,19 +93,20 @@ namespace DicomViewer_ChatGPT
             if(fixedView!=sagittal){SetImage(sagittal,BuildSagittal());sagittalDisplayOrigin=(double[])moved.Clone();}
             if(fixedView!=coronal){SetImage(coronal,BuildCoronal());coronalDisplayOrigin=(double[])moved.Clone();}
 
+            double[] hostOrigin=centerDragDisplayOrigin??DisplayOriginForView(fixedView);
             crosshairPatient=centerDragStartPatient;
             Bounds hb=GetPatientBounds();double hp=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
             Bitmap host;
-            if(fixedView==axial)host=BuildPlane(axialPlane,centerDragStartPatient,hb.MaxX-hb.MinX,hb.MaxY-hb.MinY,hp,coronalPlane,sagittalPlane,false);
-            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,centerDragStartPatient,hb.MaxY-hb.MinY,hb.MaxZ-hb.MinZ,hp,axialPlane,coronalPlane,false);
-            else host=BuildPlane(coronalPlane,centerDragStartPatient,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
+            if(fixedView==axial)host=BuildPlane(axialPlane,hostOrigin,hb.MaxX-hb.MinX,hb.MaxY-hb.MinY,hp,coronalPlane,sagittalPlane,false);
+            else if(fixedView==sagittal)host=BuildPlane(sagittalPlane,hostOrigin,hb.MaxY-hb.MinY,hb.MaxZ-hb.MinZ,hp,axialPlane,coronalPlane,false);
+            else host=BuildPlane(coronalPlane,hostOrigin,hb.MaxX-hb.MinX,hb.MaxZ-hb.MinZ,hp,axialPlane,sagittalPlane,false);
             crosshairPatient=moved;
 
             // Move the baked overlay in the fixed source image to the actual cursor
             // position without changing the underlying source slice.
-            DrawMovedCrosshairOnHost(host,fixedView,moved,centerDragStartPatient);
+            DrawMovedCrosshairOnHost(host,fixedView,moved,hostOrigin);
             SetImage(fixedView,host);
-            SetDisplayOriginForView(fixedView,centerDragStartPatient);
+            SetDisplayOriginForView(fixedView,hostOrigin);
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
@@ -197,7 +199,9 @@ namespace DicomViewer_ChatGPT
                 if(IsNearCenter(box,e.Location))
                 {
                     draggingCenter=true;dragView=box;centerDragStartMouse=e.Location;
-                    centerDragStartPatient=(double[])(crosshairPatient??GetCurrentPatientPoint()).Clone();box.Cursor=Cursors.SizeAll;return;
+                    centerDragStartPatient=(double[])(crosshairPatient??GetCurrentPatientPoint()).Clone();
+                    Plane cv=PlaneForView(box);centerDragViewU=(double[])cv.U.Clone();centerDragViewV=(double[])cv.V.Clone();
+                    centerDragDisplayOrigin=(double[])DisplayOriginForView(box).Clone();box.Cursor=Cursors.SizeAll;return;
                 }
                 Plane hit=HitTestReferenceLine(box,e.Location);
                 if(hit!=null)
@@ -224,7 +228,7 @@ namespace DicomViewer_ChatGPT
                         RefreshViewsExcept(releasedView);
                     }
                     dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
-                    centerDragStartPatient=null;interactiveRendering=false;box.Cursor=Cursors.Default;
+                    centerDragStartPatient=null;centerDragViewU=null;centerDragViewV=null;centerDragDisplayOrigin=null;interactiveRendering=false;box.Cursor=Cursors.Default;
                     if(!wasCenterDrag)RefreshAfterRotation();
                 }
             };
@@ -284,7 +288,6 @@ namespace DicomViewer_ChatGPT
             // Using the newly reconstructed image/center on every MouseMove creates
             // positive feedback (the crosshair runs ahead and all views drift).
             Rectangle r=GetImageRectangle(box);if(centerDragStartPatient==null||r.Width<2||r.Height<2)return;
-            Plane view=PlaneForView(box);
             // Map the mouse delta through the actual rendered image rectangle.
             // PictureBox Zoom can scale X/Y differently from the source pixel count
             // after rounding, so use image-pixels-per-screen-pixel directly.
@@ -293,7 +296,8 @@ namespace DicomViewer_ChatGPT
             double scaleY=(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
             double du=(mouse.X-centerDragStartMouse.X)*scaleX*pixel;
             double dv=(mouse.Y-centerDragStartMouse.Y)*scaleY*pixel;
-            crosshairPatient=Add(centerDragStartPatient,Add(Scale(view.U,du),Scale(view.V,dv)));
+            double[] u=centerDragViewU??PlaneForView(box).U,v=centerDragViewV??PlaneForView(box).V;
+            crosshairPatient=Add(centerDragStartPatient,Add(Scale(u,du),Scale(v,dv)));
         }
 
         private void SetIndicesFromPatient(double[] q)
