@@ -14,7 +14,9 @@ namespace DicomViewer_ChatGPT
         private double spacingX=1,spacingY=1,spacingZ=1,windowCenter=40,windowWidth=400;
         private Plane axialPlane,coronalPlane,sagittalPlane;
         private PictureBox dragView;
-        private Plane dragPlane;
+        private Plane dragPlane,dragCompanion;
+        private double dragStartAngle;
+        private double[] dragNormal0,dragCompanionNormal0,dragU0,dragV0,dragCompanionU0,dragCompanionV0;
 
         public MedicalDicomViewerControl()
         {
@@ -72,26 +74,29 @@ namespace DicomViewer_ChatGPT
             {
                 if(e.Button!=MouseButtons.Left||box.Image==null||!HasPatientGeometry())return;
                 Plane hit=HitTestReferenceLine(box,e.Location);
-                if(hit!=null){dragView=box;dragPlane=hit;box.Cursor=Cursors.Hand;}
+                if(hit!=null)
+                {
+                    dragView=box;dragPlane=hit;dragCompanion=OtherReferencePlane(box,hit);
+                    dragStartAngle=MouseAngleInImage(box,e.Location);
+                    dragNormal0=(double[])dragPlane.N.Clone();dragU0=(double[])dragPlane.U.Clone();dragV0=(double[])dragPlane.V.Clone();
+                    if(dragCompanion!=null){dragCompanionNormal0=(double[])dragCompanion.N.Clone();dragCompanionU0=(double[])dragCompanion.U.Clone();dragCompanionV0=(double[])dragCompanion.V.Clone();}
+                    box.Cursor=Cursors.Hand;
+                }
             };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
-                if(dragView==box){dragView=null;dragPlane=null;box.Cursor=Cursors.Default;}
+                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;box.Cursor=Cursors.Default;}
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
                 if(dragView!=box||dragPlane==null||box.Image==null)return;
                 Rectangle r=GetImageRectangle(box);if(!r.Contains(e.Location))return;
-                double ix=(e.X-r.Left)*(box.Image.Width-1)/(double)Math.Max(1,r.Width-1);
-                double iy=(e.Y-r.Top)*(box.Image.Height-1)/(double)Math.Max(1,r.Height-1);
-                double dx=ix-(box.Image.Width-1)/2.0,dy=iy-(box.Image.Height-1)/2.0;
-                if(dx*dx+dy*dy<25)return;
                 Plane view=PlaneForView(box);
-                // Mouse direction is the desired intersection line in the displayed plane.
-                double[] line=Normalize(Add(Scale(view.U,dx),Scale(view.V,dy)));
-                double[] newNormal=Normalize(Cross(line,view.N));
-                if(Dot(newNormal,dragPlane.N)<0)newNormal=Scale(newNormal,-1);
-                SetPlaneNormalKeepingIntersection(dragPlane,newNormal,line);
+                double delta=NormalizeAngle(MouseAngleInImage(box,e.Location)-dragStartAngle);
+                // RadiAnt-style coupled rotation: both reference planes rotate by
+                // the same delta around the current view normal, so they stay 90 degrees apart.
+                ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
+                if(dragCompanion!=null)ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
                 RefreshViews();
             };
         }
@@ -116,6 +121,39 @@ namespace DicomViewer_ChatGPT
         }
 
         private Plane PlaneForView(PictureBox box){return box==axial?axialPlane:box==coronal?coronalPlane:sagittalPlane;}
+        private Plane OtherReferencePlane(PictureBox box,Plane selected)
+        {
+            Plane[] a=box==axial?new[]{coronalPlane,sagittalPlane}:box==coronal?new[]{axialPlane,sagittalPlane}:new[]{axialPlane,coronalPlane};
+            return a[0]==selected?a[1]:a[0];
+        }
+
+        private static double MouseAngleInImage(PictureBox box,Point p)
+        {
+            Rectangle r=GetImageRectangle(box);
+            double x=(p.X-r.Left)/(double)Math.Max(1,r.Width)-.5;
+            double y=(p.Y-r.Top)/(double)Math.Max(1,r.Height)-.5;
+            return Math.Atan2(y,x);
+        }
+
+        private static double NormalizeAngle(double a)
+        {
+            while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;return a;
+        }
+
+        private static void ApplyRotatedPlane(Plane p,double[] n0,double[] u0,double[] v0,double[] axis,double angle)
+        {
+            p.N=Normalize(RotateAroundAxis(n0,axis,angle));
+            p.U=Normalize(RotateAroundAxis(u0,axis,angle));
+            p.V=Normalize(RotateAroundAxis(v0,axis,angle));
+        }
+
+        private static double[] RotateAroundAxis(double[] v,double[] axis,double angle)
+        {
+            axis=Normalize(axis);double c=Math.Cos(angle),s=Math.Sin(angle),d=Dot(axis,v);
+            double[] cr=Cross(axis,v);
+            return new[]{v[0]*c+cr[0]*s+axis[0]*d*(1-c),v[1]*c+cr[1]*s+axis[1]*d*(1-c),v[2]*c+cr[2]*s+axis[2]*d*(1-c)};
+        }
+
 
         private static void SetPlaneNormalKeepingIntersection(Plane plane,double[] normal,double[] intersection)
         {
