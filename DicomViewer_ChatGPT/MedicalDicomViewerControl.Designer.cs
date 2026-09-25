@@ -69,6 +69,14 @@ namespace DicomViewer_ChatGPT
             SetupViewport(this.panelCoronal, this.coronal, this.lblCoronal, "CORONAL");
             SetupViewport(this.panel3D, this.volume3D, this.lbl3D, "3D MIP PREVIEW");
 
+            // Match each viewport title to the MPR plane color used by the cross-reference lines.
+            this.lblAxial.BackColor = System.Drawing.Color.Yellow;
+            this.lblAxial.ForeColor = System.Drawing.Color.Black;
+            this.lblSagittal.BackColor = System.Drawing.Color.Cyan;
+            this.lblSagittal.ForeColor = System.Drawing.Color.Black;
+            this.lblCoronal.BackColor = System.Drawing.Color.Magenta;
+            this.lblCoronal.ForeColor = System.Drawing.Color.White;
+
             this.status.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             this.status.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.status.ForeColor = System.Drawing.Color.Gainsboro;
