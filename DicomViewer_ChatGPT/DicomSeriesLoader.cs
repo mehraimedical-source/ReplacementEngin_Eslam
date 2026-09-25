@@ -30,7 +30,9 @@ namespace DicomViewer_ChatGPT
             {
                 try
                 {
-                    DicomFile file = DicomFile.Open(path, FileReadOption.ReadSmallest);
+                    // fo-dicom 4.x does not expose FileReadOption.ReadSmallest.
+                    // Open normally here; PixelData is decoded only later when the selected series is rendered.
+                    DicomFile file = DicomFile.Open(path);
                     DicomDataset ds = file.Dataset;
                     if (!ds.Contains(DicomTag.PixelData)) continue;
 
@@ -46,15 +48,10 @@ namespace DicomViewer_ChatGPT
                 }
             }
 
-            var best = items.GroupBy(x => x.SeriesUid)
-                            .OrderByDescending(g => g.Count())
-                            .FirstOrDefault();
+            var best = items.GroupBy(x => x.SeriesUid).OrderByDescending(g => g.Count()).FirstOrDefault();
             if (best == null) return new string[0];
 
-            return best.OrderBy(x => x.Position)
-                       .ThenBy(x => x.Instance)
-                       .Select(x => x.Path)
-                       .ToArray();
+            return best.OrderBy(x => x.Position).ThenBy(x => x.Instance).Select(x => x.Path).ToArray();
         }
 
         public static ProcessedDicomImage[] Load(string[] files)
