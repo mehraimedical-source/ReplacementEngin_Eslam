@@ -472,7 +472,14 @@ namespace DicomViewer_ChatGPT
             double[] d=IntersectionDirection(view,other);
             double x=Dot(d,view.U),y=Dot(d,view.V),len=Math.Sqrt(bmp.Width*bmp.Width+bmp.Height*bmp.Height);
             using(Graphics g=Graphics.FromImage(bmp))using(Pen p=new Pen(color,1))
+            {
+                // برای جلوگیری از شکستگی ظاهری خطوط مورب، فقط Overlay را AntiAlias می‌کنیم.
+                g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                g.PixelOffsetMode=System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                p.StartCap=System.Drawing.Drawing2D.LineCap.Round;
+                p.EndCap=System.Drawing.Drawing2D.LineCap.Round;
                 g.DrawLine(p,(float)(cx-x*len),(float)(cy-y*len),(float)(cx+x*len),(float)(cy+y*len));
+            }
         }
 
         private static double[] IntersectionDirection(Plane a,Plane b)
