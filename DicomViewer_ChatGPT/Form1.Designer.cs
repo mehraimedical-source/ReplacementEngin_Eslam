@@ -10,6 +10,7 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.Label lblState;
         private System.Windows.Forms.Panel toolbarPanel;
         private System.Windows.Forms.Button btnResetAxes;
+        private System.Windows.Forms.Button btnReset3D;
         private MedicalDicomViewerControl dicomViewer;
 
         protected override void Dispose(bool disposing) { if (disposing && (components != null)) components.Dispose(); base.Dispose(disposing); }
@@ -23,6 +24,7 @@ namespace DicomViewer_ChatGPT
             this.txtFolder = new System.Windows.Forms.TextBox();
             this.toolbarPanel = new System.Windows.Forms.Panel();
             this.btnResetAxes = new System.Windows.Forms.Button();
+            this.btnReset3D = new System.Windows.Forms.Button();
             this.dicomViewer = new DicomViewer_ChatGPT.MedicalDicomViewerControl();
             this.topPanel.SuspendLayout();
             this.toolbarPanel.SuspendLayout();
@@ -84,6 +86,11 @@ namespace DicomViewer_ChatGPT
             // 
             // toolbarPanel
             // 
+<<<<<<< HEAD
+=======
+            this.toolbarPanel.Controls.Add(this.btnReset3D);
+            this.toolbarPanel.Controls.Add(this.btnResetAxes);
+>>>>>>> 88cf9b23f959f974e5d3d625746e2ca3e42af487
             this.toolbarPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(35)))), ((int)(((byte)(35)))), ((int)(((byte)(38)))));
             this.toolbarPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.toolbarPanel.Controls.Add(this.btnResetAxes);
@@ -105,6 +112,19 @@ namespace DicomViewer_ChatGPT
             this.btnResetAxes.Text = "Reset Axes";
             this.btnResetAxes.UseVisualStyleBackColor = false;
             this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
+            // 
+            // btnReset3D
+            // 
+            this.btnReset3D.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(55)))), ((int)(((byte)(55)))), ((int)(((byte)(55)))));
+            this.btnReset3D.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnReset3D.ForeColor = System.Drawing.Color.White;
+            this.btnReset3D.Location = new System.Drawing.Point(124, 8);
+            this.btnReset3D.Name = "btnReset3D";
+            this.btnReset3D.Size = new System.Drawing.Size(110, 30);
+            this.btnReset3D.TabIndex = 1;
+            this.btnReset3D.Text = "Reset 3D";
+            this.btnReset3D.UseVisualStyleBackColor = false;
+            this.btnReset3D.Click += new System.EventHandler(this.btnReset3D_Click);
             // 
             // dicomViewer
             // 

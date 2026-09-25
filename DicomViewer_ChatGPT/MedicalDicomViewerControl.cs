@@ -56,6 +56,15 @@ namespace DicomViewer_ChatGPT
             RefreshViews();
         }
 
+        public void Reset3D()
+        {
+            if(!volumeRenderer.Ready)return;
+            dragging3D=false;
+            volume3D.Cursor=Cursors.Default;
+            volumeRenderer.ResetCamera();
+            Render3D(false);
+        }
+
         public void Active(string[] dicomFiles){Active(DicomSeriesLoader.Load(dicomFiles));}
         public void ActiveFolder(string folder){var f=DicomSeriesLoader.FindLargestImageSeries(folder);if(f.Length==0)throw new InvalidOperationException("No image DICOM series was found.");Active(f);}
         public void Active(ProcessedDicomImage[] images)
