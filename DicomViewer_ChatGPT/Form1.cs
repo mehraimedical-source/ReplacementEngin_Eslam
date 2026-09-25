@@ -18,6 +18,12 @@ namespace DicomViewer_ChatGPT
             dicomViewer.Reset3D();
         }
 
+        private void numAxisWidth_ValueChanged(object sender, EventArgs e)
+        {
+            // ضخامت خطوط محورهای MPR مستقیماً از Toolbar قابل تنظیم است.
+            dicomViewer.AxisLineWidth = (float)numAxisWidth.Value;
+        }
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             txtFolder.Text = @"SR002";
