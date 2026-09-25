@@ -96,15 +96,6 @@ namespace DicomViewer_ChatGPT
                         double a, r, g, b;
                         if(useHu) BoneTransferHu(value, step, out a, out r, out g, out b);
                         else BoneTransfer((byte)value, out a, out r, out g, out b);
-                        if(useHu)
-                        {
-                            // Add only local surface shading. Geometry, ray traversal and
-                            // compositing remain unchanged from the stable baseline.
-                            Vec normal=GradientNormal(fx,fy,fz);
-                            double diffuse=Math.Max(0,normal.X*(-forward.X)+normal.Y*(-forward.Y)+normal.Z*(-forward.Z));
-                            double light=.38+.62*diffuse;
-                            r*=light;g*=light;b*=light;
-                        }
                         a *= (1.0 - alpha);
                         ar += r * a; ag += g * a; ab += b * a; alpha += a;
                     }
@@ -139,16 +130,6 @@ namespace DicomViewer_ChatGPT
                 d=Lerp(voxels[b1+y1*width+x0],voxels[b1+y1*width+x1],tx);
             }
             return Lerp(Lerp(a,b,ty),Lerp(c,d,ty),tz);
-        }
-
-        private Vec GradientNormal(double x,double y,double z)
-        {
-            // Central differences in physical space. Only used for CT bone samples
-            // that already passed the transfer-function threshold.
-            double gx=(Sample(x+1,y,z)-Sample(x-1,y,z))/(2.0*sx);
-            double gy=(Sample(x,y+1,z)-Sample(x,y-1,z))/(2.0*sy);
-            double gz=(Sample(x,y,z+1)-Sample(x,y,z-1))/(2.0*sz);
-            return Normalize(new Vec(gx,gy,gz));
         }
 
         private static void BoneTransferHu(double hu,double stepMm,out double a,out double r,out double g,out double b)
