@@ -24,6 +24,16 @@ namespace DicomViewer_ChatGPT
             dicomViewer.AxisLineWidth = (float)numAxisWidth.Value;
         }
 
+        private void btnWindowLevel_Click(object sender, EventArgs e)
+        {
+            // ابزار Window/Level به صورت Toggle فعال می‌شود.
+            dicomViewer.WindowLevelMode=!dicomViewer.WindowLevelMode;
+            btnWindowLevel.BackColor=dicomViewer.WindowLevelMode
+                ? System.Drawing.Color.DimGray
+                : System.Drawing.Color.FromArgb(55,55,55);
+            lblWindowLevel.Text=String.Format("WL: {0:0}   WW: {1:0}",dicomViewer.WindowCenter,dicomViewer.WindowWidth);
+        }
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             txtFolder.Text = @"SR002";
