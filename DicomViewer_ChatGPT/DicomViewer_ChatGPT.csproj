@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DicomSeriesLoader.cs" />
+    <Compile Include="CpuVolumeRenderer.cs" />
     <Compile Include="MedicalDicomViewerControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
