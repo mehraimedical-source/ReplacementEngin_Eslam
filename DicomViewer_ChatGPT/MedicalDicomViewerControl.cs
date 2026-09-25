@@ -37,7 +37,7 @@ namespace DicomViewer_ChatGPT
         private void RefreshViews()
         {
             SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());SetImage(volume3D,BuildMip());
-            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm   WL {6:0}/{7:0}",width,height,depth,spacingX,spacingY,spacingZ);
+            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
         private Bitmap BuildAxial()
