@@ -17,6 +17,7 @@ namespace DicomViewer_ChatGPT
         private System.Windows.Forms.PictureBox coronal;
         private System.Windows.Forms.PictureBox volume3D;
         private System.Windows.Forms.Label status;
+        private System.Windows.Forms.Button btnResetAxes;
 
         private void InitializeComponent()
         {
@@ -34,6 +35,7 @@ namespace DicomViewer_ChatGPT
             this.coronal = new System.Windows.Forms.PictureBox();
             this.volume3D = new System.Windows.Forms.PictureBox();
             this.status = new System.Windows.Forms.Label();
+            this.btnResetAxes = new System.Windows.Forms.Button();
             this.grid.SuspendLayout();
             this.panelAxial.SuspendLayout();
             this.panelSagittal.SuspendLayout();
@@ -76,9 +78,22 @@ namespace DicomViewer_ChatGPT
             this.status.Text = "Ready";
             this.status.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 
+            this.btnResetAxes.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            this.btnResetAxes.BackColor = System.Drawing.Color.FromArgb(45, 45, 45);
+            this.btnResetAxes.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnResetAxes.ForeColor = System.Drawing.Color.White;
+            this.btnResetAxes.Location = new System.Drawing.Point(886, 3);
+            this.btnResetAxes.Name = "btnResetAxes";
+            this.btnResetAxes.Size = new System.Drawing.Size(108, 24);
+            this.btnResetAxes.TabIndex = 5;
+            this.btnResetAxes.Text = "Reset Axes";
+            this.btnResetAxes.UseVisualStyleBackColor = false;
+            this.btnResetAxes.Click += new System.EventHandler(this.btnResetAxes_Click);
+
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.Controls.Add(this.grid);
+            this.Controls.Add(this.btnResetAxes);
             this.Controls.Add(this.status);
             this.Name = "MedicalDicomViewerControl";
             this.Size = new System.Drawing.Size(1000, 700);
