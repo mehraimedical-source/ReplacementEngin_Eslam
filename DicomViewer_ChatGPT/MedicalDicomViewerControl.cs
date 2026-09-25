@@ -478,13 +478,14 @@ namespace DicomViewer_ChatGPT
                 double step=SliceStepForPlane(plane);
                 double[] candidate=Add(crosshairPatient,Scale(plane.N,direction*step));
 
-                // اجازه نمی‌دهیم Crosshair از محدوده واقعی Volume خارج شود.
-                SetIndicesFromPatient(candidate);
-                double[] clamped=GetCurrentPatientPoint();
+                // برای Scroll نباید نقطه را با x/y/zIndex دوباره بسازیم؛ آن بازسازی فقط روی
+                // محورهای Source حرکت می‌کند و در Seriesهای Coronal/Sagittal بخشی از حرکت
+                // Patient-Space را حذف می‌کرد. خود Candidate را در Bounds واقعی Volume Clamp می‌کنیم.
+                double[] clamped=ClampPatientToVolume(candidate);
                 double normalMove=Dot(Sub(clamped,crosshairPatient),plane.N);
                 if(Math.Abs(normalMove)<.000001)return;
 
-                crosshairPatient=Add(crosshairPatient,Scale(plane.N,normalMove));
+                crosshairPatient=clamped;
 
                 // DisplayOrigin را همراه Plane میزبان در راستای Normal جابه‌جا می‌کنیم؛
                 // مؤلفه‌های U/V ثابت می‌مانند، پس تصویر Pan یا Recenter نمی‌شود.
@@ -494,6 +495,33 @@ namespace DicomViewer_ChatGPT
                 RefreshAfterRotation();
                 UpdateMprTitles();
             };
+        }
+
+        private double[] ClampPatientToVolume(double[] q)
+        {
+            double dx=q[0]-originX,dy=q[1]-originY,dz=q[2]-originZ;
+            double fx=(dx*rowX+dy*rowY+dz*rowZ)*invSpacingX;
+            double fy=(dx*colX+dy*colY+dz*colZ)*invSpacingY;
+            double projection=q[0]*normX+q[1]*normY+q[2]*normZ;
+            double fz=ProjectionToSliceCoordinate(projection);
+
+            fx=Math.Max(0,Math.Min(width-1,fx));
+            fy=Math.Max(0,Math.Min(height-1,fy));
+            fz=Math.Max(0,Math.Min(depth-1,fz));
+
+            double sliceProjection;
+            if(sliceProjections!=null&&sliceProjections.Length==depth)
+            {
+                int z0=(int)Math.Floor(fz),z1=Math.Min(depth-1,z0+1);
+                sliceProjection=Lerp(sliceProjections[z0],sliceProjections[z1],fz-z0);
+            }
+            else sliceProjection=firstProjection+fz/Math.Max(.000001,voxelZScale);
+
+            double normalOffset=sliceProjection-firstProjection;
+            return new[]{
+                originX+rowX*fx*spacingX+colX*fy*spacingY+normX*normalOffset,
+                originY+rowY*fx*spacingX+colY*fy*spacingY+normY*normalOffset,
+                originZ+rowZ*fx*spacingX+colZ*fy*spacingY+normZ*normalOffset};
         }
 
         private double SliceStepForPlane(Plane plane)
