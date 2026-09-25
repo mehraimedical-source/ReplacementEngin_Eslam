@@ -44,7 +44,7 @@ namespace DicomViewer_ChatGPT
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);Hook3D();
         }
 
-        private void btnResetAxes_Click(object sender,EventArgs e)
+        public void ResetAxes()
         {
             if(volume==null||depth==0)return;
             InitializePlanes();
