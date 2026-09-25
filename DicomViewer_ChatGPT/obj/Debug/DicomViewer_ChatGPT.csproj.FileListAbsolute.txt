@@ -12,3 +12,5 @@ C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\bin\Deb
 C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.CopyComplete
 C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.exe
 C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.pdb
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.Form1.resources
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.MedicalDicomViewerControl.resources

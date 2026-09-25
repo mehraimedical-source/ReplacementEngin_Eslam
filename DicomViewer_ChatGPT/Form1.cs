@@ -10,6 +10,8 @@ namespace DicomViewer_ChatGPT
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
+            txtFolder.Text = @"SR002";
+            return;
             using (var dialog = new FolderBrowserDialog())
             {
                 dialog.Description = "Select a folder containing a DICOM study/series";
