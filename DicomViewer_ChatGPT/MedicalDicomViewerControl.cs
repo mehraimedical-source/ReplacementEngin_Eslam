@@ -31,68 +31,42 @@ namespace DicomViewer_ChatGPT
             width=images[0].Width;height=images[0].Height;
             if(images.Any(i=>i.Width!=width||i.Height!=height))throw new ArgumentException("All slices must have the same dimensions.");
             volume=images;depth=images.Length;CalculateVoxelSpacing();
-            windowCenter=127.5;windowWidth=255.0;
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;RefreshViews();
         }
 
         private void RefreshViews()
         {
             SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());SetImage(volume3D,BuildMip());
-            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm   WL {6:0}/{7:0}",width,height,depth,spacingX,spacingY,spacingZ,windowCenter,windowWidth);
+            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm   WL {6:0}/{7:0}",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
         private Bitmap BuildAxial()
         {
-            byte[] p=new byte[width*height];for(int y=0;y<height;y++)for(int x=0;x<width;x++)p[y*width+x]=DisplayVoxel(x,y,zIndex);
-            Bitmap b=GrayBitmap(p,width,height);DrawCrosshair(b,xIndex,yIndex,Color.Cyan,Color.Magenta);return b;
+            Bitmap b=GrayBitmap((byte[])volume[zIndex].Gray8.Clone(),width,height);
+            DrawCrosshair(b,xIndex,yIndex,Color.Cyan,Color.Magenta);return b;
         }
 
         private Bitmap BuildCoronal()
         {
-            double mmW=(width-1)*spacingX,mmH=(depth-1)*spacingZ;
-            int outW=width,outH=Math.Max(2,(int)Math.Round(mmH/spacingX)+1);
-            byte[] p=new byte[outW*outH];
-            for(int oy=0;oy<outH;oy++){double z=(outH==1?0:(depth-1)*(outH-1-oy)/(double)(outH-1));for(int x=0;x<outW;x++)p[oy*outW+x]=SampleDisplay(x,yIndex,z);}
-            Bitmap b=GrayBitmap(p,outW,outH);
-            int cy=(int)Math.Round((depth-1-zIndex)*(outH-1)/(double)Math.Max(1,depth-1));
-            DrawCrosshair(b,xIndex,cy,Color.Cyan,Color.Yellow);return b;
+            byte[] p=new byte[width*depth];
+            for(int z=0;z<depth;z++) Buffer.BlockCopy(volume[z].Gray8,yIndex*width,p,(depth-1-z)*width,width);
+            Bitmap b=GrayBitmap(p,width,depth);
+            DrawCrosshair(b,xIndex,depth-1-zIndex,Color.Cyan,Color.Yellow);return b;
         }
 
         private Bitmap BuildSagittal()
         {
-            double mmH=(depth-1)*spacingZ;
-            int outW=height,outH=Math.Max(2,(int)Math.Round(mmH/spacingY)+1);
-            byte[] p=new byte[outW*outH];
-            for(int oy=0;oy<outH;oy++){double z=(depth-1)*(outH-1-oy)/(double)Math.Max(1,outH-1);for(int y=0;y<outW;y++)p[oy*outW+y]=SampleDisplay(xIndex,y,z);}
-            Bitmap b=GrayBitmap(p,outW,outH);
-            int cy=(int)Math.Round((depth-1-zIndex)*(outH-1)/(double)Math.Max(1,depth-1));
-            DrawCrosshair(b,yIndex,cy,Color.Magenta,Color.Yellow);return b;
+            byte[] p=new byte[height*depth];
+            for(int z=0;z<depth;z++) for(int y=0;y<height;y++) p[(depth-1-z)*height+y]=volume[z].Gray8[y*width+xIndex];
+            Bitmap b=GrayBitmap(p,height,depth);
+            DrawCrosshair(b,yIndex,depth-1-zIndex,Color.Magenta,Color.Yellow);return b;
         }
 
         private Bitmap BuildMip()
         {
             byte[] p=new byte[width*height];
-            for(int y=0;y<height;y++)for(int x=0;x<width;x++){byte m=0;for(int z=0;z<depth;z++){byte v=DisplayVoxel(x,y,z);if(v>m)m=v;}p[y*width+x]=m;}
+            for(int z=0;z<depth;z++){byte[] s=volume[z].Gray8;for(int i=0;i<p.Length;i++)if(s[i]>p[i])p[i]=s[i];}
             return GrayBitmap(p,width,height);
-        }
-
-        private byte SampleDisplay(double x,double y,double z)
-        {
-            int z0=Clamp((int)Math.Floor(z),0,depth-1),z1=Clamp(z0+1,0,depth-1);double t=z-z0;
-            double a=HuAt(Clamp((int)Math.Round(x),0,width-1),Clamp((int)Math.Round(y),0,height-1),z0);
-            double b=HuAt(Clamp((int)Math.Round(x),0,width-1),Clamp((int)Math.Round(y),0,height-1),z1);
-            return Window(a+(b-a)*t);
-        }
-        private byte DisplayVoxel(int x,int y,int z){return Window(HuAt(x,y,z));}
-        private double HuAt(int x,int y,int z)
-        {
-            var s=volume[z];int i=y*width+x;
-            return s.Gray8[i];
-        }
-        private byte Window(double value)
-        {
-            double lo=windowCenter-windowWidth/2.0,hi=windowCenter+windowWidth/2.0;
-            if(value<=lo)return 0;if(value>=hi)return 255;return (byte)Math.Round((value-lo)*255.0/(hi-lo));
         }
 
         private void CalculateVoxelSpacing()
