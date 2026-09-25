@@ -40,6 +40,7 @@ namespace DicomViewer_ChatGPT
         private bool windowLevelDragging;
         private Point windowLevelStartMouse;
         private double windowLevelStartCenter,windowLevelStartWidth;
+        private bool sampleWindowLevelOnDemand;
 
         public MedicalDicomViewerControl()
         {
@@ -67,6 +68,7 @@ namespace DicomViewer_ChatGPT
             if(volume==null)return;
             windowCenter=defaultWindowCenter;
             windowWidth=defaultWindowWidth;
+            sampleWindowLevelOnDemand=false;
             PrepareDisplayVolumeOnly();
             RefreshAfterRotation();
         }
@@ -397,7 +399,7 @@ namespace DicomViewer_ChatGPT
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
                     lastInteractiveRender=DateTime.UtcNow;
-                    PrepareDisplayVolumeOnly();
+                    sampleWindowLevelOnDemand=true;
                     RefreshAfterRotation();
                     status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
                     Application.DoEvents();
@@ -801,9 +803,17 @@ namespace DicomViewer_ChatGPT
             int b0=z0*sliceStride,b1=z1*sliceStride;
             int i00=b0+y0*width+x0,i01=b0+y0*width+x1,i10=b0+y1*width+x0,i11=b0+y1*width+x1;
             int j00=b1+y0*width+x0,j01=b1+y0*width+x1,j10=b1+y1*width+x0,j11=b1+y1*width+x1;
-            double a=Lerp(displayVolume[i00],displayVolume[i01],tx),b=Lerp(displayVolume[i10],displayVolume[i11],tx);
-            double cc=Lerp(displayVolume[j00],displayVolume[j01],tx),d=Lerp(displayVolume[j10],displayVolume[j11],tx);
-            return (byte)Math.Round(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
+            if(sampleWindowLevelOnDemand&&volume[z0].HasModality16&&volume[z1].HasModality16)
+            {
+                short[] s0=volume[z0].Modality16,s1=volume[z1].Modality16;
+                int p00=y0*width+x0,p01=y0*width+x1,p10=y1*width+x0,p11=y1*width+x1;
+                double a=Lerp(s0[p00],s0[p01],tx),b=Lerp(s0[p10],s0[p11],tx);
+                double cc=Lerp(s1[p00],s1[p01],tx),d=Lerp(s1[p10],s1[p11],tx);
+                return WindowToByte(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
+            }
+            double da=Lerp(displayVolume[i00],displayVolume[i01],tx),db=Lerp(displayVolume[i10],displayVolume[i11],tx);
+            double dc=Lerp(displayVolume[j00],displayVolume[j01],tx),dd=Lerp(displayVolume[j10],displayVolume[j11],tx);
+            return (byte)Math.Round(Lerp(Lerp(da,db,ty),Lerp(dc,dd,ty),tz));
         }
 
         private byte SamplePatient(double px,double py,double pz)
