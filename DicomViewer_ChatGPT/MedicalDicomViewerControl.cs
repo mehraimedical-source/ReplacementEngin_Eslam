@@ -73,7 +73,13 @@ namespace DicomViewer_ChatGPT
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
             PrepareFastVolume();
-            volumeRenderer.SetVolume(displayVolume,width,height,depth,spacingX,spacingY,spacingZ);
+            if(volume.All(i=>i.HasModality16))
+            {
+                short[] huVolume=new short[sliceStride*depth];
+                for(int z=0;z<depth;z++)Buffer.BlockCopy(volume[z].Modality16,0,huVolume,z*sliceStride*sizeof(short),sliceStride*sizeof(short));
+                volumeRenderer.SetCtVolume(huVolume,width,height,depth,spacingX,spacingY,spacingZ);
+            }
+            else volumeRenderer.SetVolume(displayVolume,width,height,depth,spacingX,spacingY,spacingZ);
             Render3D(false);
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();
             axialDisplayOrigin=sagittalDisplayOrigin=coronalDisplayOrigin=(double[])crosshairPatient.Clone();RefreshViews();
