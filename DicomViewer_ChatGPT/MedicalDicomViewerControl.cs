@@ -282,9 +282,24 @@ namespace DicomViewer_ChatGPT
             // شماره‌ها یک‌مبنا نمایش داده می‌شوند تا برای کاربر به شکل 1/N باشند.
             // در حالت Oblique این اعداد نزدیک‌ترین Voxel متناظر با نقطه مشترک سه صفحه هستند.
             SetIndicesFromPatient(crosshairPatient);
-            lblAxial.Text=String.Format("AXIAL   image : {0} / {1}",zIndex+1,depth);
-            lblSagittal.Text=String.Format("SAGITTAL   image : {0} / {1}",xIndex+1,width);
-            lblCoronal.Text=String.Format("CORONAL   image : {0} / {1}",yIndex+1,height);
+            int[] ai=IndexAndCountForPlane(axialPlane);
+            int[] si=IndexAndCountForPlane(sagittalPlane);
+            int[] ci=IndexAndCountForPlane(coronalPlane);
+            lblAxial.Text=String.Format("AXIAL   image : {0} / {1}",ai[0]+1,ai[1]);
+            lblSagittal.Text=String.Format("SAGITTAL   image : {0} / {1}",si[0]+1,si[1]);
+            lblCoronal.Text=String.Format("CORONAL   image : {0} / {1}",ci[0]+1,ci[1]);
+        }
+
+        private int[] IndexAndCountForPlane(Plane plane)
+        {
+            // x/y/zIndex مختصات ماتریس Source هستند، نه نام آناتومیک View.
+            // بنابراین در Seriesهای Coronal/Sagittal نباید همیشه depth را AXIAL فرض کنیم.
+            double ar=Math.Abs(Dot(plane.N,new[]{rowX,rowY,rowZ}));
+            double ac=Math.Abs(Dot(plane.N,new[]{colX,colY,colZ}));
+            double an=Math.Abs(Dot(plane.N,new[]{normX,normY,normZ}));
+            if(ar>=ac&&ar>=an)return new[]{xIndex,width};
+            if(ac>=ar&&ac>=an)return new[]{yIndex,height};
+            return new[]{zIndex,depth};
         }
 
         private void HookPlaneLines(PictureBox box)
