@@ -71,6 +71,15 @@ namespace DicomViewer_ChatGPT
             PrepareDisplayVolumeOnly();
             sampleWindowLevelOnDemand=false;
             RefreshAfterRotation();
+            RaiseWindowLevelChanged();
+        }
+
+        public event EventHandler WindowLevelChanged;
+
+        private void RaiseWindowLevelChanged()
+        {
+            EventHandler handler=WindowLevelChanged;
+            if(handler!=null)handler(this,EventArgs.Empty);
         }
 
         public double WindowCenter { get { return windowCenter; } }
@@ -431,6 +440,7 @@ namespace DicomViewer_ChatGPT
                     sampleWindowLevelOnDemand=true;
                     RefreshAfterRotation();
                     status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
+                    RaiseWindowLevelChanged();
                     Application.DoEvents();
                 }
             };
