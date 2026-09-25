@@ -39,7 +39,6 @@ namespace DicomViewer_ChatGPT
         private bool windowLevelDragging;
         private Point windowLevelStartMouse;
         private double windowLevelStartCenter,windowLevelStartWidth;
-        private Label windowLevelOverlay;
 
         public MedicalDicomViewerControl()
         {
@@ -48,7 +47,6 @@ namespace DicomViewer_ChatGPT
             HookPlaneLines(axial);HookPlaneLines(sagittal);HookPlaneLines(coronal);
             HookSliceScroll(axial);HookSliceScroll(sagittal);HookSliceScroll(coronal);
             HookWindowLevel(axial);HookWindowLevel(sagittal);HookWindowLevel(coronal);
-            CreateWindowLevelOverlay();
             Hook3D();
         }
 
@@ -360,30 +358,6 @@ namespace DicomViewer_ChatGPT
             };
         }
 
-        private void CreateWindowLevelOverlay()
-        {
-            windowLevelOverlay=new Label();
-            windowLevelOverlay.AutoSize=true;
-            windowLevelOverlay.BackColor=Color.FromArgb(170,0,0,0);
-            windowLevelOverlay.ForeColor=Color.White;
-            windowLevelOverlay.Padding=new Padding(6,4,6,4);
-            windowLevelOverlay.Visible=false;
-        }
-
-        private void ShowWindowLevelOverlay(PictureBox box)
-        {
-            Control parent=box.Parent;
-            if(windowLevelOverlay.Parent!=parent)
-            {
-                if(windowLevelOverlay.Parent!=null)windowLevelOverlay.Parent.Controls.Remove(windowLevelOverlay);
-                parent.Controls.Add(windowLevelOverlay);
-            }
-            windowLevelOverlay.Text=String.Format("WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
-            windowLevelOverlay.Location=new Point(8,Math.Max(28,parent.ClientSize.Height-windowLevelOverlay.PreferredHeight-8));
-            windowLevelOverlay.Visible=true;
-            windowLevelOverlay.BringToFront();
-        }
-
         private void HookWindowLevel(PictureBox box)
         {
             box.MouseDown += delegate(object s,MouseEventArgs e)
@@ -394,7 +368,6 @@ namespace DicomViewer_ChatGPT
                 windowLevelStartCenter=windowCenter;
                 windowLevelStartWidth=windowWidth;
                 box.Capture=true;
-                ShowWindowLevelOverlay(box);
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
@@ -408,7 +381,6 @@ namespace DicomViewer_ChatGPT
 
                 PrepareDisplayVolumeOnly();
                 RefreshAfterRotation();
-                ShowWindowLevelOverlay(box);
                 status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
             };
             box.MouseUp += delegate(object s,MouseEventArgs e)
@@ -416,7 +388,6 @@ namespace DicomViewer_ChatGPT
                 if(!windowLevelDragging)return;
                 windowLevelDragging=false;
                 box.Capture=false;
-                if(windowLevelOverlay!=null)windowLevelOverlay.Visible=false;
             };
         }
 
