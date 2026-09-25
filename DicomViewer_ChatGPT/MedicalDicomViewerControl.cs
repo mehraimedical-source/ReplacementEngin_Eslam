@@ -120,6 +120,40 @@ namespace DicomViewer_ChatGPT
             DrawPlaneLine(bmp,view,lines[1],lines[1].Color,cx,cy);
         }
 
+        private void RefreshAfterRotation()
+        {
+            SetImage(axial,BuildAxialAtDisplayOrigin());
+            SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+            SetImage(coronal,BuildCoronalAtDisplayOrigin());
+            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
+        }
+
+        private Bitmap BuildAxialAtDisplayOrigin()
+        {
+            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlaneWithCrosshair(axialPlane,axialDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxY-b.MinY,p,coronalPlane,sagittalPlane);
+        }
+        private Bitmap BuildCoronalAtDisplayOrigin()
+        {
+            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlaneWithCrosshair(coronalPlane,coronalDisplayOrigin??GetMprCenter(),b.MaxX-b.MinX,b.MaxZ-b.MinZ,p,axialPlane,sagittalPlane);
+        }
+        private Bitmap BuildSagittalAtDisplayOrigin()
+        {
+            Bounds b=GetPatientBounds();double p=Math.Min(spacingX,Math.Min(spacingY,spacingZ));
+            return BuildPlaneWithCrosshair(sagittalPlane,sagittalDisplayOrigin??GetMprCenter(),b.MaxY-b.MinY,b.MaxZ-b.MinZ,p,axialPlane,coronalPlane);
+        }
+
+        private Bitmap BuildPlaneWithCrosshair(Plane plane,double[] displayOrigin,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
+        {
+            Bitmap bmp=BuildPlane(plane,displayOrigin,physicalW,physicalH,pixel,lineA,lineB,false);
+            double cx=(bmp.Width-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),plane.U)/pixel;
+            double cy=(bmp.Height-1)/2.0+Dot(Sub(crosshairPatient,displayOrigin),plane.V)/pixel;
+            DrawPlaneLine(bmp,plane,lineA,lineA.Color,cx,cy);
+            DrawPlaneLine(bmp,plane,lineB,lineB.Color,cx,cy);
+            return bmp;
+        }
+
         private void PrepareFastVolume()
         {
             sliceStride=width*height;displayVolume=new byte[sliceStride*depth];
@@ -191,7 +225,7 @@ namespace DicomViewer_ChatGPT
                     }
                     dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
                     centerDragStartPatient=null;interactiveRendering=false;box.Cursor=Cursors.Default;
-                    if(!wasCenterDrag)RefreshViews();
+                    if(!wasCenterDrag)RefreshAfterRotation();
                 }
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
@@ -227,7 +261,7 @@ namespace DicomViewer_ChatGPT
                 // Keep full resolution; throttle only redundant mouse events.
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
-                    lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshViews();
+                    lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshAfterRotation();
                 }
             };
         }
