@@ -379,9 +379,16 @@ namespace DicomViewer_ChatGPT
                 windowWidth=Math.Max(1.0,windowLevelStartWidth+(e.X-windowLevelStartMouse.X)*scale);
                 windowCenter=windowLevelStartCenter-(e.Y-windowLevelStartMouse.Y)*scale;
 
-                PrepareDisplayVolumeOnly();
-                RefreshAfterRotation();
-                status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
+                // بازسازی کل Volume روی تک‌تک MouseMoveها UI Thread را قفل می‌کرد و
+                // نتیجه عملاً فقط هنگام MouseUp دیده می‌شد. Preview را حدود 30fps محدود می‌کنیم.
+                if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
+                {
+                    lastInteractiveRender=DateTime.UtcNow;
+                    PrepareDisplayVolumeOnly();
+                    RefreshAfterRotation();
+                    status.Text=String.Format("W/L   WL: {0:0}   WW: {1:0}",windowCenter,windowWidth);
+                    Application.DoEvents();
+                }
             };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
@@ -396,7 +403,7 @@ namespace DicomViewer_ChatGPT
             if(volume==null)return;
             sliceStride=width*height;
             if(displayVolume==null||displayVolume.Length!=sliceStride*depth)displayVolume=new byte[sliceStride*depth];
-            for(int z=0;z<depth;z++)
+            Parallel.For(0,depth,z =>
             {
                 int dst=z*sliceStride;
                 if(volume[z].HasModality16)
@@ -410,7 +417,7 @@ namespace DicomViewer_ChatGPT
                         displayVolume[dst+i]=v<=low?(byte)0:v>=high?(byte)255:(byte)Math.Round((v-low)*255.0/Math.Max(1.0,high-low));
                     }
                 }
-            }
+            });
         }
 
         private void HookSliceScroll(PictureBox box)
