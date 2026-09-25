@@ -157,6 +157,9 @@ namespace DicomViewer_ChatGPT
             SetImage(axial,BuildAxialAtDisplayOrigin());
             SetImage(sagittal,BuildSagittalAtDisplayOrigin());
             SetImage(coronal,BuildCoronalAtDisplayOrigin());
+            // اطلاعات تشخیصی باید بعد از Rotate/Scroll هم از Planeهای فعلی خوانده شوند؛
+            // در غیر این صورت N/PC قدیمی روی Screenshot نمایش داده می‌شود.
+            UpdateMprTitles();
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
@@ -320,7 +323,7 @@ namespace DicomViewer_ChatGPT
                         RefreshViewsExcept(releasedView);
                     }
                     dragView=null;dragPlane=null;dragCompanion=null;draggingCenter=false;
-                    centerDragStartPatient=null;centerDragViewU=null;centerDragViewV=null;centerDragDisplayOrigin=null;interactiveRendering=false;box.Cursor=Cursors.Default;
+                    centerDragStartPatient=null;centerDragViewU=null;centerDragViewV=null;centerDragDisplayOrigin=null;centerDragPlaneCenter=null;interactiveRendering=false;box.Cursor=Cursors.Default;
                     if(!wasCenterDrag)RefreshAfterRotation();
                 }
             };
