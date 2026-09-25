@@ -71,21 +71,29 @@ namespace DicomViewer_ChatGPT
 
             // Match each viewport title to the MPR plane color used by the cross-reference lines.
             // Keep the title bar black; color only the compact area occupied by each word.
+            // Compact colored titles must stay above the Dock=Fill PictureBox.
+            // BringToFront prevents the image control from covering AutoSize labels.
             this.lblAxial.Dock = System.Windows.Forms.DockStyle.None;
             this.lblAxial.AutoSize = true;
             this.lblAxial.Location = new System.Drawing.Point(4, 2);
+            this.lblAxial.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.lblAxial.BackColor = System.Drawing.Color.Yellow;
             this.lblAxial.ForeColor = System.Drawing.Color.Black;
             this.lblSagittal.Dock = System.Windows.Forms.DockStyle.None;
             this.lblSagittal.AutoSize = true;
             this.lblSagittal.Location = new System.Drawing.Point(4, 2);
+            this.lblSagittal.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.lblSagittal.BackColor = System.Drawing.Color.Cyan;
             this.lblSagittal.ForeColor = System.Drawing.Color.Black;
             this.lblCoronal.Dock = System.Windows.Forms.DockStyle.None;
             this.lblCoronal.AutoSize = true;
             this.lblCoronal.Location = new System.Drawing.Point(4, 2);
+            this.lblCoronal.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.lblCoronal.BackColor = System.Drawing.Color.Magenta;
             this.lblCoronal.ForeColor = System.Drawing.Color.White;
+            this.lblAxial.BringToFront();
+            this.lblSagittal.BringToFront();
+            this.lblCoronal.BringToFront();
 
             this.status.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             this.status.Dock = System.Windows.Forms.DockStyle.Bottom;
