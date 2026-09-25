@@ -17,6 +17,8 @@ namespace DicomViewer_ChatGPT
         private Plane dragPlane,dragCompanion;
         private double dragStartAngle;
         private double[] dragNormal0,dragCompanionNormal0,dragU0,dragV0,dragCompanionU0,dragCompanionV0;
+        private DateTime lastInteractiveRender=DateTime.MinValue;
+        private bool interactiveRendering;
 
         public MedicalDicomViewerControl()
         {
@@ -85,7 +87,7 @@ namespace DicomViewer_ChatGPT
             };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
-                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;box.Cursor=Cursors.Default;}
+                if(dragView==box){dragView=null;dragPlane=null;dragCompanion=null;interactiveRendering=false;box.Cursor=Cursors.Default;RefreshViews();}
             };
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
@@ -97,7 +99,12 @@ namespace DicomViewer_ChatGPT
                 // the same delta around the current view normal, so they stay 90 degrees apart.
                 ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
                 if(dragCompanion!=null)ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
-                RefreshViews();
+                // During drag render a reduced-resolution preview and throttle mouse events.
+                // MouseUp always performs one full-quality render.
+                if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
+                {
+                    lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshViews();
+                }
             };
         }
 
@@ -172,15 +179,16 @@ namespace DicomViewer_ChatGPT
 
         private Bitmap BuildPlane(Plane plane,double[] center,double physicalW,double physicalH,double pixel,Plane lineA,Plane lineB)
         {
-            int outW=PhysicalOutputSize(physicalW,pixel),outH=PhysicalOutputSize(physicalH,pixel);
+            double renderPixel=interactiveRendering?pixel*2.0:pixel;
+            int outW=PhysicalOutputSize(physicalW,renderPixel),outH=PhysicalOutputSize(physicalH,renderPixel);
             byte[] data=new byte[outW*outH];
-            double halfW=(outW-1)*pixel/2.0,halfH=(outH-1)*pixel/2.0;
+            double halfW=(outW-1)*renderPixel/2.0,halfH=(outH-1)*renderPixel/2.0;
             for(int y=0;y<outH;y++)
             {
-                double v=y*pixel-halfH;
+                double v=y*renderPixel-halfH;
                 for(int x=0;x<outW;x++)
                 {
-                    double u=x*pixel-halfW;
+                    double u=x*renderPixel-halfW;
                     data[y*outW+x]=SamplePatient(center[0]+plane.U[0]*u+plane.V[0]*v,center[1]+plane.U[1]*u+plane.V[1]*v,center[2]+plane.U[2]*u+plane.V[2]*v);
                 }
             }
