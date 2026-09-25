@@ -79,6 +79,26 @@ namespace DicomViewer_ChatGPT
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
         }
 
+        private void RefreshViewsExcept(PictureBox fixedView)
+        {
+            // RadiAnt-style center drag: the image under the mouse is the reference
+            // and remains fixed; the other two MPR views are reconstructed through
+            // the moved patient-space intersection.
+            if(fixedView!=axial)SetImage(axial,BuildAxial());
+            if(fixedView!=sagittal)SetImage(sagittal,BuildSagittal());
+            if(fixedView!=coronal)SetImage(coronal,BuildCoronal());
+            // Redraw the fixed view only to move its crosshair overlay. This currently
+            // requires a bitmap rebuild because overlays are still baked into images.
+            // Preserve its slice center temporarily so the underlying anatomy does not move.
+            int ox=xIndex,oy=yIndex,oz=zIndex;
+            SetIndicesFromPatient(centerDragStartPatient);
+            if(fixedView==axial)SetImage(axial,BuildAxial());
+            else if(fixedView==sagittal)SetImage(sagittal,BuildSagittal());
+            else if(fixedView==coronal)SetImage(coronal,BuildCoronal());
+            xIndex=ox;yIndex=oy;zIndex=oz;
+            status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
+        }
+
         private void PrepareFastVolume()
         {
             sliceStride=width*height;displayVolume=new byte[sliceStride*depth];
@@ -153,7 +173,12 @@ namespace DicomViewer_ChatGPT
                 if(draggingCenter)
                 {
                     MoveCenterFromMouse(box,e.Location);
-                    if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33){lastInteractiveRender=DateTime.UtcNow;RefreshViews();}
+                    SetIndicesFromPatient(crosshairPatient);
+                    if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
+                    {
+                        lastInteractiveRender=DateTime.UtcNow;
+                        RefreshViewsExcept(box);
+                    }
                     return;
                 }
                 if(dragPlane==null)return;
