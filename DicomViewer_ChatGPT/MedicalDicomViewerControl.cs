@@ -151,18 +151,6 @@ namespace DicomViewer_ChatGPT
             DrawPlaneLine(bmp,view,lines[1],lines[1].Color,cx,cy);
         }
 
-        private void AnchorRotatedPlaneToCrosshair(Plane plane)
-        {
-            if(crosshairPatient==null||plane==null)return;
-
-            // در مدل MPR هر صفحه حول نقطه تقاطع مشترک می‌چرخد.
-            // بنابراین مرکز Reslice صفحه چرخیده باید همان Patient Point باشد.
-            double[] origin=(double[])crosshairPatient.Clone();
-            if(plane==axialPlane)axialDisplayOrigin=origin;
-            else if(plane==sagittalPlane)sagittalDisplayOrigin=origin;
-            else if(plane==coronalPlane)coronalDisplayOrigin=origin;
-        }
-
         private void RefreshAfterRotation()
         {
             SetImage(axial,BuildAxialAtDisplayOrigin());
@@ -315,11 +303,6 @@ namespace DicomViewer_ChatGPT
                 // the same delta around the current view normal, so they stay 90 degrees apart.
                 ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
                 if(dragCompanion!=null)ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
-
-                // Planeهایی که در View میزبان می‌چرخند باید از همان نقطه سه‌بعدی مشترک عبور کنند.
-                // مرکز نمایش آن Viewها را روی crosshairPatient نگه می‌داریم تا Reslice به اطراف تصویر نپرد.
-                AnchorRotatedPlaneToCrosshair(dragPlane);
-                if(dragCompanion!=null)AnchorRotatedPlaneToCrosshair(dragCompanion);
                 // Keep full resolution; throttle only redundant mouse events.
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
