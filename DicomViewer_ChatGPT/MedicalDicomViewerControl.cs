@@ -118,12 +118,24 @@ namespace DicomViewer_ChatGPT
             // fixed and draw its crosshair at the mouse-relative position.
             double[] moved=(double[])crosshairPatient.Clone();
 
-            // هنگام جابه‌جایی نقطه تقاطع، دو View دیگر باید Reslice جدید را نشان دهند
-            // اما نباید برای آوردن Crosshair به مرکز، Anatomy را Recenter کنند.
-            // بنابراین DisplayOrigin قبلی هر View را ثابت نگه می‌داریم.
-            if(fixedView!=axial)SetImage(axial,BuildAxialAtDisplayOrigin());
-            if(fixedView!=sagittal)SetImage(sagittal,BuildSagittalAtDisplayOrigin());
-            if(fixedView!=coronal)SetImage(coronal,BuildCoronalAtDisplayOrigin());
+            // دو View مرتبط باید واقعاً از موقعیت جدید Crosshair عبور کنند، اما تصویرشان
+            // نباید در راستای داخل صفحه Recenter شود. فقط مؤلفه عمود بر هر Plane را تغییر می‌دهیم.
+            // به این ترتیب Slice عوض می‌شود ولی موقعیت Anatomy روی صفحه ثابت می‌ماند.
+            if(fixedView!=axial)
+            {
+                axialDisplayOrigin=MoveOriginOnlyAlongNormal(axialDisplayOrigin,axialPlane,moved);
+                SetImage(axial,BuildAxialAtDisplayOrigin());
+            }
+            if(fixedView!=sagittal)
+            {
+                sagittalDisplayOrigin=MoveOriginOnlyAlongNormal(sagittalDisplayOrigin,sagittalPlane,moved);
+                SetImage(sagittal,BuildSagittalAtDisplayOrigin());
+            }
+            if(fixedView!=coronal)
+            {
+                coronalDisplayOrigin=MoveOriginOnlyAlongNormal(coronalDisplayOrigin,coronalPlane,moved);
+                SetImage(coronal,BuildCoronalAtDisplayOrigin());
+            }
 
             double[] hostOrigin=centerDragDisplayOrigin??DisplayOriginForView(fixedView);
             crosshairPatient=centerDragStartPatient;
@@ -141,6 +153,16 @@ namespace DicomViewer_ChatGPT
             SetDisplayOriginForView(fixedView,hostOrigin);
             UpdateMprTitles();
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
+        }
+
+        private double[] MoveOriginOnlyAlongNormal(double[] displayOrigin,Plane plane,double[] patientPoint)
+        {
+            if(displayOrigin==null)return (double[])patientPoint.Clone();
+
+            // فقط فاصله Plane تا نقطه جدید را در راستای Normal جبران می‌کنیم.
+            // مؤلفه‌های U/V دست‌نخورده می‌مانند، پس تصویر روی صفحه به چپ/راست یا بالا/پایین نمی‌پرد.
+            double distance=Dot(Sub(patientPoint,displayOrigin),plane.N);
+            return Add(displayOrigin,Scale(plane.N,distance));
         }
 
         private void DrawMovedCrosshairOnHost(Bitmap bmp,PictureBox box,double[] moved,double[] origin)
