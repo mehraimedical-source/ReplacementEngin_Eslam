@@ -107,6 +107,7 @@ namespace DicomViewer_ChatGPT
                 foreach(var s in volume)foreach(short v in s.Modality16){if(v<min)min=v;if(v>max)max=v;}
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
+            else { windowCenter=127.5; windowWidth=255.0; }
             PrepareFastVolume();
             if(volume.All(i=>i.HasModality16))
             {
@@ -275,6 +276,7 @@ namespace DicomViewer_ChatGPT
         {
             box.MouseDown += delegate(object s,MouseEventArgs e)
             {
+                if(windowLevelMode)return;
                 if(e.Button!=MouseButtons.Left||box.Image==null||!HasPatientGeometry())return;
                 if(IsNearCenter(box,e.Location))
                 {
@@ -300,6 +302,7 @@ namespace DicomViewer_ChatGPT
             box.MouseLeave += delegate { if(dragView==null)box.Cursor=Cursors.Default; };
             box.MouseUp += delegate(object s,MouseEventArgs e)
             {
+                if(windowLevelMode)return;
                 if(dragView==box)
                 {
                     bool wasCenterDrag=draggingCenter;
@@ -319,6 +322,7 @@ namespace DicomViewer_ChatGPT
             box.MouseMove += delegate(object s,MouseEventArgs e)
             {
                 if(box.Image==null)return;
+                if(windowLevelMode)return;
                 if(dragView==null)
                 {
                     if(IsNearCenter(box,e.Location))box.Cursor=Cursors.SizeAll;
@@ -397,7 +401,15 @@ namespace DicomViewer_ChatGPT
                 int dst=z*sliceStride;
                 if(volume[z].HasModality16)
                     for(int i=0;i<sliceStride;i++)displayVolume[dst+i]=WindowToByte(volume[z].Modality16[i]);
-                else Buffer.BlockCopy(volume[z].Gray8,0,displayVolume,dst,sliceStride);
+                else
+                {
+                    double low=windowCenter-windowWidth/2.0,high=windowCenter+windowWidth/2.0;
+                    for(int i=0;i<sliceStride;i++)
+                    {
+                        double v=volume[z].Gray8[i];
+                        displayVolume[dst+i]=v<=low?(byte)0:v>=high?(byte)255:(byte)Math.Round((v-low)*255.0/Math.Max(1.0,high-low));
+                    }
+                }
             }
         }
 
