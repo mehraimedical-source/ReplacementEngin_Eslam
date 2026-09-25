@@ -144,6 +144,29 @@ namespace DicomViewer_ChatGPT
             DrawPlaneLine(bmp,view,lines[1],lines[1].Color,cx,cy);
         }
 
+        private void KeepCrosshairScreenPositionAfterRotation(Plane plane,double[] oldU,double[] oldV)
+        {
+            if(crosshairPatient==null||plane==null)return;
+
+            double[] oldOrigin;
+            if(plane==axialPlane)oldOrigin=axialDisplayOrigin;
+            else if(plane==sagittalPlane)oldOrigin=sagittalDisplayOrigin;
+            else if(plane==coronalPlane)oldOrigin=coronalDisplayOrigin;
+            else return;
+            if(oldOrigin==null)return;
+
+            // هنگام چرخاندن یک Plane، نقطه تقاطع باید در همان Pixel قبلی باقی بماند.
+            // اگر DisplayOrigin ثابت بماند ولی U/V بچرخند، تصویر در View مربوطه به چپ/راست
+            // یا بالا/پایین می‌پرد. فاصله Crosshair تا مرکز نمایش را در Basis قبلی حفظ می‌کنیم.
+            double du=Dot(Sub(crosshairPatient,oldOrigin),oldU);
+            double dv=Dot(Sub(crosshairPatient,oldOrigin),oldV);
+            double[] newOrigin=Sub(crosshairPatient,Add(Scale(plane.U,du),Scale(plane.V,dv)));
+
+            if(plane==axialPlane)axialDisplayOrigin=newOrigin;
+            else if(plane==sagittalPlane)sagittalDisplayOrigin=newOrigin;
+            else coronalDisplayOrigin=newOrigin;
+        }
+
         private void RefreshAfterRotation()
         {
             SetImage(axial,BuildAxialAtDisplayOrigin());
@@ -295,7 +318,12 @@ namespace DicomViewer_ChatGPT
                 // RadiAnt-style coupled rotation: both reference planes rotate by
                 // the same delta around the current view normal, so they stay 90 degrees apart.
                 ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
-                if(dragCompanion!=null)ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
+                KeepCrosshairScreenPositionAfterRotation(dragPlane,dragU0,dragV0);
+                if(dragCompanion!=null)
+                {
+                    ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
+                    KeepCrosshairScreenPositionAfterRotation(dragCompanion,dragCompanionU0,dragCompanionV0);
+                }
                 // Keep full resolution; throttle only redundant mouse events.
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
