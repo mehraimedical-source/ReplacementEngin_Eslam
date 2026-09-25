@@ -1,0 +1,153 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.8": {
+      "fo-dicom.Desktop/4.0.8": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "runtime": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "build": {
+          "build/net45/fo-dicom.Desktop.targets": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.8/win": {
+      "fo-dicom.Desktop/4.0.8": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "runtime": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "build": {
+          "build/net45/fo-dicom.Desktop.targets": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.8/win-x64": {
+      "fo-dicom.Desktop/4.0.8": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "runtime": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "build": {
+          "build/net45/fo-dicom.Desktop.targets": {}
+        }
+      }
+    },
+    ".NETFramework,Version=v4.8/win-x86": {
+      "fo-dicom.Desktop/4.0.8": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "runtime": {
+          "lib/net45/Dicom.Core.dll": {
+            "related": ".pdb;.XML"
+          }
+        },
+        "build": {
+          "build/net45/fo-dicom.Desktop.targets": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "fo-dicom.Desktop/4.0.8": {
+      "sha512": "yKvvraICBb5IdsGWDUF57BtHmgBWxAWxRKk66Z9/+jznxB7fhNLKvfGlL7M19KkEO7WwqUQ5uM2SUjf09g5A1Q==",
+      "type": "package",
+      "path": "fo-dicom.desktop/4.0.8",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/net45/Dicom.Native.dll",
+        "build/net45/Dicom.Native64.dll",
+        "build/net45/fo-dicom.Desktop.targets",
+        "fo-dicom.desktop.4.0.8.nupkg.sha512",
+        "fo-dicom.desktop.nuspec",
+        "lib/net45/Dicom.Core.XML",
+        "lib/net45/Dicom.Core.dll",
+        "lib/net45/Dicom.Core.pdb"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETFramework,Version=v4.8": [
+      "fo-dicom.Desktop >= 4.0.8"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Mehrdad\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Mehrdad\\source\\repos\\ReplacementEngin_Eslam\\DicomViewer_ChatGPT\\DicomViewer_ChatGPT.csproj",
+      "projectName": "DicomViewer_ChatGPT",
+      "projectPath": "C:\\Users\\Mehrdad\\source\\repos\\ReplacementEngin_Eslam\\DicomViewer_ChatGPT\\DicomViewer_ChatGPT.csproj",
+      "packagesPath": "C:\\Users\\Mehrdad\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Mehrdad\\source\\repos\\ReplacementEngin_Eslam\\DicomViewer_ChatGPT\\obj\\",
+      "projectStyle": "PackageReference",
+      "skipContentFileWrite": true,
+      "configFilePaths": [
+        "C:\\Users\\Mehrdad\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net48"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net48": {
+          "projectReferences": {}
+        }
+      }
+    },
+    "frameworks": {
+      "net48": {
+        "dependencies": {
+          "fo-dicom.Desktop": {
+            "target": "Package",
+            "version": "[4.0.8, )"
+          }
+        }
+      }
+    },
+    "runtimes": {
+      "win": {
+        "#import": []
+      },
+      "win-x64": {
+        "#import": []
+      },
+      "win-x86": {
+        "#import": []
+      }
+    }
+  }
+}

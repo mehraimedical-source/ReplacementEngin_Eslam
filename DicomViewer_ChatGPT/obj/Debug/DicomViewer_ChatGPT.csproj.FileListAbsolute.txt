@@ -1,0 +1,5 @@
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.AssemblyReference.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.SuggestedBindingRedirects.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.Properties.Resources.resources
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.GenerateResource.cache
+C:\Users\Mehrdad\source\repos\ReplacementEngin_Eslam\DicomViewer_ChatGPT\obj\Debug\DicomViewer_ChatGPT.csproj.CoreCompileInputs.cache

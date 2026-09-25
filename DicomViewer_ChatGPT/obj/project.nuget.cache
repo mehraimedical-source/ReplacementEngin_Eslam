@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "OYcsq8dCPO9cylpcDlRZwCw5V2Afqg8qwVacSVsLvAricO//36frBiQEgVXvmFGcAxh1T1VnujKRLxuWs7i/gQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Mehrdad\\source\\repos\\ReplacementEngin_Eslam\\DicomViewer_ChatGPT\\DicomViewer_ChatGPT.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Mehrdad\\.nuget\\packages\\fo-dicom.desktop\\4.0.8\\fo-dicom.desktop.4.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}
