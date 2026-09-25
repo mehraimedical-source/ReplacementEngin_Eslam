@@ -7,6 +7,9 @@ namespace DicomViewer_ChatGPT
         public int Width { get; set; }
         public int Height { get; set; }
         public byte[] Gray8 { get; set; }
+        // Optional high precision modality values (HU for CT). Gray8 remains the safe fallback.
+        public short[] Modality16 { get; set; }
+        public bool HasModality16 { get { return Modality16 != null && Modality16.Length == Width * Height; } }
         public double[] ImagePositionPatient { get; set; }
         public double[] ImageOrientationPatient { get; set; }
         public double[] PixelSpacing { get; set; }
