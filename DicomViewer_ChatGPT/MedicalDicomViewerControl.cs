@@ -683,13 +683,13 @@ namespace DicomViewer_ChatGPT
             // SamplePatientFast با همان tolerance نیم‌Voxel، خارج Volume را صفر کند.
             if((ascending&&projection<sliceProjections[0])||(!ascending&&projection>sliceProjections[0]))
             {
-                double span=sliceProjections[1]-sliceProjections[0];
-                return Math.Abs(span)<.000001?-1:(projection-sliceProjections[0])/span;
+                double edgeSpan=sliceProjections[1]-sliceProjections[0];
+                return Math.Abs(edgeSpan)<.000001?-1:(projection-sliceProjections[0])/edgeSpan;
             }
             if((ascending&&projection>sliceProjections[depth-1])||(!ascending&&projection<sliceProjections[depth-1]))
             {
-                double span=sliceProjections[depth-1]-sliceProjections[depth-2];
-                return Math.Abs(span)<.000001?depth:(depth-1)+(projection-sliceProjections[depth-1])/span;
+                double edgeSpan=sliceProjections[depth-1]-sliceProjections[depth-2];
+                return Math.Abs(edgeSpan)<.000001?depth:(depth-1)+(projection-sliceProjections[depth-1])/edgeSpan;
             }
 
             int lo=0,hi=depth-1;
