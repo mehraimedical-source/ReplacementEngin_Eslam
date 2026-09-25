@@ -89,6 +89,10 @@ namespace DicomViewer_ChatGPT
                 volumeRenderer.SetCtVolume(huVolume,width,height,depth,spacingX,spacingY,spacingZ);
             }
             else volumeRenderer.SetVolume(displayVolume,width,height,depth,spacingX,spacingY,spacingZ);
+
+            // دوربین سه‌بعدی را از هندسه واقعی DICOM تنظیم می‌کنیم تا بیمار مستقل از
+            // نحوه ذخیره شدن Sliceها، به صورت استاندارد از روبه‌رو نمایش داده شود.
+            ApplyDicomOrientationTo3D();
             Render3D(false);
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();
             axialDisplayOrigin=sagittalDisplayOrigin=coronalDisplayOrigin=(double[])crosshairPatient.Clone();RefreshViews();
@@ -681,6 +685,28 @@ namespace DicomViewer_ChatGPT
             }
             finally{b.UnlockBits(d);}
             return b;
+        }
+
+        private void ApplyDicomOrientationTo3D()
+        {
+            if(!HasPatientGeometry()||depth<1)return;
+
+            double[] o=volume[0].ImageOrientationPatient;
+            double[] row=new[]{o[0],o[1],o[2]};
+            double[] column=new[]{o[3],o[4],o[5]};
+            double[] slice;
+
+            // جهت Z واقعی Renderer باید مطابق ترتیب واقعی Sliceهای Volume باشد.
+            // استفاده از Position اولین و آخرین Slice، حالت Head First / Feet First
+            // و جهت‌های متفاوت Acquisition را بدون حدس زدن نام Series پوشش می‌دهد.
+            if(depth>1&&volume[0].ImagePositionPatient!=null&&volume[depth-1].ImagePositionPatient!=null)
+            {
+                double[] a=volume[0].ImagePositionPatient,b=volume[depth-1].ImagePositionPatient;
+                slice=Normalize(new[]{b[0]-a[0],b[1]-a[1],b[2]-a[2]});
+            }
+            else slice=Normalize(Cross(row,column));
+
+            volumeRenderer.SetPatientOrientation(row,column,slice);
         }
 
         private void Hook3D()
