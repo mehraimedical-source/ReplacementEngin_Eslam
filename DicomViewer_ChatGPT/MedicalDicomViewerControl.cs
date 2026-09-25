@@ -24,6 +24,10 @@ namespace DicomViewer_ChatGPT
         private Point centerDragStartMouse;
         private double[] centerDragStartPatient;
         private double[] crosshairPatient;
+        private byte[] displayVolume;
+        private int sliceStride;
+        private double rowX,rowY,rowZ,colX,colY,colZ,normX,normY,normZ;
+        private double originX,originY,originZ,invSpacingX,invSpacingY,voxelZScale,firstProjection;
 
         public MedicalDicomViewerControl()
         {
@@ -63,13 +67,36 @@ namespace DicomViewer_ChatGPT
                 foreach(var s in volume)foreach(short v in s.Modality16){if(v<min)min=v;if(v>max)max=v;}
                 if(min<max){windowCenter=(min+max)/2.0;windowWidth=Math.Max(1,max-min);}
             }
+            PrepareFastVolume();
+            SetImage(volume3D,BuildMip());
             xIndex=width/2;yIndex=height/2;zIndex=depth/2;InitializePlanes();crosshairPatient=GetCurrentPatientPoint();RefreshViews();
         }
 
         private void RefreshViews()
         {
-            SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());SetImage(volume3D,BuildMip());
+            SetImage(axial,BuildAxial());SetImage(sagittal,BuildSagittal());SetImage(coronal,BuildCoronal());
+            if(volume3D.Image==null)SetImage(volume3D,BuildMip());
             status.Text=String.Format("Volume {0}x{1}x{2}   spacing {3:0.###} x {4:0.###} x {5:0.###} mm",width,height,depth,spacingX,spacingY,spacingZ);
+        }
+
+        private void PrepareFastVolume()
+        {
+            sliceStride=width*height;displayVolume=new byte[sliceStride*depth];
+            for(int z=0;z<depth;z++)
+            {
+                int dst=z*sliceStride;
+                if(volume[z].HasModality16)
+                    for(int i=0;i<sliceStride;i++)displayVolume[dst+i]=WindowToByte(volume[z].Modality16[i]);
+                else Buffer.BlockCopy(volume[z].Gray8,0,displayVolume,dst,sliceStride);
+            }
+            double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient;
+            rowX=o[0];rowY=o[1];rowZ=o[2];colX=o[3];colY=o[4];colZ=o[5];
+            normX=rowY*colZ-rowZ*colY;normY=rowZ*colX-rowX*colZ;normZ=rowX*colY-rowY*colX;
+            originX=p[0];originY=p[1];originZ=p[2];invSpacingX=1.0/spacingX;invSpacingY=1.0/spacingY;
+            firstProjection=originX*normX+originY*normY+originZ*normZ;
+            double[] lp=volume[depth-1].ImagePositionPatient;
+            double last=lp[0]*normX+lp[1]*normY+lp[2]*normZ;
+            voxelZScale=Math.Abs(last-firstProjection)>.000001?(depth-1)/(last-firstProjection):0;
         }
 
         private sealed class Plane
@@ -137,8 +164,7 @@ namespace DicomViewer_ChatGPT
                 // the same delta around the current view normal, so they stay 90 degrees apart.
                 ApplyRotatedPlane(dragPlane,dragNormal0,dragU0,dragV0,view.N,delta);
                 if(dragCompanion!=null)ApplyRotatedPlane(dragCompanion,dragCompanionNormal0,dragCompanionU0,dragCompanionV0,view.N,delta);
-                // During drag render a reduced-resolution preview and throttle mouse events.
-                // MouseUp always performs one full-quality render.
+                // Keep full resolution; throttle only redundant mouse events.
                 if((DateTime.UtcNow-lastInteractiveRender).TotalMilliseconds>=33)
                 {
                     lastInteractiveRender=DateTime.UtcNow;interactiveRendering=true;RefreshViews();
@@ -377,35 +403,20 @@ namespace DicomViewer_ChatGPT
 
         private byte SamplePatientFast(double px,double py,double pz)
         {
-            // Fast sampler for interactive reslicing. Geometry constants are scalar
-            // fields and no temporary arrays are allocated in this hot path.
-            double[] o=volume[0].ImageOrientationPatient,p=volume[0].ImagePositionPatient;
-            double nx=o[1]*o[5]-o[2]*o[4],ny=o[2]*o[3]-o[0]*o[5],nz=o[0]*o[4]-o[1]*o[3];
-            double dx=px-p[0],dy=py-p[1],dz=pz-p[2];
-            double fx=(dx*o[0]+dy*o[1]+dz*o[2])/spacingX;
-            double fy=(dx*o[3]+dy*o[4]+dz*o[5])/spacingY;
-            double first=p[0]*nx+p[1]*ny+p[2]*nz;
-            double lp0=volume[depth-1].ImagePositionPatient[0],lp1=volume[depth-1].ImagePositionPatient[1],lp2=volume[depth-1].ImagePositionPatient[2];
-            double last=lp0*nx+lp1*ny+lp2*nz;
-            double target=px*nx+py*ny+pz*nz;
-            double fz=Math.Abs(last-first)>.000001?(target-first)*(depth-1)/(last-first):0;
+            double dx=px-originX,dy=py-originY,dz=pz-originZ;
+            double fx=(dx*rowX+dy*rowY+dz*rowZ)*invSpacingX;
+            double fy=(dx*colX+dy*colY+dz*colZ)*invSpacingY;
+            double fz=((px*normX+py*normY+pz*normZ)-firstProjection)*voxelZScale;
             if(fx<0||fy<0||fz<0||fx>width-1||fy>height-1||fz>depth-1)return 0;
             int x0=(int)fx,y0=(int)fy,z0=(int)fz;
             int x1=x0<width-1?x0+1:x0,y1=y0<height-1?y0+1:y0,z1=z0<depth-1?z0+1:z0;
             double tx=fx-x0,ty=fy-y0,tz=fz-z0;
-            if(volume[z0].HasModality16&&volume[z1].HasModality16)
-            {
-                short[] a0=volume[z0].Modality16,a1=volume[z1].Modality16;
-                int i00=y0*width+x0,i01=y0*width+x1,i10=y1*width+x0,i11=y1*width+x1;
-                double a=Lerp(a0[i00],a0[i01],tx),b=Lerp(a0[i10],a0[i11],tx);
-                double cc=Lerp(a1[i00],a1[i01],tx),d=Lerp(a1[i10],a1[i11],tx);
-                return WindowToByte(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
-            }
-            byte[] g0=volume[z0].Gray8,g1=volume[z1].Gray8;
-            int j00=y0*width+x0,j01=y0*width+x1,j10=y1*width+x0,j11=y1*width+x1;
-            double ga=Lerp(g0[j00],g0[j01],tx),gb=Lerp(g0[j10],g0[j11],tx);
-            double gc=Lerp(g1[j00],g1[j01],tx),gd=Lerp(g1[j10],g1[j11],tx);
-            return (byte)Math.Round(Lerp(Lerp(ga,gb,ty),Lerp(gc,gd,ty),tz));
+            int b0=z0*sliceStride,b1=z1*sliceStride;
+            int i00=b0+y0*width+x0,i01=b0+y0*width+x1,i10=b0+y1*width+x0,i11=b0+y1*width+x1;
+            int j00=b1+y0*width+x0,j01=b1+y0*width+x1,j10=b1+y1*width+x0,j11=b1+y1*width+x1;
+            double a=Lerp(displayVolume[i00],displayVolume[i01],tx),b=Lerp(displayVolume[i10],displayVolume[i11],tx);
+            double cc=Lerp(displayVolume[j00],displayVolume[j01],tx),d=Lerp(displayVolume[j10],displayVolume[j11],tx);
+            return (byte)Math.Round(Lerp(Lerp(a,b,ty),Lerp(cc,d,ty),tz));
         }
 
         private byte SamplePatient(double px,double py,double pz)
