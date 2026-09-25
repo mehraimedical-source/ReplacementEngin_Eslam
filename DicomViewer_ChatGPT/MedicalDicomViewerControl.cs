@@ -254,9 +254,9 @@ namespace DicomViewer_ChatGPT
             // شماره‌ها یک‌مبنا نمایش داده می‌شوند تا برای کاربر به شکل 1/N باشند.
             // در حالت Oblique این اعداد نزدیک‌ترین Voxel متناظر با نقطه مشترک سه صفحه هستند.
             SetIndicesFromPatient(crosshairPatient);
-            lblAxial.Text=String.Format("AXIAL   {0}/{1}",zIndex+1,depth);
-            lblSagittal.Text=String.Format("SAGITTAL   {0}/{1}",xIndex+1,width);
-            lblCoronal.Text=String.Format("CORONAL   {0}/{1}",yIndex+1,height);
+            lblAxial.Text=String.Format("AXIAL   image : {0} / {1}",zIndex+1,depth);
+            lblSagittal.Text=String.Format("SAGITTAL   image : {0} / {1}",xIndex+1,width);
+            lblCoronal.Text=String.Format("CORONAL   image : {0} / {1}",yIndex+1,height);
         }
 
         private void HookPlaneLines(PictureBox box)
