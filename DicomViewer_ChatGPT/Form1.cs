@@ -13,6 +13,11 @@ namespace DicomViewer_ChatGPT
             dicomViewer.ResetAxes();
         }
 
+        private void btnReset3D_Click(object sender, EventArgs e)
+        {
+            dicomViewer.Reset3D();
+        }
+
         private void btnBrowse_Click(object sender, EventArgs e)
         {
             txtFolder.Text = @"SR002";
