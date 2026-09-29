@@ -19,7 +19,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             InitializeComponent();
         }
 
-        private Image _img; string _json;
+        private Image _img;  
         public SpatialOcrTestForm(Image img, string json)
         {
             InitializeComponent();
