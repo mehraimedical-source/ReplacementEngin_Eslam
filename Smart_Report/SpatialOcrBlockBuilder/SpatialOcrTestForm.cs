@@ -93,6 +93,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 options.MaxCenterDistanceFactor.ToString("0.00", CultureInfo.InvariantCulture));
             b.AppendLine("OCR Items=" + items.Count.ToString(CultureInfo.InvariantCulture));
             b.AppendLine("Detected Rows=" + rows.Count.ToString(CultureInfo.InvariantCulture));
+            b.AppendLine("Cluster Gap Height Factor=6.00");
             b.AppendLine();
             b.AppendLine("[OCR JSON]");
             b.AppendLine(txtJson.Text);
@@ -114,6 +115,20 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 b.Append(row.Items.Count.ToString(CultureInfo.InvariantCulture));
                 b.Append("  : ");
                 b.AppendLine(row.GetText());
+
+                // Clusterها را جداگانه گزارش می‌کنیم تا Row فیزیکی دست‌نخورده بماند
+                // و بتوانیم نتیجه لایه دوم Spatial را مستقل بررسی کنیم.
+                List<SpatialCluster> clusters = new HorizontalClusterDetector(
+                    new HorizontalClusteringOptions()).Detect(row);
+                for (int j = 0; j < clusters.Count; j++)
+                {
+                    b.Append("    Cluster ");
+                    b.Append((j + 1).ToString(CultureInfo.InvariantCulture));
+                    b.Append("  GapBefore=");
+                    b.Append(clusters[j].GapBefore.ToString("0.0", CultureInfo.InvariantCulture));
+                    b.Append("  : ");
+                    b.AppendLine(clusters[j].GetText());
+                }
             }
 
             return b.ToString();
@@ -212,19 +227,38 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
                 List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(txtJson.Text, options);
                 List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
+                HorizontalClusterDetector clusterDetector = new HorizontalClusterDetector(
+                    new HorizontalClusteringOptions());
 
                 gridRows.Rows.Clear();
                 for (int i = 0; i < rows.Count; i++)
                 {
                     SpatialRow row = rows[i];
+                    List<SpatialCluster> clusters = clusterDetector.Detect(row);
+                    StringBuilder clusterText = new StringBuilder();
+                    for (int j = 0; j < clusters.Count; j++)
+                    {
+                        if (j > 0) clusterText.Append(" || ");
+                        clusterText.Append("[");
+                        clusterText.Append(clusters[j].GetText());
+                        clusterText.Append("]");
+                    }
+
                     gridRows.Rows.Add(
                         (i + 1).ToString(CultureInfo.InvariantCulture),
                         row.Bounds.Top.ToString("0.0", CultureInfo.InvariantCulture) + " .. " + row.Bounds.Bottom.ToString("0.0", CultureInfo.InvariantCulture),
                         row.MedianHeight.ToString("0.0", CultureInfo.InvariantCulture),
                         row.Items.Count.ToString(CultureInfo.InvariantCulture),
-                        row.GetText());
+                        row.GetText(),
+                        clusters.Count.ToString(CultureInfo.InvariantCulture),
+                        clusterText.ToString());
                 }
-                lblStatus.Text = items.Count + " OCR items  |  " + rows.Count + " rows";
+                int clusterCount = 0;
+                for (int i = 0; i < rows.Count; i++)
+                    clusterCount += clusterDetector.Detect(rows[i]).Count;
+
+                lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
+                    " rows  |  " + clusterCount + " clusters";
             }
             catch (Exception ex)
             {
