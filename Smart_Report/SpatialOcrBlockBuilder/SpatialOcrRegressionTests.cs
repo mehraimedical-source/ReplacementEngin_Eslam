@@ -37,10 +37,9 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(ocrJson, options);
                     List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
 
-                    // Regression فقط RowDetector را تست نمی‌کند. Expected Rows در Sample Bank
-                    // همان ساختار منطقی مورد انتظار هر خط است؛ بنابراین خروجی Resolved Cluster
-                    // نیز باید بتواند دقیقاً همان خط را بازسازی کند. این تست تغییراتی را که
-                    // Row سالم را در ContextualClusterResolver دوباره Split می‌کنند آشکار می‌کند.
+                    // هر لایه با Ground Truth مستقل خودش تست می‌شود:
+                    // Rows برای RowDetector و ResolvedClusters برای ContextualClusterResolver.
+                    // بنابراین سالم بودن Rowها نمی‌تواند خرابی Clusterها را پنهان کند.
                     HorizontalClusterDetector clusterDetector = new HorizontalClusterDetector(
                         new HorizontalClusteringOptions());
                     List<ContextualClusterResolution> resolved =
@@ -118,11 +117,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             return true;
         }
 
-        /// <summary>
-        /// Clusterهای Resolve شده هر Row باید دوباره همان Expected Row را بسازند.
-        /// اگر یک Row مانند BPD به دو Cluster شکسته شود، حتی با سالم بودن RowDetector
-        /// Regression باید FAIL شود تا خرابی لایه Spatial پنهان نماند.
-        /// </summary>
         /// <summary>
         /// خروجی Resolver فقط با Ground Truth مستقل ResolvedClusters مقایسه می‌شود.
         /// Rows جواب RowDetector است و هرگز به عنوان Expected لایه Cluster استفاده نمی‌شود.
