@@ -165,7 +165,14 @@ namespace Smart_Report
                 FindKeyword(text, _rules.Parameters[i], found, true);
 
             for (int i = 0; i < _rules.Measurements.Count; i++)
-                FindKeyword(text, _rules.Measurements[i], found, false);
+            {
+                // Fetal HR is often OCR'd without a separator before the value,
+                // e.g. "Fetal HR158-bpm". Handle it with its own value pattern.
+                if (String.Compare(_rules.Measurements[i], "Fetal HR", true) == 0)
+                    FindFetalHeartRate(text, found);
+                else
+                    FindKeyword(text, _rules.Measurements[i], found, false);
+            }
 
             // Conditional measurements: these labels are also used as presets
             // or anatomy text, so they start a block only when a numeric value
@@ -210,6 +217,25 @@ namespace Smart_Report
             }
 
             return unique;
+        }
+
+        private void FindFetalHeartRate(string text, List<BlockStart> result)
+        {
+            string pattern =
+                @"(?<![A-Z0-9])Fetal\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?\s*-?\s*(?:bpm)(?![A-Z])";
+
+            MatchCollection matches = Regex.Matches(
+                text,
+                pattern,
+                RegexOptions.IgnoreCase);
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index;
+                start.Keyword = "Fetal HR";
+                result.Add(start);
+            }
         }
 
         private void FindConditionalMeasurement(string text, string keyword, List<BlockStart> result)
