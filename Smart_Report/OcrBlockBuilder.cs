@@ -161,6 +161,14 @@ namespace Smart_Report
             for (int i = 0; i < _rules.Sections.Count; i++)
                 FindKeyword(text, _rules.Sections[i], found, true);
 
+            // OCR/report variants that cannot be represented safely as plain
+            // unconditional keywords in the editable starter lists.
+            FindBracketedOb(text, found);
+            FindReportSectionVariant(text, "Fetal Biom", "Fetal Biometry", found);
+            FindReportSectionVariant(text, "Fetal Long", "Fetal Long Bones", found);
+            FindAuaValue(text, found);
+            FindCompactRatio(text, "FL/AC", found);
+
             for (int i = 0; i < _rules.Parameters.Count; i++)
                 FindKeyword(text, _rules.Parameters[i], found, true);
 
@@ -217,6 +225,71 @@ namespace Smart_Report
             }
 
             return unique;
+        }
+
+        private void FindBracketedOb(string text, List<BlockStart> result)
+        {
+            MatchCollection matches = Regex.Matches(text, @"\[\s*OB\s*\]", RegexOptions.IgnoreCase);
+            for (int i = 0; i < matches.Count; i++)
+            {
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index;
+                start.Keyword = matches[i].Value;
+                result.Add(start);
+            }
+        }
+
+        private void FindReportSectionVariant(string text, string prefix, string keyword, List<BlockStart> result)
+        {
+            string pattern = @"(?<![A-Z0-9])" + Regex.Escape(prefix) + @"(?:etry|etry\.\.\.|\.\.\.|[A-Za-z]*\.\.\.)";
+            MatchCollection matches = Regex.Matches(text, pattern, RegexOptions.IgnoreCase);
+            for (int i = 0; i < matches.Count; i++)
+            {
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index;
+                start.Keyword = keyword;
+                result.Add(start);
+            }
+        }
+
+        private void FindAuaValue(string text, List<BlockStart> result)
+        {
+            MatchCollection matches = Regex.Matches(
+                text,
+                @"(?<![A-Z0-9])AUA\s+[0-9]+w[0-9]+d(?![A-Z0-9])",
+                RegexOptions.IgnoreCase);
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index;
+                start.Keyword = "AUA";
+                result.Add(start);
+            }
+        }
+
+        private void FindCompactRatio(string text, string keyword, List<BlockStart> result)
+        {
+            MatchCollection matches = Regex.Matches(
+                text,
+                Regex.Escape(keyword) + @"\s+[+-]?[0-9]+(?:[\.,][0-9]+)?\s*%",
+                RegexOptions.IgnoreCase);
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                int index = matches[i].Index;
+
+                // Normal separated ratio is already handled by the editable
+                // measurement rule. This helper is only for OCR-attached text
+                // such as "5,255FL/AC 21.16 %".
+                if (index == 0 || Char.IsWhiteSpace(text[index - 1]))
+                    continue;
+
+                BlockStart start = new BlockStart();
+                start.Index = index;
+                start.Keyword = keyword;
+                result.Add(start);
+            }
         }
 
         private void FindFetalHeartRate(string text, List<BlockStart> result)
@@ -307,6 +380,9 @@ namespace Smart_Report
                 // OB is a real section label on report pages, but it can also
                 // appear in machine presets such as "3 Trim./OB".
                 if (keyword == "OB" && index > 0 && text[index - 1] == '/')
+                    return false;
+
+                if (keyword == "OB" && index > 0 && text[index - 1] == '[')
                     return false;
 
                 return true;
