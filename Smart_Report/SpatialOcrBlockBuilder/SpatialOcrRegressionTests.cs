@@ -36,17 +36,35 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(ocrJson, options);
                     List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
 
-                    string error;
-                    if (RowsEqual(rows, expectedRows, out error))
+                    // Regression فقط RowDetector را تست نمی‌کند. Expected Rows در Sample Bank
+                    // همان ساختار منطقی مورد انتظار هر خط است؛ بنابراین خروجی Resolved Cluster
+                    // نیز باید بتواند دقیقاً همان خط را بازسازی کند. این تست تغییراتی را که
+                    // Row سالم را در ContextualClusterResolver دوباره Split می‌کنند آشکار می‌کند.
+                    HorizontalClusterDetector clusterDetector = new HorizontalClusterDetector(
+                        new HorizontalClusteringOptions());
+                    List<ContextualClusterResolution> resolved =
+                        new ContextualClusterResolver(new ContextualClusterResolverOptions())
+                        .Resolve(rows, clusterDetector);
+
+                    string rowError;
+                    string resolvedError;
+                    bool rowsPassed = RowsEqual(rows, expectedRows, out rowError);
+                    bool resolvedPassed = ResolvedRowsEqual(resolved, expectedRows, out resolvedError);
+
+                    if (rowsPassed && resolvedPassed)
                     {
                         passed++;
                         report.AppendLine("PASS  " + name);
+                        report.AppendLine("      Rows: PASS");
+                        report.AppendLine("      ResolvedClusters: PASS");
                     }
                     else
                     {
                         failed++;
                         report.AppendLine("FAIL  " + name);
-                        report.AppendLine("      " + error);
+                        report.AppendLine("      Rows: " + (rowsPassed ? "PASS" : "FAIL - " + rowError));
+                        report.AppendLine("      ResolvedClusters: " +
+                            (resolvedPassed ? "PASS" : "FAIL - " + resolvedError));
                     }
                 }
                 catch (Exception ex)
@@ -91,6 +109,58 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 {
                     error = "Row " + (i + 1) + ": expected [" + expectedRows[i] +
                         "] actual [" + actualRows[i].GetText() + "]";
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
+        }
+
+        /// <summary>
+        /// Clusterهای Resolve شده هر Row باید دوباره همان Expected Row را بسازند.
+        /// اگر یک Row مانند BPD به دو Cluster شکسته شود، حتی با سالم بودن RowDetector
+        /// Regression باید FAIL شود تا خرابی لایه Spatial پنهان نماند.
+        /// </summary>
+        private static bool ResolvedRowsEqual(IList<ContextualClusterResolution> resolved,
+            string[] expectedRows, out string error)
+        {
+            if (resolved.Count != expectedRows.Length)
+            {
+                error = "Resolved row count: expected " + expectedRows.Length +
+                    ", actual " + resolved.Count;
+                return false;
+            }
+
+            for (int i = 0; i < expectedRows.Length; i++)
+            {
+                List<SpatialCluster> clusters = resolved[i].ResolvedClusters;
+
+                // در Expected فعلی هر Row یک ساختار منطقی کامل است. تا وقتی Contract
+                // دقیق Cell/Region به Sample Bank اضافه نشده، بیش از یک Cluster یعنی
+                // Engine همان Row صحیح را دوباره شکسته و باید Failure گزارش شود.
+                if (clusters.Count != 1)
+                {
+                    StringBuilder actual = new StringBuilder();
+                    for (int j = 0; j < clusters.Count; j++)
+                    {
+                        if (j > 0) actual.Append(" || ");
+                        actual.Append("[");
+                        actual.Append(clusters[j].GetText());
+                        actual.Append("]");
+                    }
+
+                    error = "Row " + (i + 1) + " split into " + clusters.Count +
+                        " clusters. Expected [" + expectedRows[i] + "] Actual " + actual.ToString();
+                    return false;
+                }
+
+                string actualText = NormalizeRow(clusters[0].GetText());
+                string expectedText = NormalizeRow(expectedRows[i]);
+                if (actualText != expectedText)
+                {
+                    error = "Row " + (i + 1) + ": expected [" + expectedRows[i] +
+                        "] actual [" + clusters[0].GetText() + "]";
                     return false;
                 }
             }
