@@ -16,59 +16,13 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         private readonly NumericUpDown nudOverlap = new NumericUpDown();
         private readonly NumericUpDown nudCenter = new NumericUpDown();
 
+        /// <summary>
+        /// سازنده فرم فقط اجزای ساخته شده توسط Windows Forms Designer را مقداردهی اولیه می‌کند.
+        /// تمام کنترل‌ها، اندازه‌ها و چیدمان فرم در فایل Designer نگهداری می‌شوند.
+        /// </summary>
         public SpatialOcrTestForm()
         {
-            Text = "Spatial OCR Block Builder - Row Detector Test";
-            StartPosition = FormStartPosition.CenterScreen;
-            Width = 1250; Height = 780;
-
-            ToolStrip bar = new ToolStrip();
-            ToolStripButton run = new ToolStripButton("Analyze Rows");
-            ToolStripButton tests = new ToolStripButton("Run Regression Tests");
-            ToolStripButton copy = new ToolStripButton("Copy Test Data");
-            ToolStripButton save = new ToolStripButton("Save Test Data");
-            ToolStripButton clear = new ToolStripButton("Clear");
-            ToolStripButton legacy = new ToolStripButton("Legacy Form");
-            run.Click += delegate { Analyze(); };
-            // خروجی کامل تست شامل JSON خام، تنظیمات و Rowهای تشخیص داده شده را برای ارسال سریع کپی می‌کند.
-            copy.Click += delegate { CopyTestData(); };
-            // همان خروجی قابل ارسال را برای آرشیو Sampleهای واقعی در فایل متنی ذخیره می‌کند.
-            save.Click += delegate { SaveTestData(); };
-
-            // اجرای تست‌های رگرسیون Spatial با همان پارامترهایی که روی فرم تنظیم شده‌اند.
-            tests.Click += delegate { RunRegressionTests(); };
-            clear.Click += delegate { txtJson.Clear(); gridRows.Rows.Clear(); lblStatus.Text = ""; };
-            legacy.Click += delegate { new Smart_Report.Form1().Show(); };
-            bar.Items.Add(run); bar.Items.Add(tests); bar.Items.Add(copy); bar.Items.Add(save); bar.Items.Add(clear); bar.Items.Add(new ToolStripSeparator()); bar.Items.Add(legacy);
-
-            Panel settings = new Panel(); settings.Dock = DockStyle.Top; settings.Height = 34;
-            settings.Controls.Add(MakeLabel("Min overlap", 8));
-            SetupNumeric(nudOverlap, 90, 0.45M); settings.Controls.Add(nudOverlap);
-            settings.Controls.Add(MakeLabel("Max center factor", 180));
-            SetupNumeric(nudCenter, 290, 0.55M); settings.Controls.Add(nudCenter);
-            lblStatus.AutoSize = true; lblStatus.Left = 405; lblStatus.Top = 9; settings.Controls.Add(lblStatus);
-
-            SplitContainer split = new SplitContainer();
-            split.Dock = DockStyle.Fill; split.Orientation = Orientation.Horizontal; split.SplitterDistance = 300;
-
-            txtJson.Multiline = true; txtJson.ScrollBars = ScrollBars.Both; txtJson.WordWrap = false;
-            txtJson.Dock = DockStyle.Fill; txtJson.Font = new Font("Consolas", 9F);
-            split.Panel1.Controls.Add(txtJson);
-
-            gridRows.Dock = DockStyle.Fill; gridRows.AllowUserToAddRows = false; gridRows.ReadOnly = true;
-            gridRows.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            gridRows.Columns.Add("Row", "#");
-            gridRows.Columns.Add("Y", "Y Range");
-            gridRows.Columns.Add("Height", "Median H");
-            gridRows.Columns.Add("Items", "Items");
-            gridRows.Columns.Add("Text", "Reconstructed Row");
-            gridRows.Columns[0].FillWeight = 10; gridRows.Columns[1].FillWeight = 18;
-            gridRows.Columns[2].FillWeight = 15; gridRows.Columns[3].FillWeight = 12;
-            gridRows.Columns[4].FillWeight = 120;
-            split.Panel2.Controls.Add(gridRows);
-
-            Controls.Add(split); Controls.Add(settings); Controls.Add(bar);
-            bar.Dock = DockStyle.Top; settings.BringToFront();
+            InitializeComponent();
         }
 
         /// <summary>
