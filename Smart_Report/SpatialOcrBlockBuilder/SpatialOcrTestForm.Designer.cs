@@ -11,6 +11,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         private System.Windows.Forms.ToolStripLabel lblSampleName;
         private System.Windows.Forms.ToolStripTextBox txtSampleName;
         private System.Windows.Forms.ToolStripButton btnSaveSample;
+        private System.Windows.Forms.ToolStripButton btnLoadSample;
         private System.Windows.Forms.ToolStripButton btnClear;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton btnLegacyForm;
@@ -51,6 +52,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.lblSampleName = new System.Windows.Forms.ToolStripLabel();
             this.txtSampleName = new System.Windows.Forms.ToolStripTextBox();
             this.btnSaveSample = new System.Windows.Forms.ToolStripButton();
+            this.btnLoadSample = new System.Windows.Forms.ToolStripButton();
             this.btnClear = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.btnLegacyForm = new System.Windows.Forms.ToolStripButton();
@@ -81,6 +83,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 this.lblSampleName,
                 this.txtSampleName,
                 this.btnSaveSample,
+                this.btnLoadSample,
                 this.btnClear,
                 this.toolStripSeparator1,
                 this.btnLegacyForm});
@@ -101,6 +104,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.txtSampleName.Size = new System.Drawing.Size(140, 25);
             this.btnSaveSample.Text = "Save Sample";
             this.btnSaveSample.Click += new System.EventHandler(this.btnSaveSample_Click);
+            this.btnLoadSample.Text = "Load Sample";
+            this.btnLoadSample.Click += new System.EventHandler(this.btnLoadSample_Click);
             this.btnClear.Text = "Clear";
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             this.btnLegacyForm.Text = "Legacy Form";
@@ -221,6 +226,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         /// رویداد ذخیره Sample کامل در بانک دائمی پروژه.
         /// </summary>
         private void btnSaveSample_Click(object sender, System.EventArgs e) { SaveSample(); }
+
+        /// <summary>
+        /// رویداد بارگذاری مجدد Sample ذخیره‌شده برای اجرای همان Pipeline روی داده واقعی.
+        /// </summary>
+        private void btnLoadSample_Click(object sender, System.EventArgs e) { LoadSample(); }
 
         /// <summary>
         /// رویداد ذخیره اطلاعات Sample در فایل متنی.
