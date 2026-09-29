@@ -7,12 +7,14 @@ namespace Smart_Report
     {
         private OcrBlockRules _rules;
         private OcrBlockBuilder _blockBuilder;
+        private OcrContentAnalyzer _contentAnalyzer;
 
         public Form1()
         {
             InitializeComponent();
             _rules = OcrBlockRules.CreateDefault();
             _blockBuilder = new OcrBlockBuilder(_rules);
+            _contentAnalyzer = new OcrContentAnalyzer();
         }
 
         private void btnInitialRules_Click(object sender, EventArgs e)
@@ -36,6 +38,14 @@ namespace Smart_Report
         {
             OcrRegressionTests tests = new OcrRegressionTests();
             txtBlockOutput.Text = tests.Run(_blockBuilder);
+        }
+
+        // ابتدا همان OCR Blockها را با Ruleهای فعلی می‌سازد،
+        // سپس Content Analyzer روی Blockها اجرا می‌شود و خروجی JSON در کادر جدا نمایش داده می‌شود.
+        private void btnAnalyzeJson_Click(object sender, EventArgs e)
+        {
+            txtJsonOutput.Text = _contentAnalyzer.AnalyzeJson(
+                _blockBuilder.Build(txtOcrInput.Text));
         }
     }
 }
