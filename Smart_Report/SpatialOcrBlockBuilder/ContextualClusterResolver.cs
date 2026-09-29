@@ -22,6 +22,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
         // موقعیت ستون‌ها نسبت به ارتفاع متن نرمال می‌شود تا Resolution تصویر روی تصمیم اثر نگذارد.
         public double MaxColumnDriftHeightFactor = 2.0;
+
+        // اگر فقط یک Row همسایه ساختار را تأیید کند، Merge فقط برای Gapهای متوسط مجاز است.
+        // این شرط Rowهای جدولی کوتاه مثل CEREB/Fetal HR را پوشش می‌دهد ولی پنل‌های دور از هم
+        // مثل DR/HR در Sample 2 را به علت Gap بسیار بزرگ به هم نمی‌چسباند.
+        public double MaxSingleSupportGapHeightFactor = 16.0;
     }
 
     /// <summary>
@@ -62,7 +67,16 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         double support = CalculateNeighborSupport(
                             rows, i, original[b], original[b + 1]);
                         if (support > r.NeighborSupport) r.NeighborSupport = support;
-                        mergeBoundary.Add(support >= options.MinSupportingRows);
+
+                        double normalizedGap = GetNormalizedGap(
+                            rows[i], original[b], original[b + 1]);
+
+                        bool strongSupport = support >= options.MinSupportingRows;
+                        bool singleSupportWithModerateGap =
+                            support >= 1.0 &&
+                            normalizedGap <= options.MaxSingleSupportGapHeightFactor;
+
+                        mergeBoundary.Add(strongSupport || singleSupportWithModerateGap);
                     }
 
                     BuildResolvedClusters(original, mergeBoundary, r.ResolvedClusters);
@@ -147,6 +161,17 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             for (int i = 0; i < cluster.Items.Count; i++)
                 if (cluster.Items[i].Bounds.Left < x) x = cluster.Items[i].Bounds.Left;
             return x;
+        }
+
+        private static double GetNormalizedGap(SpatialRow row,
+            SpatialCluster left, SpatialCluster right)
+        {
+            double gap = right.Bounds.Left - left.Bounds.Right;
+            if (gap <= 0.0) return 0.0;
+
+            double scale = GetRowScale(row);
+            if (scale <= 0.0) scale = 1.0;
+            return gap / scale;
         }
 
         private static double GetRowScale(SpatialRow row)
