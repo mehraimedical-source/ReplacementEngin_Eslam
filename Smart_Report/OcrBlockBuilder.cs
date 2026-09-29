@@ -24,8 +24,7 @@ namespace Smart_Report
             EndIndex = -1;
         }
 
-        // Debug/display representation of a block. The raw Text itself is not
-        // modified; brackets are added only when the object is converted to text.
+        // نمایش Block برای Debug است. Raw Text تغییر نمی‌کند و فقط هنگام نمایش [] اضافه می‌شود.
         public override string ToString()
         {
             return "[" + Text + "]";
@@ -42,21 +41,19 @@ namespace Smart_Report
             public string Keyword;
         }
 
-        // Creates a builder with the application's default editable rules.
+        // Builder را با Ruleهای پیش‌فرض و قابل ویرایش برنامه می‌سازد.
         public OcrBlockBuilder()
             : this(OcrBlockRules.CreateDefault())
         {
         }
 
-        // Creates a builder from caller-supplied rules. SetRules clones them so
-        // later edits outside the builder cannot silently change current behavior.
+        // Builder را با Ruleهای داده‌شده می‌سازد. Ruleها Clone می‌شوند تا تغییر بیرونی رفتار Engine را ناخواسته عوض نکند.
         public OcrBlockBuilder(OcrBlockRules rules)
         {
             SetRules(rules);
         }
 
-        // Replaces the active starter rules. A null value intentionally falls
-        // back to defaults instead of leaving the builder without rules.
+        // Ruleهای فعال Block Starter را عوض می‌کند. اگر null باشد Default Rules استفاده می‌شود.
         public void SetRules(OcrBlockRules rules)
         {
             _rules = (rules == null) ? OcrBlockRules.CreateDefault() : rules.Clone();
@@ -78,16 +75,14 @@ namespace Smart_Report
             string text = Normalize(rawOcrText);
             List<BlockStart> starts = FindBlockStarts(text);
 
-            // Zero Data Loss:
-            // If no known block starter exists, keep the whole OCR text.
+            // اصل Zero Data Loss: اگر Block Starter پیدا نشد، کل Raw OCR حفظ می‌شود.
             if (starts.Count == 0)
             {
                 AddBlock(blocks, text, "", 0, text.Length);
                 return blocks;
             }
 
-            // Keep everything before the first recognized starter as a block.
-            // Unknown/header/device text must never disappear.
+            // متن قبل از اولین Block Starter هم حفظ می‌شود؛ Header و Device Text نباید حذف شوند.
             if (starts[0].Index > 0)
                 AddBlock(blocks, text, "", 0, starts[0].Index);
 
@@ -119,8 +114,7 @@ namespace Smart_Report
             return blocks;
         }
 
-        // Adds one exact character range as an OcrBlock. Empty ranges are ignored,
-        // but non-empty OCR text is preserved (Zero Data Loss principle).
+        // یک Range دقیق را به OcrBlock تبدیل می‌کند؛ Range خالی رد می‌شود ولی Raw Text غیرخالی حفظ می‌شود.
         private void AddBlock(
             List<OcrBlock> blocks,
             string text,
@@ -146,8 +140,7 @@ namespace Smart_Report
             blocks.Add(block);
         }
 
-        // Convenience output used by the test/UI: builds blocks and prints one
-        // [block] per line. Brackets are presentation markers, not OCR correction.
+        // خروجی UI و Regression Test را می‌سازد؛ [] فقط نمایش Boundary است و Raw OCR را اصلاح نمی‌کند.
         public string BuildBracketText(string rawOcrText)
         {
             List<OcrBlock> blocks = Build(rawOcrText);
@@ -178,9 +171,7 @@ namespace Smart_Report
             return text.Trim();
         }
 
-        // Collects all candidate boundaries from editable rules plus narrowly
-        // defined OCR-aware patterns (FHR, NT, NB, D, etc.). Candidates are sorted
-        // and overlapping/duplicate starts are removed before Build() cuts text.
+        // Boundaryهای احتمالی را از Editable Rules و Patternهای OCR مثل FHR، NT، NB و D جمع می‌کند؛ سپس Duplicate/Overlap را حذف می‌کند.
         private List<BlockStart> FindBlockStarts(string text)
         {
             List<BlockStart> found = new List<BlockStart>();
@@ -201,8 +192,7 @@ namespace Smart_Report
 
             for (int i = 0; i < _rules.Measurements.Count; i++)
             {
-                // Fetal HR is often OCR'd without a separator before the value,
-                // e.g. "Fetal HR158-bpm". Handle it with its own value pattern.
+                // Fetal HR ممکن است مثل Fetal HR158-bpm بدون فاصله OCR شود؛ بنابراین Pattern اختصاصی دارد.
                 if (String.Compare(_rules.Measurements[i], "Fetal HR", true) == 0)
                     FindFetalHeartRate(text, found);
                 else
@@ -223,7 +213,7 @@ namespace Smart_Report
                 if (byIndex != 0)
                     return byIndex;
 
-                // At the same location, prefer the more specific keyword.
+                // در Index یکسان، Keyword اختصاصی‌تر و طولانی‌تر اولویت دارد.
                 return b.Keyword.Length.CompareTo(a.Keyword.Length);
             });
 
@@ -239,12 +229,11 @@ namespace Smart_Report
 
                 BlockStart previous = unique[unique.Count - 1];
 
-                // Same start position: keep only the most specific match.
+                // در Start Position یکسان فقط Match اختصاصی‌تر نگه داشته می‌شود تا Duplicate Block نسازیم.
                 if (previous.Index == found[i].Index)
                     continue;
 
-                // Prevent a shorter keyword inside a longer already detected
-                // keyword from creating a false block.
+                // Keyword کوتاه داخل Match بلندتر نباید False Block ایجاد کند.
                 int previousEnd = previous.Index + previous.Keyword.Length;
                 if (found[i].Index < previousEnd)
                     continue;
@@ -532,14 +521,11 @@ namespace Smart_Report
                     return false;
             }
 
-            // Example: OFD (HC) 97.37mm
-            // HC is part of the OFD title, not a new block.
+            // مثال OFD (HC) 97.37mm: این HC بخشی از Title است و Block Starter جدید نیست.
             if (IsInsideParentheses(text, index))
                 return false;
 
-            // Plain GA and EDD never reach here because they are deliberately
-            // not registered as starters. Their role will be determined from
-            // the surrounding block.
+            // GA و EDD ساده عمداً Starter نیستند؛ مثال BPD ... GA ... EDD ... باید یک Block بماند و نقش آنها از Context مشخص شود.
             return true;
         }
 
