@@ -12,8 +12,10 @@ namespace Smart_Report
         public int StartIndex;
         public int EndIndex;
 
-        // Creates an empty OCR block. Indices start at -1 so an uninitialized
-        // block cannot be confused with a real block beginning at character 0.
+        // یک بلوک خالی می‌سازد.
+        // دلیل: مقدار -1 برای Indexها یعنی هنوز محدوده واقعی از OCR به این بلوک داده نشده است؛
+        // در نتیجه با بلوکی که واقعاً از کاراکتر صفر شروع شده اشتباه نمی‌شود.
+        // مثال: StartIndex=0 یعنی متن واقعاً از ابتدای OCR آمده، ولی -1 یعنی هنوز مقداردهی نشده است.
         public OcrBlock()
         {
             Text = "";
@@ -60,11 +62,12 @@ namespace Smart_Report
             _rules = (rules == null) ? OcrBlockRules.CreateDefault() : rules.Clone();
         }
 
-        // Main blocking pipeline:
-        // 1) normalize OCR whitespace, 2) find every supported block start,
-        // 3) preserve unknown text before/between starts, and 4) cut blocks.
-        // IMPORTANT: this stage decides boundaries only; it does not decide
-        // whether a block is clinically useful and it must preserve raw OCR data.
+        // تابع اصلی ساخت بلوک‌هاست.
+        // مراحل: 1) یکدست کردن فاصله‌های OCR، 2) پیدا کردن تمام Startهای معتبر،
+        // 3) حفظ متن ناشناخته قبل و بین Startها، 4) بریدن متن به بلوک‌ها.
+        // دلیل این طراحی: در این مرحله فقط Boundary مهم است، نه اینکه متن برای Report مفید است یا نه.
+        // مثال: متن Header یا تنظیمات دستگاه ممکن است هنوز معنی بالینی نداشته باشد، ولی حذف نمی‌شود.
+        // اصل مهم Zero Data Loss: هیچ قسمت Raw OCR فقط به دلیل ناشناخته بودن دور ریخته نمی‌شود.
         public List<OcrBlock> Build(string rawOcrText)
         {
             List<OcrBlock> blocks = new List<OcrBlock>();
@@ -163,8 +166,9 @@ namespace Smart_Report
             return result.ToString();
         }
 
-        // Normalizes only whitespace so matching is stable across OCR engines.
-        // It deliberately does NOT repair spelling/glyph errors such as Fetaļ.
+        // فقط فاصله‌ها، Tab و Enterهای OCR را یکدست می‌کند تا Regexها روی متن پایدار باشند.
+        // دلیل: Block Builder نباید خودش OCR را "تصحیح" کند؛ وظیفه‌اش تشخیص مرزهاست.
+        // مثال: "Fetaļ" به "Fetal" تبدیل نمی‌شود؛ همان Raw باقی می‌ماند و Rule مخصوص آن را می‌شناسد.
         private string Normalize(string text)
         {
             text = text.Replace("\r", " ");
@@ -251,9 +255,11 @@ namespace Smart_Report
             return unique;
         }
 
-        // Finds report section labels written as [OB]. We start at '[' so the
-        // complete raw label stays together. Plain OB matching is separately
-        // suppressed inside brackets and in machine presets such as 3 Trim./OB.
+        // Section گزارش را در شکل [OB] پیدا می‌کند و مرز را از خود '[' شروع می‌کند.
+        // دلیل: می‌خواهیم Raw عبارت [OB] کامل داخل یک بلوک بماند.
+        // مثال: "... T [OB] AUA 17w5d" -> [OB] باید Section مستقل باشد.
+        // اما هر OB یک Section نیست؛ مثال "3 Trim./OB" بخشی از Preset دستگاه است.
+        // همچنین Match معمولی OB داخل [OB] جداگانه غیرفعال می‌شود تا دو مرز روی یک عبارت نسازیم.
         private void FindBracketedOb(string text, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(text, @"\[\s*OB\s*\]", RegexOptions.IgnoreCase);
@@ -266,9 +272,10 @@ namespace Smart_Report
             }
         }
 
-        // Finds truncated OCR section headings such as "Fetal Biom..." and
-        // "Fetal Long...". These cannot safely be unconditional short keywords,
-        // because the same prefixes may occur in unrelated text.
+        // عنوان Sectionهایی را پیدا می‌کند که OCR انتهای آنها را ناقص خوانده است.
+        // مثال: "Fetal Biom..." به جای Fetal Biometry و "Fetal Long..." برای Fetal Long Bones.
+        // دلیل استفاده از Pattern مخصوص: اگر فقط "Fetal Biom" را Keyword عمومی کنیم، ممکن است
+        // هر متن دیگری که با این Prefix شروع شده اشتباهاً Section جدید ایجاد کند.
         private void FindReportSectionVariant(string text, string prefix, string keyword, List<BlockStart> result)
         {
             string pattern = @"(?<![A-Z0-9])" + Regex.Escape(prefix) + @"(?:etry|etry\.\.\.|\.\.\.|[A-Za-z]*\.\.\.)";
@@ -282,8 +289,9 @@ namespace Smart_Report
             }
         }
 
-        // Recognizes report-style AUA only when followed by a gestational-age
-        // value (for example AUA 17w5d). This avoids making bare AUA too broad.
+        // AUA را فقط وقتی مرز گزارش می‌داند که بلافاصله مقدار سن بارداری داشته باشد.
+        // مثال: "AUA 17w5d" -> شروع بلوک معتبر است.
+        // دلیل: AUA تنها را به Keyword عمومی تبدیل نمی‌کنیم تا هر حضور اتفاقی آن Split ایجاد نکند.
         private void FindAuaValue(string text, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(
@@ -300,9 +308,11 @@ namespace Smart_Report
             }
         }
 
-        // Recovers a ratio boundary when OCR attaches preceding chart/table text
-        // to it, e.g. "5,255FL/AC 21.16 %". Normal spaced FL/AC is already handled
-        // by editable measurement rules, so this helper acts only on attached text.
+        // Ratio را وقتی پیدا می‌کند که OCR متن قبلی جدول را بدون فاصله به آن چسبانده باشد.
+        // دلیل: Rule معمولی FL/AC وقتی قبلش متن چسبیده باشد ممکن است مرز درست را نبیند.
+        // مثال واقعی: "5,255FL/AC 21.16 %" -> مرز باید دقیقاً از FL/AC شروع شود و
+        // مقدار "5,255" حذف نشود؛ آن مقدار در بلوک قبلی باقی می‌ماند (Zero Data Loss).
+        // اگر FL/AC معمولی و با فاصله باشد، همان Rule قابل ویرایش Measurements کافی است.
         private void FindCompactRatio(string text, string keyword, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(
@@ -327,14 +337,16 @@ namespace Smart_Report
             }
         }
 
-        // Finds the COMPLETE Fetal HR measurement, not just the token "HR".
-        // Supported real OCR forms include:
-        //   Fetal HR158-bpm      (missing space / hyphen before bpm)
-        //   Fetal HR 143 143 bpm (report table repeats the numeric value)
-        //   Fetaļ HR158-bpm      (OCR substitutes ļ for final l)
-        //   Feta HR158-bpm       (OCR drops final l)
-        // Requiring numeric value + bpm keeps this tolerant spelling rule narrow.
-        // Raw OCR is never corrected: Fetaļ/Feta remain exactly as recognized.
+        // کل اندازه‌گیری Fetal HR را پیدا می‌کند، نه فقط کلمه HR را.
+        // دلیل: OCR ممکن است خود عبارت Fetal را خراب کند، ولی ساختار "HR + عدد + bpm"
+        // مدرک قوی‌ای است که این عبارت واقعاً ضربان قلب جنین است.
+        // مثال‌های واقعی که باید یک بلوک کامل شوند:
+        //   Fetal HR158-bpm       -> حالت بدون فاصله و با خط تیره
+        //   Fetal HR 143 143 bpm  -> جدول گزارش عدد را دوبار تکرار کرده است
+        //   Fetaļ HR158-bpm       -> OCR حرف l را به ļ تبدیل کرده است
+        //   Feta HR158-bpm        -> OCR حرف آخر l را حذف کرده است
+        // نکته مهم: متن Raw اصلاح نمی‌شود؛ مثلاً Fetaļ همان Fetaļ داخل خروجی باقی می‌ماند.
+        // فقط برای تشخیص مرز بلوک، این شکل‌ها معادل ساختاری Fetal HR در نظر گرفته می‌شوند.
         private void FindFetalHeartRate(string text, List<BlockStart> result)
         {
             string pattern =
@@ -354,12 +366,13 @@ namespace Smart_Report
             }
         }
 
-        // Finds generic HR only when syntax proves it is a measurement:
-        // HR + numeric value + bpm, e.g. "HR 147 bpm".
-        // This is intentionally conditional because machine text such as
-        // "32Hz HR TIs 0.1" must NOT start an HR block. If HR belongs to a
-        // Fetal/Fetaļ/Feta HR phrase, FindFetalHeartRate owns the whole phrase
-        // and this helper skips the inner HR to prevent a split in the middle.
+        // HR عمومی را فقط وقتی Measurement می‌داند که بعد از آن "عدد + bpm" وجود داشته باشد.
+        // دلیل: کلمه HR به تنهایی قابل اعتماد نیست و در تنظیمات دستگاه هم دیده شده است.
+        // مثال صحیح: "HR 147 bpm" -> باید بلوک جدید بسازد.
+        // مثال غلط: "32Hz HR TIs 0.1" -> نباید از HR جدا شود، چون bpm و مقدار HR ندارد.
+        // اگر HR داخل "Fetal/Fetaļ/Feta HR ... bpm" باشد نیز این تابع آن را رد می‌کند؛
+        // چون FindFetalHeartRate باید کل عبارت را از ابتدای Fetal/Fetaļ/Feta جدا کند.
+        // وگرنه خروجی غلطی مثل [Fetaļ] [HR158-bpm] ساخته می‌شود.
         private void FindConditionalHeartRate(string text, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(
@@ -381,13 +394,16 @@ namespace Smart_Report
             }
         }
 
-        // Conditional numeric measurement matcher used for ambiguous short labels.
-        // Current callers: NT, NB and D. A label becomes a boundary only when a
-        // number and mm/cm follow it. Thus NT/CA1-7S (a preset) is not NT data,
-        // while "NT 2.32 mm" is. D additionally accepts OCR "D.4.10 mm" where
-        // a dot was inserted between the label and value. Do not generalize this
-        // to arbitrary word+number+unit patterns; Doppler/device settings contain
-        // many similar forms (SV, SVD, PRF, WF) that are not block starters here.
+        // Measurementهای کوتاه و مبهم مثل NT، NB و D را به صورت شرطی پیدا می‌کند.
+        // دلیل: خود Keyword به تنهایی کافی نیست؛ همان حروف ممکن است در Preset یا متن دستگاه باشند.
+        // شرط فعلی: بعد از Keyword باید مقدار عددی و واحد mm یا cm بیاید.
+        // مثال: "NT 2.32 mm" -> Measurement واقعی و شروع بلوک است.
+        // مثال: "NT/CA1-7S/14.0cm" -> نام Preset دستگاه است و نباید از NT جدا شود.
+        // مثال: "NB 2.66 mm" -> Measurement واقعی است.
+        // برای D یک خطای OCR واقعی هم دیده‌ایم: "D.4.10 mm"؛ بنابراین فقط D اجازه دارد
+        // به جای فاصله، نقطه بین D و مقدار داشته باشد. Raw OCR همچنان دست‌نخورده می‌ماند.
+        // این منطق را نباید به هر "کلمه + عدد + واحد" تعمیم داد؛ چون مواردی مثل
+        // SV 2.0mm، SVD 6.4cm، PRF و WF تنظیمات Doppler هستند و لزوماً Block Starter نیستند.
         private void FindConditionalMeasurement(string text, string keyword, List<BlockStart> result)
         {
             string pattern =
@@ -527,9 +543,11 @@ namespace Smart_Report
             return true;
         }
 
-        // Returns the nearest preceding EFW/EFW1/EFW2 occurrence. It supports the
-        // local EFW-formula guard so BPD/HC/AC/FL references inside a formula do not
-        // incorrectly create new blocks. The guard is deliberately local in distance.
+        // نزدیک‌ترین EFW / EFW1 / EFW2 قبل از موقعیت فعلی را پیدا می‌کند.
+        // دلیل: BPD، HC، AC و FL گاهی Measurement مستقل نیستند و فقط نام پارامترهای فرمول EFW هستند.
+        // مثال: "EFW1 Hadlock2 BPD,AC,FL" -> BPD/AC/FL نباید سه بلوک جدید بسازند.
+        // اما در Section بعدی Fetal Biometry، "BPD 3.96 cm" باید دوباره Measurement مستقل شود؛
+        // به همین علت Context فرمول EFW محدود و محلی نگه داشته شده است.
         private int LastEfwIndex(string text, int beforeIndex)
         {
             int a = text.LastIndexOf("EFW1", beforeIndex, StringComparison.OrdinalIgnoreCase);
@@ -541,8 +559,10 @@ namespace Smart_Report
             return best;
         }
 
-        // True when index lies after the most recent '(' with no closing ')' yet.
-        // Example: in "OFD (HC) 97.37mm", HC describes OFD and must not split.
+        // بررسی می‌کند Keyword فعلی داخل پرانتز باز قرار دارد یا نه.
+        // دلیل: نام Measurement ممکن است داخل عنوان Measurement دیگری آمده باشد.
+        // مثال: "OFD (HC) 97.37mm" -> HC اینجا توضیح OFD است، نه شروع Measurement جدید؛
+        // بنابراین نباید خروجی به [OFD (] و [HC) ...] شکسته شود.
         private bool IsInsideParentheses(string text, int index)
         {
             int open = text.LastIndexOf('(', index);
