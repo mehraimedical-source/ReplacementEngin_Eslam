@@ -167,6 +167,13 @@ namespace Smart_Report
             for (int i = 0; i < _rules.Measurements.Count; i++)
                 FindKeyword(text, _rules.Measurements[i], found, false);
 
+            // Conditional measurements: these labels are also used as presets
+            // or anatomy text, so they start a block only when a numeric value
+            // and a measurement unit immediately follow them.
+            FindConditionalMeasurement(text, "NT", found);
+            FindConditionalMeasurement(text, "NB", found);
+            FindConditionalMeasurement(text, "D", found);
+
             found.Sort(delegate(BlockStart a, BlockStart b)
             {
                 int byIndex = a.Index.CompareTo(b.Index);
@@ -203,6 +210,27 @@ namespace Smart_Report
             }
 
             return unique;
+        }
+
+        private void FindConditionalMeasurement(string text, string keyword, List<BlockStart> result)
+        {
+            string pattern =
+                @"(?<![A-Z0-9])" +
+                Regex.Escape(keyword) +
+                @"\s+[+-]?[0-9]+(?:[\.,][0-9]+)?\s*(?:mm|cm)(?![A-Z])";
+
+            MatchCollection matches = Regex.Matches(
+                text,
+                pattern,
+                RegexOptions.IgnoreCase);
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index;
+                start.Keyword = keyword;
+                result.Add(start);
+            }
         }
 
         private void FindKeyword(
@@ -257,14 +285,23 @@ namespace Smart_Report
                 return true;
             }
 
-            // Measurement names separated by commas are references inside
-            // formulas such as EFW1 Hadlock2 BPD,AC,FL and must not split.
+            // BPD/HC/AC/FL can be formula references inside an EFW block.
+            // OCR may render separators as comma, dot, slash, or spaces, so
+            // determine this from the local EFW context instead of punctuation.
             if (keyword == "BPD" || keyword == "HC" || keyword == "AC" || keyword == "FL")
             {
-                int keywordEnd = index + keyword.Length;
-                if ((keywordEnd < text.Length && text[keywordEnd] == ',') ||
-                    (index > 0 && text[index - 1] == ','))
-                    return false;
+                int previousEfw = LastEfwIndex(text, index);
+                if (previousEfw >= 0)
+                {
+                    int distance = index - previousEfw;
+                    if (distance <= 45)
+                    {
+                        string between = text.Substring(previousEfw, distance);
+                        if (between.IndexOf("g ", StringComparison.OrdinalIgnoreCase) < 0 &&
+                            between.IndexOf("mm ", StringComparison.OrdinalIgnoreCase) < 0)
+                            return false;
+                    }
+                }
             }
 
             // Ratio names can also appear inside a longer EFW formula,
@@ -296,6 +333,17 @@ namespace Smart_Report
             // not registered as starters. Their role will be determined from
             // the surrounding block.
             return true;
+        }
+
+        private int LastEfwIndex(string text, int beforeIndex)
+        {
+            int a = text.LastIndexOf("EFW1", beforeIndex, StringComparison.OrdinalIgnoreCase);
+            int b = text.LastIndexOf("EFW2", beforeIndex, StringComparison.OrdinalIgnoreCase);
+            int c = text.LastIndexOf("EFW", beforeIndex, StringComparison.OrdinalIgnoreCase);
+            int best = a;
+            if (b > best) best = b;
+            if (c > best) best = c;
+            return best;
         }
 
         private bool IsInsideParentheses(string text, int index)
