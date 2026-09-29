@@ -8,6 +8,7 @@ namespace Smart_Report
         private System.Windows.Forms.TextBox txtOcrInput;
         private System.Windows.Forms.TextBox txtBlockOutput;
         private System.Windows.Forms.Button btnBuildBlocks;
+        private System.Windows.Forms.Button btnInitialRules;
 
         protected override void Dispose(bool disposing)
         {
@@ -26,6 +27,7 @@ namespace Smart_Report
             this.txtOcrInput = new System.Windows.Forms.TextBox();
             this.txtBlockOutput = new System.Windows.Forms.TextBox();
             this.btnBuildBlocks = new System.Windows.Forms.Button();
+            this.btnInitialRules = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblInput
@@ -85,11 +87,23 @@ namespace Smart_Report
             this.btnBuildBlocks.UseVisualStyleBackColor = true;
             this.btnBuildBlocks.Click += new System.EventHandler(this.btnBuildBlocks_Click);
             // 
+            // btnInitialRules
+            // 
+            this.btnInitialRules.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.btnInitialRules.Location = new System.Drawing.Point(268, 263);
+            this.btnInitialRules.Name = "btnInitialRules";
+            this.btnInitialRules.Size = new System.Drawing.Size(145, 34);
+            this.btnInitialRules.TabIndex = 5;
+            this.btnInitialRules.Text = "Initial Rules";
+            this.btnInitialRules.UseVisualStyleBackColor = true;
+            this.btnInitialRules.Click += new System.EventHandler(this.btnInitialRules_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 601);
+            this.Controls.Add(this.btnInitialRules);
             this.Controls.Add(this.txtBlockOutput);
             this.Controls.Add(this.lblOutput);
             this.Controls.Add(this.btnBuildBlocks);
