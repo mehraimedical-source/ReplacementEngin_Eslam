@@ -191,6 +191,13 @@ namespace Smart_Report
                 "SAMSUNG Feta HR TIs 0.1 / TIb 0.1 / MI 1.4",
                 "[SAMSUNG Feta HR TIs 0.1 / TIb 0.1 / MI 1.4]"));
 
+            // این Test از Sample واقعی Ratio Table آمده است.
+            // دلیل: OCR پرانتز Normal Range مربوط به FL/HC را ناقص خوانده و ')' وجود ندارد.
+            // با وجود این، HC/AC یک Ratio مستقل است و باید Block جدید بسازد.
+            t.Add(Case("Ratio after truncated normal range",
+                "Name Hoseyni Por, Marziye... ID 116271 Exam. Date 2025-06-01 Gender Female BirthDate 1984-03-21 Age 41yr 2m Institute RAD Med.Image ins. Ref. Physician Arezo Shahmoradi Description 2852 T Ratio Value Normal Range FL/BPD 65.56 % (71.0~87.0%, >23w) FL/HC 17.13 % (13.30~23.90%, 15... HC/AC 1.24 (0.87~1.39, 13–42w)",
+                "[Name Hoseyni Por, Marziye... ID 116271 Exam. Date 2025-06-01 Gender Female BirthDate 1984-03-21 Age 41yr 2m Institute RAD Med.Image ins. Ref. Physician Arezo Shahmoradi Description 2852 T Ratio Value Normal Range]\n[FL/BPD 65.56 % (71.0~87.0%, >23w)]\n[FL/HC 17.13 % (13.30~23.90%, 15...]\n[HC/AC 1.24 (0.87~1.39, 13–42w)]"));
+
             return t;
         }
     }
