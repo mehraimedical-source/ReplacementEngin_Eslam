@@ -330,6 +330,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 List<AlignmentAnchor> anchors = new AlignmentAnchorDetector(
                     new AlignmentAnchorOptions()).Detect(rows);
 
+                AlignmentPatternDetector patternDetector = new AlignmentPatternDetector(
+                    new AlignmentPatternOptions());
+                List<AlignmentPattern> patterns = patternDetector.BuildPatterns(rows);
+                List<AlignmentPatternTransition> transitions = patternDetector.DetectTransitions(rows);
+
                 List<SpatialRegion> regions = new SpatialRegionDetector(
                     new SpatialRegionOptions()).Detect(rows, clusterDetector);
 
@@ -357,6 +362,40 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         if (j > 0) anchorOutput.Append(" / ");
                         anchorOutput.Append(anchor.Items[j].Text);
                     }
+                    anchorOutput.AppendLine();
+                }
+                anchorOutput.AppendLine();
+
+                // Pattern خام هر Row و تغییر آن نسبت به Row قبلی را جداگانه چاپ می‌کنیم
+                // تا قبل از استفاده در RegionDetector بتوانیم Threshold و رفتار Topology را با تصویر کنترل کنیم.
+                anchorOutput.AppendLine("===== ALIGNMENT PATTERNS =====");
+                for (int i = 0; i < patterns.Count; i++)
+                {
+                    anchorOutput.Append("Row ");
+                    anchorOutput.Append((patterns[i].RowIndex + 1).ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  X=");
+                    for (int j = 0; j < patterns[i].Positions.Count; j++)
+                    {
+                        if (j > 0) anchorOutput.Append(", ");
+                        anchorOutput.Append(patterns[i].Positions[j].ToString("0.0", CultureInfo.InvariantCulture));
+                    }
+                    anchorOutput.AppendLine();
+                }
+
+                anchorOutput.AppendLine();
+                anchorOutput.AppendLine("===== TOPOLOGY TRANSITIONS =====");
+                for (int i = 0; i < transitions.Count; i++)
+                {
+                    AlignmentPatternTransition transition = transitions[i];
+                    anchorOutput.Append("Row ");
+                    anchorOutput.Append((transition.PreviousRowIndex + 1).ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append(" -> ");
+                    anchorOutput.Append((transition.CurrentRowIndex + 1).ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  Similarity=");
+                    anchorOutput.Append(transition.Similarity.ToString("0.00", CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  Change=");
+                    anchorOutput.Append(transition.ChangeScore.ToString("0.00", CultureInfo.InvariantCulture));
+                    if (transition.IsBoundary) anchorOutput.Append("  *** BOUNDARY ***");
                     anchorOutput.AppendLine();
                 }
                 anchorOutput.AppendLine();
@@ -390,7 +429,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
                 lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
                     " rows  |  " + clusterCount + " clusters  |  " +
-                    anchors.Count + " anchors  |  " + regions.Count + " regions";
+                    anchors.Count + " anchors  |  " + transitions.Count + " transitions  |  " +
+                    regions.Count + " regions";
             }
             catch (Exception ex)
             {
