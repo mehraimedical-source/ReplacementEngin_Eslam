@@ -62,6 +62,9 @@ namespace Smart_Report
             r.Measurements.Add("HC");
             r.Measurements.Add("AC");
             r.Measurements.Add("Fetal HR");
+            r.Measurements.Add("LT. HUM");
+            r.Measurements.Add("ULNA");
+            r.Measurements.Add("RT. TIB");
             r.Measurements.Add("D1");
             r.Measurements.Add("D2");
             r.Measurements.Add("CI");
