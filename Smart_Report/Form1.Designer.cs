@@ -10,6 +10,9 @@ namespace Smart_Report
         private System.Windows.Forms.Button btnBuildBlocks;
         private System.Windows.Forms.Button btnInitialRules;
         private System.Windows.Forms.Button btnRunTests;
+        private System.Windows.Forms.Button btnAnalyzeJson;
+        private System.Windows.Forms.Label lblJsonOutput;
+        private System.Windows.Forms.TextBox txtJsonOutput;
 
         protected override void Dispose(bool disposing)
         {
@@ -30,6 +33,9 @@ namespace Smart_Report
             this.btnBuildBlocks = new System.Windows.Forms.Button();
             this.btnInitialRules = new System.Windows.Forms.Button();
             this.btnRunTests = new System.Windows.Forms.Button();
+            this.btnAnalyzeJson = new System.Windows.Forms.Button();
+            this.lblJsonOutput = new System.Windows.Forms.Label();
+            this.txtJsonOutput = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // lblInput
@@ -111,11 +117,48 @@ namespace Smart_Report
             this.btnRunTests.UseVisualStyleBackColor = true;
             this.btnRunTests.Click += new System.EventHandler(this.btnRunTests_Click);
             // 
+            // btnAnalyzeJson
+            // 
+            this.btnAnalyzeJson.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.btnAnalyzeJson.Location = new System.Drawing.Point(721, 263);
+            this.btnAnalyzeJson.Name = "btnAnalyzeJson";
+            this.btnAnalyzeJson.Size = new System.Drawing.Size(145, 34);
+            this.btnAnalyzeJson.TabIndex = 7;
+            this.btnAnalyzeJson.Text = "Analyze JSON";
+            this.btnAnalyzeJson.UseVisualStyleBackColor = true;
+            this.btnAnalyzeJson.Click += new System.EventHandler(this.btnAnalyzeJson_Click);
+            // 
+            // lblJsonOutput
+            // 
+            this.lblJsonOutput.AutoSize = true;
+            this.lblJsonOutput.Location = new System.Drawing.Point(12, 601);
+            this.lblJsonOutput.Name = "lblJsonOutput";
+            this.lblJsonOutput.Size = new System.Drawing.Size(72, 13);
+            this.lblJsonOutput.TabIndex = 8;
+            this.lblJsonOutput.Text = "JSON Output:";
+            // 
+            // txtJsonOutput
+            // 
+            this.txtJsonOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtJsonOutput.Location = new System.Drawing.Point(15, 620);
+            this.txtJsonOutput.Multiline = true;
+            this.txtJsonOutput.Name = "txtJsonOutput";
+            this.txtJsonOutput.ReadOnly = true;
+            this.txtJsonOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtJsonOutput.Size = new System.Drawing.Size(954, 218);
+            this.txtJsonOutput.TabIndex = 9;
+            this.txtJsonOutput.WordWrap = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(984, 601);
+            this.ClientSize = new System.Drawing.Size(984, 851);
+            this.Controls.Add(this.txtJsonOutput);
+            this.Controls.Add(this.lblJsonOutput);
+            this.Controls.Add(this.btnAnalyzeJson);
             this.Controls.Add(this.btnRunTests);
             this.Controls.Add(this.btnInitialRules);
             this.Controls.Add(this.txtBlockOutput);
@@ -123,7 +166,7 @@ namespace Smart_Report
             this.Controls.Add(this.btnBuildBlocks);
             this.Controls.Add(this.txtOcrInput);
             this.Controls.Add(this.lblInput);
-            this.MinimumSize = new System.Drawing.Size(700, 500);
+            this.MinimumSize = new System.Drawing.Size(700, 700);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Smart Report - OCR Block Builder";
