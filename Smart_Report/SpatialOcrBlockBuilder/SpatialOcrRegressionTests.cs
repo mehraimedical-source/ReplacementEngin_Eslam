@@ -33,6 +33,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     string expectedJson = File.ReadAllText(Path.Combine(folder, "expected.json"), Encoding.UTF8);
                     string[] expectedRows = ReadExpectedRows(expectedJson);
                     List<string[]> expectedClusters = ReadExpectedClusters(expectedJson);
+                    List<string[]> expectedRegions = ReadExpectedRegions(expectedJson);
 
                     List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(ocrJson, options);
                     List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
@@ -46,17 +47,25 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         new ContextualClusterResolver(new ContextualClusterResolverOptions())
                         .Resolve(rows, clusterDetector);
 
+                    // RegionDetector همان ResolvedClusters تأییدشده را مصرف می‌کند؛
+                    // دوباره Resolve نمی‌کنیم تا هر لایه دقیقاً روی خروجی لایه قبل Regression شود.
+                    List<SpatialRegion> regions = new SpatialRegionDetector(
+                        new SpatialRegionOptions()).DetectResolved(resolved);
+
                     string rowError;
                     string resolvedError;
+                    string regionError;
                     bool rowsPassed = RowsEqual(rows, expectedRows, out rowError);
                     bool resolvedPassed = ResolvedRowsEqual(resolved, expectedClusters, out resolvedError);
+                    bool regionsPassed = RegionsEqual(resolved, regions, expectedRegions, out regionError);
 
-                    if (rowsPassed && resolvedPassed)
+                    if (rowsPassed && resolvedPassed && regionsPassed)
                     {
                         passed++;
                         report.AppendLine("PASS  " + name);
                         report.AppendLine("      Rows: PASS");
                         report.AppendLine("      ResolvedClusters: PASS");
+                        report.AppendLine("      Regions: PASS");
                     }
                     else
                     {
@@ -65,6 +74,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         report.AppendLine("      Rows: " + (rowsPassed ? "PASS" : "FAIL - " + rowError));
                         report.AppendLine("      ResolvedClusters: " +
                             (resolvedPassed ? "PASS" : "FAIL - " + resolvedError));
+                        report.AppendLine("      Regions: " +
+                            (regionsPassed ? "PASS" : "FAIL - " + regionError));
                     }
                 }
                 catch (Exception ex)
@@ -180,21 +191,176 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         }
 
         /// <summary>
+        /// Regionها را با Ground Truth مستقل مقایسه می‌کند.
+        /// ترتیب خود Regionها مهم نیست، ولی ترتیب Clusterهای داخل هر Region باید حفظ شود.
+        /// همچنین هر Cluster Resolve شده باید دقیقاً یک بار داخل Regionها مصرف شده باشد.
+        /// </summary>
+        private static bool RegionsEqual(IList<ContextualClusterResolution> resolved,
+            IList<SpatialRegion> actualRegions, IList<string[]> expectedRegions, out string error)
+        {
+            if (expectedRegions == null)
+            {
+                error = "expected.json does not contain Regions.";
+                return false;
+            }
+
+            string coverageError;
+            if (!RegionCoverageIsValid(resolved, actualRegions, out coverageError))
+            {
+                error = coverageError;
+                return false;
+            }
+
+            if (actualRegions.Count != expectedRegions.Count)
+            {
+                error = "Region count: expected " + expectedRegions.Count +
+                    ", actual " + actualRegions.Count + ". Actual " +
+                    BuildRegionList(actualRegions);
+                return false;
+            }
+
+            bool[] used = new bool[actualRegions.Count];
+
+            for (int i = 0; i < expectedRegions.Count; i++)
+            {
+                int matched = -1;
+                for (int j = 0; j < actualRegions.Count; j++)
+                {
+                    if (used[j]) continue;
+                    if (RegionMatches(actualRegions[j], expectedRegions[i]))
+                    {
+                        matched = j;
+                        break;
+                    }
+                }
+
+                if (matched < 0)
+                {
+                    error = "Expected Region " + (i + 1) + " not found: [" +
+                        JoinExpectedRegion(expectedRegions[i]) + "]. Actual " +
+                        BuildRegionList(actualRegions);
+                    return false;
+                }
+
+                used[matched] = true;
+            }
+
+            error = null;
+            return true;
+        }
+
+        /// <summary>
+        /// تضمین می‌کند RegionDetector هیچ Cluster را گم یا Duplicate نکرده باشد.
+        /// این تست مستقل از متن Expected است و خود Contract لایه Region را کنترل می‌کند.
+        /// </summary>
+        private static bool RegionCoverageIsValid(IList<ContextualClusterResolution> resolved,
+            IList<SpatialRegion> regions, out string error)
+        {
+            List<SpatialCluster> source = new List<SpatialCluster>();
+            for (int i = 0; i < resolved.Count; i++)
+                for (int j = 0; j < resolved[i].ResolvedClusters.Count; j++)
+                    source.Add(resolved[i].ResolvedClusters[j]);
+
+            int actualCount = 0;
+            for (int i = 0; i < regions.Count; i++)
+                actualCount += regions[i].Clusters.Count;
+
+            if (actualCount != source.Count)
+            {
+                error = "Region coverage count: expected " + source.Count +
+                    " resolved clusters, actual " + actualCount;
+                return false;
+            }
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                int hits = 0;
+                for (int r = 0; r < regions.Count; r++)
+                    for (int c = 0; c < regions[r].Clusters.Count; c++)
+                        if (object.ReferenceEquals(source[i], regions[r].Clusters[c]))
+                            hits++;
+
+                if (hits != 1)
+                {
+                    error = "Resolved cluster [" + source[i].GetText() +
+                        "] appears in Regions " + hits + " times.";
+                    return false;
+                }
+            }
+
+            error = null;
+            return true;
+        }
+
+        private static bool RegionMatches(SpatialRegion region, string[] expected)
+        {
+            if (region.Clusters.Count != expected.Length) return false;
+
+            for (int i = 0; i < expected.Length; i++)
+                if (NormalizeRow(region.Clusters[i].GetText()) != NormalizeRow(expected[i]))
+                    return false;
+
+            return true;
+        }
+
+        private static string JoinExpectedRegion(string[] region)
+        {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < region.Length; i++)
+            {
+                if (i > 0) b.Append(" / ");
+                b.Append(region[i]);
+            }
+            return b.ToString();
+        }
+
+        private static string BuildRegionList(IList<SpatialRegion> regions)
+        {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < regions.Count; i++)
+            {
+                if (i > 0) b.Append(" || ");
+                b.Append("{");
+                for (int j = 0; j < regions[i].Clusters.Count; j++)
+                {
+                    if (j > 0) b.Append(" / ");
+                    b.Append(regions[i].Clusters[j].GetText());
+                }
+                b.Append("}");
+            }
+            return b.ToString();
+        }
+
+        private static List<string[]> ReadExpectedRegions(string json)
+        {
+            return ReadExpectedMatrix(json, "Regions");
+        }
+
+        /// <summary>
         /// ماتریس ResolvedClusters را از expected.json می‌خواند.
         /// هر عضو بیرونی یک Physical Row و هر String داخلی یک Cluster مورد انتظار است.
         /// </summary>
         private static List<string[]> ReadExpectedClusters(string json)
         {
-            int name = json.IndexOf("\"ResolvedClusters\"");
+            return ReadExpectedMatrix(json, "ResolvedClusters");
+        }
+
+        /// <summary>
+        /// یک Property دوبعدی String[][] را از expected.json می‌خواند.
+        /// Parser عمداً کوچک و محدود به Contract بانک Sample است تا با .NET 2.0 سازگار بماند.
+        /// </summary>
+        private static List<string[]> ReadExpectedMatrix(string json, string propertyName)
+        {
+            int name = json.IndexOf("\"" + propertyName + "\"");
             if (name < 0) return null;
 
             int outerStart = json.IndexOf('[', name);
             if (outerStart < 0)
-                throw new FormatException("ResolvedClusters array is invalid.");
+                throw new FormatException(propertyName + " array is invalid.");
 
             int outerEnd = FindJsonArrayEnd(json, outerStart);
             if (outerEnd < 0)
-                throw new FormatException("ResolvedClusters array is not closed.");
+                throw new FormatException(propertyName + " array is not closed.");
 
             List<string[]> result = new List<string[]>();
             int position = outerStart + 1;
@@ -206,7 +372,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
                 int rowEnd = FindJsonArrayEnd(json, rowStart);
                 if (rowEnd < 0 || rowEnd > outerEnd)
-                    throw new FormatException("ResolvedClusters row is invalid.");
+                    throw new FormatException(propertyName + " row is invalid.");
 
                 string body = json.Substring(rowStart + 1, rowEnd - rowStart - 1);
                 MatchCollection values = Regex.Matches(body,
