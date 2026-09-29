@@ -46,7 +46,8 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="OcrBlockBuilder.cs" />\r\n    <Compile Include="OcrContentAnalyzer.cs" />
+    <Compile Include="OcrBlockBuilder.cs" />
+    <Compile Include="OcrContentAnalyzer.cs" />
     <Compile Include="OcrBlockRules.cs" />
     <Compile Include="OcrRegressionTests.cs" />
     <Compile Include="InitialRulesForm.cs">
