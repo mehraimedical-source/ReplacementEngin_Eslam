@@ -296,7 +296,7 @@ namespace Smart_Report
         private void FindFetalHeartRate(string text, List<BlockStart> result)
         {
             string pattern =
-                @"(?<![A-Z0-9])Fetal\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?(?:\s+[+-]?[0-9]+(?:[\.,][0-9]+)?)?\s*-?\s*(?:bpm)(?![A-Z])";
+                @"(?<![A-Z0-9])Feta(?:l|ļ)\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?(?:\s+[+-]?[0-9]+(?:[\.,][0-9]+)?)?\s*-?\s*(?:bpm)(?![A-Z])";
 
             MatchCollection matches = Regex.Matches(
                 text,
@@ -321,8 +321,13 @@ namespace Smart_Report
 
             for (int i = 0; i < matches.Count; i++)
             {
+                int index = matches[i].Index;
+                string before = text.Substring(Math.Max(0, index - 8), Math.Min(8, index));
+                if (Regex.IsMatch(before, @"Feta(?:l|ļ)\s+$", RegexOptions.IgnoreCase))
+                    continue;
+
                 BlockStart start = new BlockStart();
-                start.Index = matches[i].Index;
+                start.Index = index;
                 start.Keyword = "HR";
                 result.Add(start);
             }
