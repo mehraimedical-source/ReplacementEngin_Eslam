@@ -33,15 +33,25 @@ namespace Smart_Report
             this.lblInput.AutoSize = true;
             this.lblInput.Location = new System.Drawing.Point(12, 14);
             this.lblInput.Name = "lblInput";
-            this.lblInput.Size = new System.Drawing.Size(87, 13);
+            this.lblInput.Size = new System.Drawing.Size(82, 13);
             this.lblInput.TabIndex = 0;
             this.lblInput.Text = "Raw OCR Text:";
             // 
+            // lblOutput
+            // 
+            this.lblOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.lblOutput.AutoSize = true;
+            this.lblOutput.Location = new System.Drawing.Point(12, 310);
+            this.lblOutput.Name = "lblOutput";
+            this.lblOutput.Size = new System.Drawing.Size(72, 13);
+            this.lblOutput.TabIndex = 3;
+            this.lblOutput.Text = "Block Output:";
+            // 
             // txtOcrInput
             // 
-            this.txtOcrInput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOcrInput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.txtOcrInput.Location = new System.Drawing.Point(15, 33);
             this.txtOcrInput.Multiline = true;
             this.txtOcrInput.Name = "txtOcrInput";
@@ -49,6 +59,20 @@ namespace Smart_Report
             this.txtOcrInput.Size = new System.Drawing.Size(954, 218);
             this.txtOcrInput.TabIndex = 1;
             this.txtOcrInput.WordWrap = false;
+            // 
+            // txtBlockOutput
+            // 
+            this.txtBlockOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtBlockOutput.Location = new System.Drawing.Point(15, 330);
+            this.txtBlockOutput.Multiline = true;
+            this.txtBlockOutput.Name = "txtBlockOutput";
+            this.txtBlockOutput.ReadOnly = true;
+            this.txtBlockOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtBlockOutput.Size = new System.Drawing.Size(954, 258);
+            this.txtBlockOutput.TabIndex = 4;
+            this.txtBlockOutput.WordWrap = false;
             // 
             // btnBuildBlocks
             // 
@@ -60,30 +84,6 @@ namespace Smart_Report
             this.btnBuildBlocks.Text = "Build Blocks";
             this.btnBuildBlocks.UseVisualStyleBackColor = true;
             this.btnBuildBlocks.Click += new System.EventHandler(this.btnBuildBlocks_Click);
-            // 
-            // lblOutput
-            // 
-            this.lblOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.lblOutput.AutoSize = true;
-            this.lblOutput.Location = new System.Drawing.Point(12, 310);
-            this.lblOutput.Name = "lblOutput";
-            this.lblOutput.Size = new System.Drawing.Size(74, 13);
-            this.lblOutput.TabIndex = 3;
-            this.lblOutput.Text = "Block Output:";
-            // 
-            // txtBlockOutput
-            // 
-            this.txtBlockOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtBlockOutput.Location = new System.Drawing.Point(15, 330);
-            this.txtBlockOutput.Multiline = true;
-            this.txtBlockOutput.Name = "txtBlockOutput";
-            this.txtBlockOutput.ReadOnly = true;
-            this.txtBlockOutput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtBlockOutput.Size = new System.Drawing.Size(954, 258);
-            this.txtBlockOutput.TabIndex = 4;
-            this.txtBlockOutput.WordWrap = false;
             // 
             // Form1
             // 
@@ -101,6 +101,7 @@ namespace Smart_Report
             this.Text = "Smart Report - OCR Block Builder";
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion
