@@ -31,5 +31,11 @@ namespace Smart_Report
         {
             txtBlockOutput.Text = _blockBuilder.BuildBracketText(txtOcrInput.Text);
         }
+
+        private void btnRunTests_Click(object sender, EventArgs e)
+        {
+            OcrRegressionTests tests = new OcrRegressionTests();
+            txtBlockOutput.Text = tests.Run(_blockBuilder);
+        }
     }
 }
