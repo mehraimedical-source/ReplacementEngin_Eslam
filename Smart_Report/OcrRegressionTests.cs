@@ -143,6 +143,10 @@ namespace Smart_Report
                 "OB (Fetus Compare) Composite GA A 22w1d B 21w6d Estimated Fetal Weight A 493 g B 470 g Fetal Biometry A B",
                 "[OB (Fetus Compare)]\n[Composite GA A 22w1d B 21w6d]\n[Estimated Fetal Weight A 493 g B 470 g]\n[Fetal Biometry A B]"));
 
+            t.Add(Case("Samsung CRL with trailing device settings",
+                "SAMSUNG 73202(1994-01-31) DRTAGHIZADEH 2026-07-06 Gaderi, Neda 20:59:19 Uterus/EA2-11AR/6.0cm/37Hz Tls 0.4 / TIb 0.4 / MI 1.2 [2D] CRL 4.31 mm Gen GA 6w1d±4d 2027-02-28 Gn 45 DR 102 SAMSUNG FA 3 V8 P 90% 18 1 22 4- XX 13 144 5 十 16",
+                "[SAMSUNG 73202(1994-01-31) DRTAGHIZADEH 2026-07-06 Gaderi, Neda 20:59:19 Uterus/EA2-11AR/6.0cm/37Hz Tls 0.4 / TIb 0.4 / MI 1.2 [2D]]\n[CRL 4.31 mm Gen GA 6w1d±4d 2027-02-28 Gn 45 DR 102 SAMSUNG FA 3 V8 P 90% 18 1 22 4- XX 13 144 5 十 16]"));
+
             return t;
         }
     }
