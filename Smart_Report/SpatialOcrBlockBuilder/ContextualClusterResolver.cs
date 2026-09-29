@@ -86,8 +86,12 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
             // مرز Split با دو Anchor واقعی تعریف می‌شود: آخرین Item سمت چپ و اولین Item سمت راست.
             // Row همسایه فقط وقتی شاهد است که در نزدیکی هر دو Anchor داده داشته باشد.
-            double leftAnchor = GetRightMostItemLeft(left);
-            double rightAnchor = GetLeftMostItemLeft(right);
+            // Anchor سمت چپ را از لبه راست Cluster می‌گیریم، نه Left آخرین Item.
+            // دلیل: OCR ممکن است دو مقدار مجاور را در یک Row جدا و در Row همسایه
+            // به صورت یک Box پهن برگرداند. در آن حالت Left دو Box برابر نیست ولی
+            // Box همسایه همان مرز هندسی را پوشش می‌دهد (نمونه BPD/HC در Sample 1).
+            double leftAnchor = left.Bounds.Right;
+            double rightAnchor = right.Bounds.Left;
 
             for (int distance = 1; distance <= options.NeighborRadius; distance++)
             {
@@ -110,9 +114,20 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
             for (int i = 0; i < row.Items.Count; i++)
             {
-                double x = row.Items[i].Bounds.Left;
-                if (Math.Abs(x - leftAnchor) <= tolerance) hasLeft = true;
-                if (Math.Abs(x - rightAnchor) <= tolerance) hasRight = true;
+                SpatialBounds bounds = row.Items[i].Bounds;
+
+                // برای Anchor چپ علاوه بر نزدیکی Left، پوشاندن خود Anchor توسط Box
+                // نیز شاهد معتبر است. این کار اختلاف Segmentation OCR بین Rowهای
+                // هم‌ساختار را تحمل می‌کند، بدون استفاده از متن یا قواعد پزشکی.
+                if (Math.Abs(bounds.Left - leftAnchor) <= tolerance ||
+                    (bounds.Left <= leftAnchor + tolerance &&
+                     bounds.Right >= leftAnchor - tolerance))
+                    hasLeft = true;
+
+                // Anchor راست آغاز Cluster بعدی است؛ نزدیکی Left همان ستون را
+                // تشخیص می‌دهد و اجازه نمی‌دهد صرفاً یک Box بسیار پهن دو سمت را تأیید کند.
+                if (Math.Abs(bounds.Left - rightAnchor) <= tolerance)
+                    hasRight = true;
             }
 
             return hasLeft && hasRight;
