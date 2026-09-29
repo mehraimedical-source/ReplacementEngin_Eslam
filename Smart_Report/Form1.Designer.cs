@@ -9,6 +9,7 @@ namespace Smart_Report
         private System.Windows.Forms.TextBox txtBlockOutput;
         private System.Windows.Forms.Button btnBuildBlocks;
         private System.Windows.Forms.Button btnInitialRules;
+        private System.Windows.Forms.Button btnRunTests;
 
         protected override void Dispose(bool disposing)
         {
@@ -28,6 +29,7 @@ namespace Smart_Report
             this.txtBlockOutput = new System.Windows.Forms.TextBox();
             this.btnBuildBlocks = new System.Windows.Forms.Button();
             this.btnInitialRules = new System.Windows.Forms.Button();
+            this.btnRunTests = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // lblInput
@@ -98,11 +100,23 @@ namespace Smart_Report
             this.btnInitialRules.UseVisualStyleBackColor = true;
             this.btnInitialRules.Click += new System.EventHandler(this.btnInitialRules_Click);
             // 
+            // btnRunTests
+            // 
+            this.btnRunTests.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.btnRunTests.Location = new System.Drawing.Point(570, 263);
+            this.btnRunTests.Name = "btnRunTests";
+            this.btnRunTests.Size = new System.Drawing.Size(145, 34);
+            this.btnRunTests.TabIndex = 6;
+            this.btnRunTests.Text = "Run Regression Tests";
+            this.btnRunTests.UseVisualStyleBackColor = true;
+            this.btnRunTests.Click += new System.EventHandler(this.btnRunTests_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(984, 601);
+            this.Controls.Add(this.btnRunTests);
             this.Controls.Add(this.btnInitialRules);
             this.Controls.Add(this.txtBlockOutput);
             this.Controls.Add(this.lblOutput);
