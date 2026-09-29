@@ -26,7 +26,9 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         private System.Windows.Forms.PictureBox picSource;
         private System.Windows.Forms.DataGridView gridRows;
         private System.Windows.Forms.SplitContainer splitResults;
+        private System.Windows.Forms.SplitContainer splitRegionView;
         private System.Windows.Forms.DataGridView gridRegions;
+        private System.Windows.Forms.TextBox txtRegionText;
 
         /// <summary>
         /// منابع استفاده شده توسط فرم را آزاد می‌کند.
@@ -78,6 +80,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.dataGridViewTextBoxColumn6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.gridRegions = new System.Windows.Forms.DataGridView();
+            this.splitRegionView = new System.Windows.Forms.SplitContainer();
+            this.txtRegionText = new System.Windows.Forms.TextBox();
             this.dataGridViewTextBoxColumn8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn9 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn10 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -99,6 +103,9 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitResults.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegions)).BeginInit();
+            this.splitRegionView.Panel1.SuspendLayout();
+            this.splitRegionView.Panel2.SuspendLayout();
+            this.splitRegionView.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlCommands
@@ -363,7 +370,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             // 
             // splitResults.Panel2
             // 
-            this.splitResults.Panel2.Controls.Add(this.gridRegions);
+            this.splitResults.Panel2.Controls.Add(this.splitRegionView);
             this.splitResults.Size = new System.Drawing.Size(1234, 351);
             this.splitResults.SplitterDistance = 178;
             this.splitResults.TabIndex = 0;
@@ -437,14 +444,14 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.dataGridViewTextBoxColumn8,
             this.dataGridViewTextBoxColumn9,
             this.dataGridViewTextBoxColumn10,
-            this.dataGridViewTextBoxColumn11,
-            this.dataGridViewTextBoxColumn12});
+            this.dataGridViewTextBoxColumn11});
             this.gridRegions.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridRegions.Location = new System.Drawing.Point(0, 0);
             this.gridRegions.Name = "gridRegions";
             this.gridRegions.ReadOnly = true;
             this.gridRegions.Size = new System.Drawing.Size(1234, 169);
             this.gridRegions.TabIndex = 0;
+            this.gridRegions.SelectionChanged += new System.EventHandler(this.gridRegions_SelectionChanged);
             // 
             // dataGridViewTextBoxColumn8
             // 
@@ -470,11 +477,25 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.dataGridViewTextBoxColumn11.Name = "dataGridViewTextBoxColumn11";
             this.dataGridViewTextBoxColumn11.ReadOnly = true;
             // 
-            // dataGridViewTextBoxColumn12
+            // splitRegionView
             // 
-            this.dataGridViewTextBoxColumn12.HeaderText = "Region Text (top -> bottom)";
-            this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
-            this.dataGridViewTextBoxColumn12.ReadOnly = true;
+            this.splitRegionView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitRegionView.Location = new System.Drawing.Point(0, 0);
+            this.splitRegionView.Name = "splitRegionView";
+            this.splitRegionView.SplitterDistance = 650;
+            this.splitRegionView.Panel1.Controls.Add(this.gridRegions);
+            this.splitRegionView.Panel2.Controls.Add(this.txtRegionText);
+            // 
+            // txtRegionText
+            // 
+            this.txtRegionText.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtRegionText.Font = new System.Drawing.Font("Consolas", 9F);
+            this.txtRegionText.Multiline = true;
+            this.txtRegionText.Name = "txtRegionText";
+            this.txtRegionText.ReadOnly = true;
+            this.txtRegionText.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtRegionText.WordWrap = false;
+            // 
             // 
             // SpatialOcrTestForm
             // 
@@ -508,6 +529,10 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitResults.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegions)).EndInit();
+            this.splitRegionView.Panel1.ResumeLayout(false);
+            this.splitRegionView.Panel2.ResumeLayout(false);
+            this.splitRegionView.Panel2.PerformLayout();
+            this.splitRegionView.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -552,6 +577,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             txtJson.Clear();
             gridRows.Rows.Clear();
             gridRegions.Rows.Clear();
+            txtRegionText.Clear();
             lblStatus.Text = "";
         }
 
@@ -574,6 +600,5 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn9;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn10;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn12;
     }
 }
