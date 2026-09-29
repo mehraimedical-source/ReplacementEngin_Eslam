@@ -65,9 +65,9 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.nudCenter = new System.Windows.Forms.NumericUpDown();
             this.lblStatus = new System.Windows.Forms.Label();
             this.splitMain = new System.Windows.Forms.SplitContainer();
-            this.txtJson = new System.Windows.Forms.TextBox();
             this.splitSource = new System.Windows.Forms.SplitContainer();
             this.picSource = new System.Windows.Forms.PictureBox();
+            this.txtJson = new System.Windows.Forms.TextBox();
             this.splitResults = new System.Windows.Forms.SplitContainer();
             this.gridRows = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -315,7 +315,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitSource.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitSource.Location = new System.Drawing.Point(0, 0);
             this.splitSource.Name = "splitSource";
-            this.splitSource.SplitterDistance = 610;
             // 
             // splitSource.Panel1
             // 
@@ -325,6 +324,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             // 
             this.splitSource.Panel2.Controls.Add(this.txtJson);
             this.splitSource.Size = new System.Drawing.Size(1234, 310);
+            this.splitSource.SplitterDistance = 710;
             this.splitSource.TabIndex = 0;
             // 
             // picSource
@@ -333,7 +333,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.picSource.Dock = System.Windows.Forms.DockStyle.Fill;
             this.picSource.Location = new System.Drawing.Point(0, 0);
             this.picSource.Name = "picSource";
-            this.picSource.Size = new System.Drawing.Size(610, 310);
+            this.picSource.Size = new System.Drawing.Size(710, 310);
             this.picSource.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picSource.TabIndex = 0;
             this.picSource.TabStop = false;
@@ -346,7 +346,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.txtJson.Multiline = true;
             this.txtJson.Name = "txtJson";
             this.txtJson.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtJson.Size = new System.Drawing.Size(620, 310);
+            this.txtJson.Size = new System.Drawing.Size(520, 310);
             this.txtJson.TabIndex = 0;
             this.txtJson.WordWrap = false;
             // 
@@ -495,7 +495,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             ((System.ComponentModel.ISupportInitialize)(this.nudOverlap)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCenter)).EndInit();
             this.splitMain.Panel1.ResumeLayout(false);
-            this.splitMain.Panel1.PerformLayout();
             this.splitMain.Panel2.ResumeLayout(false);
             this.splitMain.ResumeLayout(false);
             this.splitSource.Panel1.ResumeLayout(false);
