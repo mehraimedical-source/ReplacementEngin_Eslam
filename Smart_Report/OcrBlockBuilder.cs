@@ -12,6 +12,8 @@ namespace Smart_Report
         public int StartIndex;
         public int EndIndex;
 
+        // Creates an empty OCR block. Indices start at -1 so an uninitialized
+        // block cannot be confused with a real block beginning at character 0.
         public OcrBlock()
         {
             Text = "";
@@ -20,6 +22,8 @@ namespace Smart_Report
             EndIndex = -1;
         }
 
+        // Debug/display representation of a block. The raw Text itself is not
+        // modified; brackets are added only when the object is converted to text.
         public override string ToString()
         {
             return "[" + Text + "]";
@@ -36,21 +40,31 @@ namespace Smart_Report
             public string Keyword;
         }
 
+        // Creates a builder with the application's default editable rules.
         public OcrBlockBuilder()
             : this(OcrBlockRules.CreateDefault())
         {
         }
 
+        // Creates a builder from caller-supplied rules. SetRules clones them so
+        // later edits outside the builder cannot silently change current behavior.
         public OcrBlockBuilder(OcrBlockRules rules)
         {
             SetRules(rules);
         }
 
+        // Replaces the active starter rules. A null value intentionally falls
+        // back to defaults instead of leaving the builder without rules.
         public void SetRules(OcrBlockRules rules)
         {
             _rules = (rules == null) ? OcrBlockRules.CreateDefault() : rules.Clone();
         }
 
+        // Main blocking pipeline:
+        // 1) normalize OCR whitespace, 2) find every supported block start,
+        // 3) preserve unknown text before/between starts, and 4) cut blocks.
+        // IMPORTANT: this stage decides boundaries only; it does not decide
+        // whether a block is clinically useful and it must preserve raw OCR data.
         public List<OcrBlock> Build(string rawOcrText)
         {
             List<OcrBlock> blocks = new List<OcrBlock>();
@@ -102,6 +116,8 @@ namespace Smart_Report
             return blocks;
         }
 
+        // Adds one exact character range as an OcrBlock. Empty ranges are ignored,
+        // but non-empty OCR text is preserved (Zero Data Loss principle).
         private void AddBlock(
             List<OcrBlock> blocks,
             string text,
@@ -127,6 +143,8 @@ namespace Smart_Report
             blocks.Add(block);
         }
 
+        // Convenience output used by the test/UI: builds blocks and prints one
+        // [block] per line. Brackets are presentation markers, not OCR correction.
         public string BuildBracketText(string rawOcrText)
         {
             List<OcrBlock> blocks = Build(rawOcrText);
@@ -145,6 +163,8 @@ namespace Smart_Report
             return result.ToString();
         }
 
+        // Normalizes only whitespace so matching is stable across OCR engines.
+        // It deliberately does NOT repair spelling/glyph errors such as Fetaļ.
         private string Normalize(string text)
         {
             text = text.Replace("\r", " ");
@@ -154,6 +174,9 @@ namespace Smart_Report
             return text.Trim();
         }
 
+        // Collects all candidate boundaries from editable rules plus narrowly
+        // defined OCR-aware patterns (FHR, NT, NB, D, etc.). Candidates are sorted
+        // and overlapping/duplicate starts are removed before Build() cuts text.
         private List<BlockStart> FindBlockStarts(string text)
         {
             List<BlockStart> found = new List<BlockStart>();
@@ -228,6 +251,9 @@ namespace Smart_Report
             return unique;
         }
 
+        // Finds report section labels written as [OB]. We start at '[' so the
+        // complete raw label stays together. Plain OB matching is separately
+        // suppressed inside brackets and in machine presets such as 3 Trim./OB.
         private void FindBracketedOb(string text, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(text, @"\[\s*OB\s*\]", RegexOptions.IgnoreCase);
@@ -240,6 +266,9 @@ namespace Smart_Report
             }
         }
 
+        // Finds truncated OCR section headings such as "Fetal Biom..." and
+        // "Fetal Long...". These cannot safely be unconditional short keywords,
+        // because the same prefixes may occur in unrelated text.
         private void FindReportSectionVariant(string text, string prefix, string keyword, List<BlockStart> result)
         {
             string pattern = @"(?<![A-Z0-9])" + Regex.Escape(prefix) + @"(?:etry|etry\.\.\.|\.\.\.|[A-Za-z]*\.\.\.)";
@@ -253,6 +282,8 @@ namespace Smart_Report
             }
         }
 
+        // Recognizes report-style AUA only when followed by a gestational-age
+        // value (for example AUA 17w5d). This avoids making bare AUA too broad.
         private void FindAuaValue(string text, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(
@@ -269,6 +300,9 @@ namespace Smart_Report
             }
         }
 
+        // Recovers a ratio boundary when OCR attaches preceding chart/table text
+        // to it, e.g. "5,255FL/AC 21.16 %". Normal spaced FL/AC is already handled
+        // by editable measurement rules, so this helper acts only on attached text.
         private void FindCompactRatio(string text, string keyword, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(
@@ -293,6 +327,14 @@ namespace Smart_Report
             }
         }
 
+        // Finds the COMPLETE Fetal HR measurement, not just the token "HR".
+        // Supported real OCR forms include:
+        //   Fetal HR158-bpm      (missing space / hyphen before bpm)
+        //   Fetal HR 143 143 bpm (report table repeats the numeric value)
+        //   Fetaļ HR158-bpm      (OCR substitutes ļ for final l)
+        //   Feta HR158-bpm       (OCR drops final l)
+        // Requiring numeric value + bpm keeps this tolerant spelling rule narrow.
+        // Raw OCR is never corrected: Fetaļ/Feta remain exactly as recognized.
         private void FindFetalHeartRate(string text, List<BlockStart> result)
         {
             string pattern =
@@ -312,6 +354,12 @@ namespace Smart_Report
             }
         }
 
+        // Finds generic HR only when syntax proves it is a measurement:
+        // HR + numeric value + bpm, e.g. "HR 147 bpm".
+        // This is intentionally conditional because machine text such as
+        // "32Hz HR TIs 0.1" must NOT start an HR block. If HR belongs to a
+        // Fetal/Fetaļ/Feta HR phrase, FindFetalHeartRate owns the whole phrase
+        // and this helper skips the inner HR to prevent a split in the middle.
         private void FindConditionalHeartRate(string text, List<BlockStart> result)
         {
             MatchCollection matches = Regex.Matches(
@@ -333,6 +381,13 @@ namespace Smart_Report
             }
         }
 
+        // Conditional numeric measurement matcher used for ambiguous short labels.
+        // Current callers: NT, NB and D. A label becomes a boundary only when a
+        // number and mm/cm follow it. Thus NT/CA1-7S (a preset) is not NT data,
+        // while "NT 2.32 mm" is. D additionally accepts OCR "D.4.10 mm" where
+        // a dot was inserted between the label and value. Do not generalize this
+        // to arbitrary word+number+unit patterns; Doppler/device settings contain
+        // many similar forms (SV, SVD, PRF, WF) that are not block starters here.
         private void FindConditionalMeasurement(string text, string keyword, List<BlockStart> result)
         {
             string pattern =
@@ -355,6 +410,9 @@ namespace Smart_Report
             }
         }
 
+        // Generic matcher for the centralized editable Section/Parameter/Measurement
+        // lists. Word boundaries prevent matching inside larger alphanumeric words;
+        // IsRealBlockStart then applies context guards for known ambiguous cases.
         private void FindKeyword(
             string text,
             string keyword,
@@ -391,6 +449,11 @@ namespace Smart_Report
             }
         }
 
+        // Final guard for ordinary keyword matches. "independent" is used for
+        // section/parameter-like starters; measurement starters receive additional
+        // protections against EFW formulas, ratios and parenthesized labels.
+        // Returning false means "this occurrence is text inside another block",
+        // not that the OCR text should be deleted.
         private bool IsRealBlockStart(
             string text,
             int index,
@@ -464,6 +527,9 @@ namespace Smart_Report
             return true;
         }
 
+        // Returns the nearest preceding EFW/EFW1/EFW2 occurrence. It supports the
+        // local EFW-formula guard so BPD/HC/AC/FL references inside a formula do not
+        // incorrectly create new blocks. The guard is deliberately local in distance.
         private int LastEfwIndex(string text, int beforeIndex)
         {
             int a = text.LastIndexOf("EFW1", beforeIndex, StringComparison.OrdinalIgnoreCase);
@@ -475,6 +541,8 @@ namespace Smart_Report
             return best;
         }
 
+        // True when index lies after the most recent '(' with no closing ')' yet.
+        // Example: in "OFD (HC) 97.37mm", HC describes OFD and must not split.
         private bool IsInsideParentheses(string text, int index)
         {
             int open = text.LastIndexOf('(', index);
