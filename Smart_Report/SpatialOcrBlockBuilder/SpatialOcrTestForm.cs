@@ -8,14 +8,8 @@ using System.Windows.Forms;
 
 namespace Smart_Report.SpatialOcrBlockBuilder
 {
-    public sealed class SpatialOcrTestForm : Form
+    public sealed partial class SpatialOcrTestForm : Form
     {
-        private readonly TextBox txtJson = new TextBox();
-        private readonly DataGridView gridRows = new DataGridView();
-        private readonly Label lblStatus = new Label();
-        private readonly NumericUpDown nudOverlap = new NumericUpDown();
-        private readonly NumericUpDown nudCenter = new NumericUpDown();
-
         /// <summary>
         /// سازنده فرم فقط اجزای ساخته شده توسط Windows Forms Designer را مقداردهی اولیه می‌کند.
         /// تمام کنترل‌ها، اندازه‌ها و چیدمان فرم در فایل Designer نگهداری می‌شوند.
