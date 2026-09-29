@@ -14,6 +14,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         public readonly List<int> RowIndexes = new List<int>();
 
         public int RowCount { get { return RowIndexes.Count; } }
+        public int StartRow { get { return RowIndexes.Count == 0 ? -1 : RowIndexes[0]; } }
+        public int EndRow { get { return RowIndexes.Count == 0 ? -1 : RowIndexes[RowIndexes.Count - 1]; } }
     }
 
     public sealed class AlignmentAnchorOptions
@@ -23,6 +25,10 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
         // Anchor تک‌ردیفی برای تحلیل ساختار صفحه قابل اتکا نیست؛ حداقل در دو Row باید تکرار شود.
         public int MinRows = 2;
+
+        // اگر Anchor برای چند Row متوالی شاهد نداشته باشد، ادامه دادن آن باعث اتصال
+        // بخش‌های مستقل صفحه فقط به دلیل X مشابه می‌شود. یک Row خالی را تحمل می‌کنیم.
+        public int MaxMissingRows = 1;
     }
 
     /// <summary>
@@ -63,6 +69,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         // می‌توانند به اشتباه یک Alignment عمودی مصنوعی بسازند.
                         if (ContainsRow(candidates[a], rowIndex)) continue;
 
+                        // Anchor محلی است: اگر آخرین شاهد آن بیش از حد از Row جاری دور باشد،
+                        // حتی با X یکسان نباید Header و Tableهای پایین صفحه را به هم متصل کند.
+                        int missingRows = rowIndex - candidates[a].EndRow - 1;
+                        if (missingRows > options.MaxMissingRows) continue;
+
                         double distance = Math.Abs(candidates[a].X - item.Bounds.Left);
                         if (distance <= tolerance && distance < bestDistance)
                         {
@@ -92,7 +103,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
             result.Sort(delegate(AlignmentAnchor a, AlignmentAnchor b)
             {
-                return a.X.CompareTo(b.X);
+                int row = a.StartRow.CompareTo(b.StartRow);
+                return row != 0 ? row : a.X.CompareTo(b.X);
             });
             return result;
         }
