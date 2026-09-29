@@ -38,6 +38,51 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         }
 
 
+
+        /// <summary>
+        /// Sample ذخیره‌شده را دوباره وارد محیط تست می‌کند.
+        /// OCR دقیقاً از ocr.json خوانده می‌شود و تصویر نیز به صورت Clone بارگذاری می‌شود
+        /// تا فایل image.png بعد از Load قفل نماند و Sample در ادامه قابل مدیریت باشد.
+        /// </summary>
+        private void LoadSample()
+        {
+            try
+            {
+                SpatialOcrSampleRepository repository = new SpatialOcrSampleRepository();
+                string folder;
+                string imagePath;
+                string ocrPath;
+                string expectedPath;
+
+                if (!repository.TryGetSample(txtSampleName.Text, out folder, out imagePath,
+                    out ocrPath, out expectedPath))
+                    throw new InvalidOperationException(
+                        "Sample not found or incomplete: " + txtSampleName.Text);
+
+                string json = File.ReadAllText(ocrPath, Encoding.UTF8);
+                Image loadedImage;
+                using (Image source = Image.FromFile(imagePath))
+                    loadedImage = new Bitmap(source);
+
+                if (_img != null)
+                    _img.Dispose();
+
+                _img = loadedImage;
+                txtJson.Text = json;
+                gridRows.Rows.Clear();
+                txtSampleName.Text = Path.GetFileName(folder);
+                lblStatus.Text = "Sample loaded: " + Path.GetFileName(folder);
+
+                // بعد از Load همان مسیر واقعی Engine اجرا می‌شود؛ Expected ورودی Analyze نیست.
+                Analyze();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Load Sample",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         /// <summary>
         /// Sample جاری را شامل تصویر اصلی، JSON خام OCR و Expected Rowها در بانک دائمی پروژه ذخیره می‌کند.
         /// Expected از نتیجه‌ای ساخته می‌شود که اکنون در Test Form تحلیل شده و بعداً می‌تواند دستی بازبینی شود.
