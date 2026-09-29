@@ -368,5 +368,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             n.Left = left; n.Top = 5; n.Width = 75; n.DecimalPlaces = 2;
             n.Increment = 0.05M; n.Minimum = 0; n.Maximum = 2; n.Value = value;
         }
+
+    
     }
 }

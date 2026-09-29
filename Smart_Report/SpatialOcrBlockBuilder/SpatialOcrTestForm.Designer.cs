@@ -64,9 +64,21 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.lblStatus = new System.Windows.Forms.Label();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.txtJson = new System.Windows.Forms.TextBox();
-            this.gridRows = new System.Windows.Forms.DataGridView();
             this.splitResults = new System.Windows.Forms.SplitContainer();
+            this.gridRows = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.gridRegions = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn9 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn10 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn11 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn12 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.pnlCommands.SuspendLayout();
             this.pnlSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverlap)).BeginInit();
@@ -80,9 +92,9 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegions)).BeginInit();
             this.SuspendLayout();
-
-            // پنل فرمان‌ها جای ToolStrip را گرفته تا همه کنترل‌ها Button/TextBox استاندارد
-            // و مستقیماً در Visual Studio Designer قابل ویرایش باشند.
+            // 
+            // pnlCommands
+            // 
             this.pnlCommands.Controls.Add(this.btnAnalyzeRows);
             this.pnlCommands.Controls.Add(this.btnRunRegressionTests);
             this.pnlCommands.Controls.Add(this.btnCopyTestData);
@@ -97,64 +109,98 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.pnlCommands.Location = new System.Drawing.Point(0, 0);
             this.pnlCommands.Name = "pnlCommands";
             this.pnlCommands.Size = new System.Drawing.Size(1234, 42);
-
+            this.pnlCommands.TabIndex = 2;
+            // 
+            // btnAnalyzeRows
+            // 
             this.btnAnalyzeRows.Location = new System.Drawing.Point(8, 8);
             this.btnAnalyzeRows.Name = "btnAnalyzeRows";
             this.btnAnalyzeRows.Size = new System.Drawing.Size(95, 26);
+            this.btnAnalyzeRows.TabIndex = 0;
             this.btnAnalyzeRows.Text = "Analyze Rows";
             this.btnAnalyzeRows.Click += new System.EventHandler(this.btnAnalyzeRows_Click);
-
+            // 
+            // btnRunRegressionTests
+            // 
             this.btnRunRegressionTests.Location = new System.Drawing.Point(109, 8);
             this.btnRunRegressionTests.Name = "btnRunRegressionTests";
             this.btnRunRegressionTests.Size = new System.Drawing.Size(135, 26);
+            this.btnRunRegressionTests.TabIndex = 1;
             this.btnRunRegressionTests.Text = "Run Regression Tests";
             this.btnRunRegressionTests.Click += new System.EventHandler(this.btnRunRegressionTests_Click);
-
+            // 
+            // btnCopyTestData
+            // 
             this.btnCopyTestData.Location = new System.Drawing.Point(250, 8);
             this.btnCopyTestData.Name = "btnCopyTestData";
             this.btnCopyTestData.Size = new System.Drawing.Size(105, 26);
+            this.btnCopyTestData.TabIndex = 2;
             this.btnCopyTestData.Text = "Copy Test Data";
             this.btnCopyTestData.Click += new System.EventHandler(this.btnCopyTestData_Click);
-
+            // 
+            // btnSaveTestData
+            // 
             this.btnSaveTestData.Location = new System.Drawing.Point(361, 8);
             this.btnSaveTestData.Name = "btnSaveTestData";
             this.btnSaveTestData.Size = new System.Drawing.Size(105, 26);
+            this.btnSaveTestData.TabIndex = 3;
             this.btnSaveTestData.Text = "Save Test Data";
             this.btnSaveTestData.Click += new System.EventHandler(this.btnSaveTestData_Click);
-
+            // 
+            // lblSampleName
+            // 
             this.lblSampleName.AutoSize = true;
             this.lblSampleName.Location = new System.Drawing.Point(480, 14);
             this.lblSampleName.Name = "lblSampleName";
+            this.lblSampleName.Size = new System.Drawing.Size(45, 13);
+            this.lblSampleName.TabIndex = 4;
             this.lblSampleName.Text = "Sample:";
-
+            // 
+            // txtSampleName
+            // 
             this.txtSampleName.Location = new System.Drawing.Point(530, 11);
             this.txtSampleName.Name = "txtSampleName";
             this.txtSampleName.Size = new System.Drawing.Size(110, 20);
-
+            this.txtSampleName.TabIndex = 5;
+            // 
+            // btnSaveSample
+            // 
             this.btnSaveSample.Location = new System.Drawing.Point(646, 8);
             this.btnSaveSample.Name = "btnSaveSample";
             this.btnSaveSample.Size = new System.Drawing.Size(90, 26);
+            this.btnSaveSample.TabIndex = 6;
             this.btnSaveSample.Text = "Save Sample";
             this.btnSaveSample.Click += new System.EventHandler(this.btnSaveSample_Click);
-
+            // 
+            // btnLoadSample
+            // 
             this.btnLoadSample.Location = new System.Drawing.Point(742, 8);
             this.btnLoadSample.Name = "btnLoadSample";
             this.btnLoadSample.Size = new System.Drawing.Size(90, 26);
+            this.btnLoadSample.TabIndex = 7;
             this.btnLoadSample.Text = "Load Sample";
             this.btnLoadSample.Click += new System.EventHandler(this.btnLoadSample_Click);
-
+            // 
+            // btnClear
+            // 
             this.btnClear.Location = new System.Drawing.Point(838, 8);
             this.btnClear.Name = "btnClear";
             this.btnClear.Size = new System.Drawing.Size(70, 26);
+            this.btnClear.TabIndex = 8;
             this.btnClear.Text = "Clear";
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
-
+            // 
+            // btnLegacyForm
+            // 
             this.btnLegacyForm.Location = new System.Drawing.Point(914, 8);
             this.btnLegacyForm.Name = "btnLegacyForm";
             this.btnLegacyForm.Size = new System.Drawing.Size(90, 26);
+            this.btnLegacyForm.TabIndex = 9;
             this.btnLegacyForm.Text = "Legacy Form";
             this.btnLegacyForm.Click += new System.EventHandler(this.btnLegacyForm_Click);
-
+            // 
+            // pnlSettings
+            // 
             this.pnlSettings.Controls.Add(this.lblOverlap);
             this.pnlSettings.Controls.Add(this.nudOverlap);
             this.pnlSettings.Controls.Add(this.lblCenterFactor);
@@ -164,93 +210,238 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.pnlSettings.Location = new System.Drawing.Point(0, 42);
             this.pnlSettings.Name = "pnlSettings";
             this.pnlSettings.Size = new System.Drawing.Size(1234, 34);
-
+            this.pnlSettings.TabIndex = 1;
+            // 
+            // lblOverlap
+            // 
             this.lblOverlap.AutoSize = true;
             this.lblOverlap.Location = new System.Drawing.Point(8, 9);
+            this.lblOverlap.Name = "lblOverlap";
+            this.lblOverlap.Size = new System.Drawing.Size(62, 13);
+            this.lblOverlap.TabIndex = 0;
             this.lblOverlap.Text = "Min overlap";
-
+            // 
+            // nudOverlap
+            // 
             this.nudOverlap.DecimalPlaces = 2;
-            this.nudOverlap.Increment = new decimal(new int[] {5, 0, 0, 131072});
+            this.nudOverlap.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
             this.nudOverlap.Location = new System.Drawing.Point(90, 5);
-            this.nudOverlap.Maximum = new decimal(new int[] {2, 0, 0, 0});
+            this.nudOverlap.Maximum = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.nudOverlap.Name = "nudOverlap";
             this.nudOverlap.Size = new System.Drawing.Size(75, 20);
-            this.nudOverlap.Value = new decimal(new int[] {45, 0, 0, 131072});
-
+            this.nudOverlap.TabIndex = 1;
+            this.nudOverlap.Value = new decimal(new int[] {
+            45,
+            0,
+            0,
+            131072});
+            // 
+            // lblCenterFactor
+            // 
             this.lblCenterFactor.AutoSize = true;
             this.lblCenterFactor.Location = new System.Drawing.Point(180, 9);
+            this.lblCenterFactor.Name = "lblCenterFactor";
+            this.lblCenterFactor.Size = new System.Drawing.Size(90, 13);
+            this.lblCenterFactor.TabIndex = 2;
             this.lblCenterFactor.Text = "Max center factor";
-
+            // 
+            // nudCenter
+            // 
             this.nudCenter.DecimalPlaces = 2;
-            this.nudCenter.Increment = new decimal(new int[] {5, 0, 0, 131072});
+            this.nudCenter.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            131072});
             this.nudCenter.Location = new System.Drawing.Point(290, 5);
-            this.nudCenter.Maximum = new decimal(new int[] {2, 0, 0, 0});
+            this.nudCenter.Maximum = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.nudCenter.Name = "nudCenter";
             this.nudCenter.Size = new System.Drawing.Size(75, 20);
-            this.nudCenter.Value = new decimal(new int[] {55, 0, 0, 131072});
-
+            this.nudCenter.TabIndex = 3;
+            this.nudCenter.Value = new decimal(new int[] {
+            55,
+            0,
+            0,
+            131072});
+            // 
+            // lblStatus
+            // 
             this.lblStatus.AutoSize = true;
             this.lblStatus.Location = new System.Drawing.Point(405, 9);
             this.lblStatus.Name = "lblStatus";
-
+            this.lblStatus.Size = new System.Drawing.Size(0, 13);
+            this.lblStatus.TabIndex = 4;
+            // 
+            // splitMain
+            // 
             this.splitMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitMain.Location = new System.Drawing.Point(0, 76);
             this.splitMain.Name = "splitMain";
             this.splitMain.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.splitMain.SplitterDistance = 300;
-
+            // 
+            // splitMain.Panel1
+            // 
+            this.splitMain.Panel1.Controls.Add(this.txtJson);
+            // 
+            // splitMain.Panel2
+            // 
+            this.splitMain.Panel2.Controls.Add(this.splitResults);
+            this.splitMain.Size = new System.Drawing.Size(1234, 665);
+            this.splitMain.SplitterDistance = 310;
+            this.splitMain.TabIndex = 0;
+            // 
+            // txtJson
+            // 
             this.txtJson.Dock = System.Windows.Forms.DockStyle.Fill;
             this.txtJson.Font = new System.Drawing.Font("Consolas", 9F);
+            this.txtJson.Location = new System.Drawing.Point(0, 0);
             this.txtJson.Multiline = true;
+            this.txtJson.Name = "txtJson";
             this.txtJson.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtJson.Size = new System.Drawing.Size(1234, 310);
+            this.txtJson.TabIndex = 0;
             this.txtJson.WordWrap = false;
-            this.splitMain.Panel1.Controls.Add(this.txtJson);
-
-            this.gridRows.AllowUserToAddRows = false;
-            this.gridRows.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.gridRows.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridRows.ReadOnly = true;
-            this.gridRows.Columns.Add("Row", "#");
-            this.gridRows.Columns.Add("Y", "Y Range");
-            this.gridRows.Columns.Add("Height", "Median H");
-            this.gridRows.Columns.Add("Items", "Items");
-            this.gridRows.Columns.Add("Text", "Reconstructed Row");
-            this.gridRows.Columns.Add("Clusters", "Clusters");
-            this.gridRows.Columns.Add("ClusterText", "Horizontal Clusters");
-            this.gridRows.Columns[0].FillWeight = 10F;
-            this.gridRows.Columns[1].FillWeight = 18F;
-            this.gridRows.Columns[2].FillWeight = 15F;
-            this.gridRows.Columns[3].FillWeight = 12F;
-            this.gridRows.Columns[4].FillWeight = 80F;
-            this.gridRows.Columns[5].FillWeight = 12F;
-            this.gridRows.Columns[6].FillWeight = 100F;
+            // 
+            // splitResults
+            // 
             this.splitResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitResults.Location = new System.Drawing.Point(0, 0);
             this.splitResults.Name = "splitResults";
             this.splitResults.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.splitResults.SplitterDistance = 190;
-
-            // Grid بالا تصمیم Row و Cluster را نشان می‌دهد.
+            // 
+            // splitResults.Panel1
+            // 
             this.splitResults.Panel1.Controls.Add(this.gridRows);
-
-            // Grid پایین نتیجه مرحله Region را مستقل نشان می‌دهد تا اتصال عمودی Clusterها
-            // مستقیماً روی فرم قابل مشاهده و قابل بررسی باشد.
+            // 
+            // splitResults.Panel2
+            // 
+            this.splitResults.Panel2.Controls.Add(this.gridRegions);
+            this.splitResults.Size = new System.Drawing.Size(1234, 351);
+            this.splitResults.SplitterDistance = 178;
+            this.splitResults.TabIndex = 0;
+            // 
+            // gridRows
+            // 
+            this.gridRows.AllowUserToAddRows = false;
+            this.gridRows.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.gridRows.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn1,
+            this.dataGridViewTextBoxColumn2,
+            this.dataGridViewTextBoxColumn3,
+            this.dataGridViewTextBoxColumn4,
+            this.dataGridViewTextBoxColumn5,
+            this.dataGridViewTextBoxColumn6,
+            this.dataGridViewTextBoxColumn7});
+            this.gridRows.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridRows.Location = new System.Drawing.Point(0, 0);
+            this.gridRows.Name = "gridRows";
+            this.gridRows.ReadOnly = true;
+            this.gridRows.Size = new System.Drawing.Size(1234, 178);
+            this.gridRows.TabIndex = 0;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.HeaderText = "#";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.HeaderText = "Y Range";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn3
+            // 
+            this.dataGridViewTextBoxColumn3.HeaderText = "Median H";
+            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            this.dataGridViewTextBoxColumn3.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn4
+            // 
+            this.dataGridViewTextBoxColumn4.HeaderText = "Items";
+            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            this.dataGridViewTextBoxColumn4.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn5
+            // 
+            this.dataGridViewTextBoxColumn5.HeaderText = "Reconstructed Row";
+            this.dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
+            this.dataGridViewTextBoxColumn5.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn6
+            // 
+            this.dataGridViewTextBoxColumn6.HeaderText = "Clusters";
+            this.dataGridViewTextBoxColumn6.Name = "dataGridViewTextBoxColumn6";
+            this.dataGridViewTextBoxColumn6.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn7
+            // 
+            this.dataGridViewTextBoxColumn7.HeaderText = "Horizontal Clusters";
+            this.dataGridViewTextBoxColumn7.Name = "dataGridViewTextBoxColumn7";
+            this.dataGridViewTextBoxColumn7.ReadOnly = true;
+            // 
+            // gridRegions
+            // 
             this.gridRegions.AllowUserToAddRows = false;
             this.gridRegions.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.gridRegions.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn8,
+            this.dataGridViewTextBoxColumn9,
+            this.dataGridViewTextBoxColumn10,
+            this.dataGridViewTextBoxColumn11,
+            this.dataGridViewTextBoxColumn12});
             this.gridRegions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridRegions.Location = new System.Drawing.Point(0, 0);
+            this.gridRegions.Name = "gridRegions";
             this.gridRegions.ReadOnly = true;
-            this.gridRegions.Columns.Add("Region", "Region");
-            this.gridRegions.Columns.Add("XRange", "X Range");
-            this.gridRegions.Columns.Add("YRange", "Y Range");
-            this.gridRegions.Columns.Add("RegionClusters", "Clusters");
-            this.gridRegions.Columns.Add("RegionText", "Region Text (top -> bottom)");
-            this.gridRegions.Columns[0].FillWeight = 12F;
-            this.gridRegions.Columns[1].FillWeight = 22F;
-            this.gridRegions.Columns[2].FillWeight = 22F;
-            this.gridRegions.Columns[3].FillWeight = 14F;
-            this.gridRegions.Columns[4].FillWeight = 120F;
-            this.splitResults.Panel2.Controls.Add(this.gridRegions);
-
-            this.splitMain.Panel2.Controls.Add(this.splitResults);
-
+            this.gridRegions.Size = new System.Drawing.Size(1234, 169);
+            this.gridRegions.TabIndex = 0;
+            // 
+            // dataGridViewTextBoxColumn8
+            // 
+            this.dataGridViewTextBoxColumn8.HeaderText = "Region";
+            this.dataGridViewTextBoxColumn8.Name = "dataGridViewTextBoxColumn8";
+            this.dataGridViewTextBoxColumn8.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn9
+            // 
+            this.dataGridViewTextBoxColumn9.HeaderText = "X Range";
+            this.dataGridViewTextBoxColumn9.Name = "dataGridViewTextBoxColumn9";
+            this.dataGridViewTextBoxColumn9.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn10
+            // 
+            this.dataGridViewTextBoxColumn10.HeaderText = "Y Range";
+            this.dataGridViewTextBoxColumn10.Name = "dataGridViewTextBoxColumn10";
+            this.dataGridViewTextBoxColumn10.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn11
+            // 
+            this.dataGridViewTextBoxColumn11.HeaderText = "Clusters";
+            this.dataGridViewTextBoxColumn11.Name = "dataGridViewTextBoxColumn11";
+            this.dataGridViewTextBoxColumn11.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn12
+            // 
+            this.dataGridViewTextBoxColumn12.HeaderText = "Region Text (top -> bottom)";
+            this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
+            this.dataGridViewTextBoxColumn12.ReadOnly = true;
+            // 
+            // SpatialOcrTestForm
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1234, 741);
@@ -277,6 +468,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridRegions)).EndInit();
             this.ResumeLayout(false);
+
         }
 
         #endregion
@@ -329,5 +521,18 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         {
             new Smart_Report.Form1().Show();
         }
+
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn6;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn7;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn8;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn9;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn10;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn12;
     }
 }
