@@ -345,6 +345,10 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     anchorOutput.Append("  X=");
                     anchorOutput.Append(anchor.X.ToString("0.0", CultureInfo.InvariantCulture));
                     anchorOutput.Append("  Rows=");
+                    anchorOutput.Append((anchor.StartRow + 1).ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append("..");
+                    anchorOutput.Append((anchor.EndRow + 1).ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  Support=");
                     anchorOutput.Append(anchor.RowCount.ToString(CultureInfo.InvariantCulture));
                     anchorOutput.Append("  : ");
 
