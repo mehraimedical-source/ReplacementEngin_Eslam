@@ -343,8 +343,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                             region.Bounds.Right.ToString("0.0", CultureInfo.InvariantCulture),
                         region.Bounds.Top.ToString("0.0", CultureInfo.InvariantCulture) + " .. " +
                             region.Bounds.Bottom.ToString("0.0", CultureInfo.InvariantCulture),
-                        region.Clusters.Count.ToString(CultureInfo.InvariantCulture),
-                        regionText.ToString());
+                        region.Clusters.Count.ToString(CultureInfo.InvariantCulture));
                 }
 
                 lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
