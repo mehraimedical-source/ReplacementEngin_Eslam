@@ -32,6 +32,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     string ocrJson = File.ReadAllText(Path.Combine(folder, "ocr.json"), Encoding.UTF8);
                     string expectedJson = File.ReadAllText(Path.Combine(folder, "expected.json"), Encoding.UTF8);
                     string[] expectedRows = ReadExpectedRows(expectedJson);
+                    List<string[]> expectedClusters = ReadExpectedClusters(expectedJson);
 
                     List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(ocrJson, options);
                     List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
@@ -49,7 +50,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     string rowError;
                     string resolvedError;
                     bool rowsPassed = RowsEqual(rows, expectedRows, out rowError);
-                    bool resolvedPassed = ResolvedRowsEqual(resolved, expectedRows, out resolvedError);
+                    bool resolvedPassed = ResolvedRowsEqual(resolved, expectedClusters, out resolvedError);
 
                     if (rowsPassed && resolvedPassed)
                     {
@@ -122,51 +123,110 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         /// اگر یک Row مانند BPD به دو Cluster شکسته شود، حتی با سالم بودن RowDetector
         /// Regression باید FAIL شود تا خرابی لایه Spatial پنهان نماند.
         /// </summary>
+        /// <summary>
+        /// خروجی Resolver فقط با Ground Truth مستقل ResolvedClusters مقایسه می‌شود.
+        /// Rows جواب RowDetector است و هرگز به عنوان Expected لایه Cluster استفاده نمی‌شود.
+        /// </summary>
         private static bool ResolvedRowsEqual(IList<ContextualClusterResolution> resolved,
-            string[] expectedRows, out string error)
+            IList<string[]> expectedClusters, out string error)
         {
-            if (resolved.Count != expectedRows.Length)
+            if (expectedClusters == null)
             {
-                error = "Resolved row count: expected " + expectedRows.Length +
+                error = "expected.json does not contain ResolvedClusters.";
+                return false;
+            }
+
+            if (resolved.Count != expectedClusters.Count)
+            {
+                error = "Resolved row count: expected " + expectedClusters.Count +
                     ", actual " + resolved.Count;
                 return false;
             }
 
-            for (int i = 0; i < expectedRows.Length; i++)
+            for (int i = 0; i < expectedClusters.Count; i++)
             {
-                List<SpatialCluster> clusters = resolved[i].ResolvedClusters;
+                IList<SpatialCluster> actual = resolved[i].ResolvedClusters;
+                string[] expected = expectedClusters[i];
 
-                // در Expected فعلی هر Row یک ساختار منطقی کامل است. تا وقتی Contract
-                // دقیق Cell/Region به Sample Bank اضافه نشده، بیش از یک Cluster یعنی
-                // Engine همان Row صحیح را دوباره شکسته و باید Failure گزارش شود.
-                if (clusters.Count != 1)
+                if (actual.Count != expected.Length)
                 {
-                    StringBuilder actual = new StringBuilder();
-                    for (int j = 0; j < clusters.Count; j++)
-                    {
-                        if (j > 0) actual.Append(" || ");
-                        actual.Append("[");
-                        actual.Append(clusters[j].GetText());
-                        actual.Append("]");
-                    }
-
-                    error = "Row " + (i + 1) + " split into " + clusters.Count +
-                        " clusters. Expected [" + expectedRows[i] + "] Actual " + actual.ToString();
+                    error = "Row " + (i + 1) + " cluster count: expected " +
+                        expected.Length + ", actual " + actual.Count +
+                        ". Actual " + BuildClusterList(actual);
                     return false;
                 }
 
-                string actualText = NormalizeRow(clusters[0].GetText());
-                string expectedText = NormalizeRow(expectedRows[i]);
-                if (actualText != expectedText)
+                for (int j = 0; j < expected.Length; j++)
                 {
-                    error = "Row " + (i + 1) + ": expected [" + expectedRows[i] +
-                        "] actual [" + clusters[0].GetText() + "]";
-                    return false;
+                    if (NormalizeRow(actual[j].GetText()) != NormalizeRow(expected[j]))
+                    {
+                        error = "Row " + (i + 1) + " Cluster " + (j + 1) +
+                            ": expected [" + expected[j] + "] actual [" +
+                            actual[j].GetText() + "]";
+                        return false;
+                    }
                 }
             }
 
             error = null;
             return true;
+        }
+
+        private static string BuildClusterList(IList<SpatialCluster> clusters)
+        {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < clusters.Count; i++)
+            {
+                if (i > 0) b.Append(" || ");
+                b.Append("[");
+                b.Append(clusters[i].GetText());
+                b.Append("]");
+            }
+            return b.ToString();
+        }
+
+        /// <summary>
+        /// ماتریس ResolvedClusters را از expected.json می‌خواند.
+        /// هر عضو بیرونی یک Physical Row و هر String داخلی یک Cluster مورد انتظار است.
+        /// </summary>
+        private static List<string[]> ReadExpectedClusters(string json)
+        {
+            int name = json.IndexOf("\"ResolvedClusters\"");
+            if (name < 0) return null;
+
+            int outerStart = json.IndexOf('[', name);
+            if (outerStart < 0)
+                throw new FormatException("ResolvedClusters array is invalid.");
+
+            int outerEnd = FindJsonArrayEnd(json, outerStart);
+            if (outerEnd < 0)
+                throw new FormatException("ResolvedClusters array is not closed.");
+
+            List<string[]> result = new List<string[]>();
+            int position = outerStart + 1;
+
+            while (position < outerEnd)
+            {
+                int rowStart = json.IndexOf('[', position);
+                if (rowStart < 0 || rowStart >= outerEnd) break;
+
+                int rowEnd = FindJsonArrayEnd(json, rowStart);
+                if (rowEnd < 0 || rowEnd > outerEnd)
+                    throw new FormatException("ResolvedClusters row is invalid.");
+
+                string body = json.Substring(rowStart + 1, rowEnd - rowStart - 1);
+                MatchCollection values = Regex.Matches(body,
+                    "\\\"((?:\\\\\\\\.|[^\\\"\\\\\\\\])*)\\\"");
+
+                List<string> row = new List<string>();
+                for (int i = 0; i < values.Count; i++)
+                    row.Add(UnescapeJson(values[i].Groups[1].Value));
+
+                result.Add(row.ToArray());
+                position = rowEnd + 1;
+            }
+
+            return result;
         }
 
         /// <summary>
