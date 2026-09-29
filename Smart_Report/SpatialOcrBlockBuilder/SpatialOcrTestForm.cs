@@ -19,6 +19,16 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             InitializeComponent();
         }
 
+        private Image _img; string _json;
+        public SpatialOcrTestForm(Image img, string json)
+        {
+            InitializeComponent();
+
+            _img = img;
+            txtJson.Text = json;
+        }
+
+
         /// <summary>
         /// تمام اطلاعات لازم برای بررسی یک Sample را در قالب متن استاندارد می‌سازد.
         /// این متن عمداً JSON خام را نیز نگه می‌دارد تا هیچ اطلاعات Spatial هنگام ارسال از بین نرود.
