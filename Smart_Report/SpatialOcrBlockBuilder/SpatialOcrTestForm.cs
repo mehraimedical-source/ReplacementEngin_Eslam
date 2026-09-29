@@ -35,6 +35,10 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             _img = img;
             json = json == null ? String.Empty : json;
             txtJson.Text = json;
+
+            // اگر فرم از مسیر اصلی برنامه همراه تصویر باز شده باشد، همان لحظه تصویر
+            // در کنار JSON نمایش داده می‌شود تا بررسی Spatial بدون مراجعه به پنجره دیگری ممکن باشد.
+            picSource.Image = _img;
         }
 
 
@@ -68,6 +72,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     _img.Dispose();
 
                 _img = loadedImage;
+                picSource.Image = _img;
                 txtJson.Text = json;
                 gridRows.Rows.Clear();
                 gridRegions.Rows.Clear();
