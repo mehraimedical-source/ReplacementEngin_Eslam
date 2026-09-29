@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Smart_Report.SpatialOcrBlockBuilder
 {
-    // Purpose-built parser for the OCR JSON contract. No external JSON package is required.
+    // Parser اختصاصی قرارداد JSON خروجی OCR؛ برای سازگاری با نسخه فعلی Framework به Package خارجی وابسته نیست.
     public static class SpatialOcrJsonParser
     {
         public static List<SpatialOcrItem> Parse(string json, RowDetectionOptions options)
@@ -57,6 +57,10 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 item.Bounds.Right = right; item.Bounds.Bottom = bottom;
                 result.Add(item);
             }
+
+            // پس از Parse کامل تصویر، Scale نسبی هر OCR Item را بر اساس Median همان تصویر محاسبه می‌کنیم.
+            // در این مرحله هیچ داده‌ای به عنوان Noise حذف نمی‌شود؛ فقط Featureهای هندسی غنی‌تر می‌شوند.
+            SpatialDocumentMetrics.Apply(result);
             return result;
         }
 
