@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     "Name | Ali Mohamadi, Mitra | ID | 170279 | Exam. Date | 17-09-2026",
     "[OB]",
@@ -16,5 +16,55 @@
     "CEREB | 18.53 | 18.53 | mm | 18w1d±10d | Hill | 61.36 | Nicolai...",
     "Fetal HR | Last | 1 | 2 | 3",
     "Fetal HR | 142 | 142 | bpm"
+  ],
+  "ResolvedClusters": [
+    [
+      "Name | Ali Mohamadi, Mitra | ID | 170279 | Exam. Date | 17-09-2026"
+    ],
+    [
+      "[OB]"
+    ],
+    [
+      "EDD(GA) | 16-02-2027 | GA | 18w2d | AUA | 18w3d"
+    ],
+    [
+      "EDD(AUA) | 15-02-2027 | EFW | 249g | GA(EFW) | 18w3d"
+    ],
+    [
+      "Pctl.(EFW) | 64.08"
+    ],
+    [
+      "Fetal Biometry | Last | 1 | 2 | 3 | GA | Pctl."
+    ],
+    [
+      "BPD | 42.34 | 42.34 | mm | 18w5d±12d | Hadlock | 73.66 | Hadlock"
+    ],
+    [
+      "HC | 157.42 | 157.42 | mm | 18w4d±10d | Hadlock | 60.08 | Hadlock"
+    ],
+    [
+      "AC | 129.74 | 129.74 | mm | 18w3d±14d | Hadlock | 55.09 | Hadlock"
+    ],
+    [
+      "FL | 28.37 | 28.37 | mm | 18w4d±12d | Hadlock | 60.01 | Hadlock"
+    ],
+    [
+      "Fetal Long Bones | Last | 1 | 2 | 3 | GA | Pctl."
+    ],
+    [
+      "HUM | 26.12 | 26.12 | mm | 18w1d±19d | Jeanty | 38.87 | Jeanty"
+    ],
+    [
+      "Fetal Cranium | Last | 1 | 2 | 3 | GA | Pctl."
+    ],
+    [
+      "CEREB | 18.53 | 18.53 | mm | 18w1d±10d | Hill | 61.36 | Nicolai..."
+    ],
+    [
+      "Fetal HR | Last | 1 | 2 | 3"
+    ],
+    [
+      "Fetal HR | 142 | 142 | bpm"
+    ]
   ]
 }
