@@ -72,8 +72,7 @@ namespace Smart_Report
             // 
             // txtBlockOutput
             // 
-            this.txtBlockOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.txtBlockOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtBlockOutput.Location = new System.Drawing.Point(15, 330);
             this.txtBlockOutput.Multiline = true;
@@ -119,7 +118,7 @@ namespace Smart_Report
             // 
             // btnAnalyzeJson
             // 
-            this.btnAnalyzeJson.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.btnAnalyzeJson.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.btnAnalyzeJson.Location = new System.Drawing.Point(721, 263);
             this.btnAnalyzeJson.Name = "btnAnalyzeJson";
             this.btnAnalyzeJson.Size = new System.Drawing.Size(145, 34);
@@ -130,17 +129,17 @@ namespace Smart_Report
             // 
             // lblJsonOutput
             // 
+            this.lblJsonOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblJsonOutput.AutoSize = true;
             this.lblJsonOutput.Location = new System.Drawing.Point(12, 601);
             this.lblJsonOutput.Name = "lblJsonOutput";
-            this.lblJsonOutput.Size = new System.Drawing.Size(72, 13);
+            this.lblJsonOutput.Size = new System.Drawing.Size(73, 13);
             this.lblJsonOutput.TabIndex = 8;
             this.lblJsonOutput.Text = "JSON Output:";
             // 
             // txtJsonOutput
             // 
-            this.txtJsonOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.txtJsonOutput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtJsonOutput.Location = new System.Drawing.Point(15, 620);
             this.txtJsonOutput.Multiline = true;
