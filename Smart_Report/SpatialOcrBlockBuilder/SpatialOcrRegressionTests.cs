@@ -105,21 +105,65 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         /// </summary>
         private static string[] ReadExpectedRows(string json)
         {
-            Match section = Regex.Match(json,
-                "\\\"Rows\\\"\\s*:\\s*\\[(.*?)\\]",
-                RegexOptions.Singleline);
-
-            if (!section.Success)
+            // Regex قبلی در اولین ] متوقف می‌شد؛ بنابراین متنی مثل [OB] یا [2D]
+            // باعث می‌شد فقط چند Row اول خوانده شوند. این Parser کوچک مرز Array را
+            // با آگاهی از Stringهای JSON پیدا می‌کند و ] داخل متن را اشتباه نمی‌گیرد.
+            int rowsName = json.IndexOf("\"Rows\"");
+            if (rowsName < 0)
                 throw new FormatException("expected.json does not contain Rows.");
 
+            int arrayStart = json.IndexOf('[', rowsName);
+            if (arrayStart < 0)
+                throw new FormatException("Rows array is invalid.");
+
+            int arrayEnd = FindJsonArrayEnd(json, arrayStart);
+            if (arrayEnd < 0)
+                throw new FormatException("Rows array is not closed.");
+
+            string body = json.Substring(arrayStart + 1, arrayEnd - arrayStart - 1);
             List<string> rows = new List<string>();
-            MatchCollection values = Regex.Matches(section.Groups[1].Value,
-                "\\\"((?:\\\\.|[^\\\"\\\\])*)\\\"");
+            MatchCollection values = Regex.Matches(body,
+                "\\\"((?:\\\\\\\\.|[^\\\"\\\\\\\\])*)\\\"");
 
             for (int i = 0; i < values.Count; i++)
                 rows.Add(UnescapeJson(values[i].Groups[1].Value));
 
             return rows.ToArray();
+        }
+
+        private static int FindJsonArrayEnd(string json, int arrayStart)
+        {
+            bool inString = false;
+            bool escaped = false;
+            int depth = 0;
+
+            for (int i = arrayStart; i < json.Length; i++)
+            {
+                char ch = json[i];
+
+                if (inString)
+                {
+                    if (escaped) escaped = false;
+                    else if (ch == '\\\\') escaped = true;
+                    else if (ch == '\"') inString = false;
+                    continue;
+                }
+
+                if (ch == '\"')
+                {
+                    inString = true;
+                    continue;
+                }
+
+                if (ch == '[') depth++;
+                else if (ch == ']')
+                {
+                    depth--;
+                    if (depth == 0) return i;
+                }
+            }
+
+            return -1;
         }
 
         private static string UnescapeJson(string value)
