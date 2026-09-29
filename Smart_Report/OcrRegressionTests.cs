@@ -119,6 +119,30 @@ namespace Smart_Report
                 "BPD 81.32mm GA 32w5d OFD (HC) 97.37mm HC 291.71mm GA 32w1d CI (BPD/OFD) 83% AC 279.28mm HC/AC 1.04 FL 61.77mm EFW 1897g FL/AC 22% FL/BPD 76% FL/HC 0.21",
                 "[BPD 81.32mm GA 32w5d]\n[OFD (HC) 97.37mm]\n[HC 291.71mm GA 32w1d]\n[CI (BPD/OFD) 83%]\n[AC 279.28mm]\n[HC/AC 1.04]\n[FL 61.77mm]\n[EFW 1897g]\n[FL/AC 22%]\n[FL/BPD 76%]\n[FL/HC 0.21]"));
 
+            t.Add(Case("Twin hierarchical sections",
+                "OB (Fetus A) LMP GA(LMP) EDD(LMP) Gravida Para Composite GA Average GA(AUA) 22w1d EDD(AUA) 2027-01-31 EFW1 Hadlock2 BPD,AC,FL 493 g Fetal Biometry m1 m2 m3 GA GP Rt FL 37.71 mm BPD 52.10 mm AC 174.20 mm HC 194.10 mm 2D Calculations HC/AC 1.11 OB (Fetus B) LMP GA(LMP) EDD(LMP) Gravida Para Composite GA Average GA(AUA) 21w6d EDD(AUA) 2027-02-02 EFW2 Hadlock2 BPD.AC.FL 470 g Fetal Biometry Lt FL 36.80 mm BPD 51.20 mm AC 170.00 mm HC 191.00 mm 2D Calculations HC/AC 1.12 OB (Fetus Compare) Composite GA A B Estimated Fetal Weight A B Fetal Biometry A B 2D Calculations A B",
+                "[OB (Fetus A)]\n[LMP]\n[GA(LMP)]\n[EDD(LMP)]\n[Gravida]\n[Para]\n[Composite GA Average]\n[GA(AUA) 22w1d]\n[EDD(AUA) 2027-01-31]\n[EFW1 Hadlock2 BPD,AC,FL 493 g]\n[Fetal Biometry m1 m2 m3 GA GP]\n[Rt FL 37.71 mm]\n[BPD 52.10 mm]\n[AC 174.20 mm]\n[HC 194.10 mm]\n[2D Calculations]\n[HC/AC 1.11]\n[OB (Fetus B)]\n[LMP]\n[GA(LMP)]\n[EDD(LMP)]\n[Gravida]\n[Para]\n[Composite GA Average]\n[GA(AUA) 21w6d]\n[EDD(AUA) 2027-02-02]\n[EFW2 Hadlock2 BPD.AC.FL 470 g]\n[Fetal Biometry]\n[Lt FL 36.80 mm]\n[BPD 51.20 mm]\n[AC 170.00 mm]\n[HC 191.00 mm]\n[2D Calculations]\n[HC/AC 1.12]\n[OB (Fetus Compare)]\n[Composite GA A B]\n[Estimated Fetal Weight A B]\n[Fetal Biometry A B]\n[2D Calculations A B]"));
+
+            t.Add(Case("Empty OB parameters are preserved",
+                "OB LMP GA(Clin) EDD(GA) Gravida Para DOC Ovulation Date Composite GA Average GA(AUA) 12w4d EDD(AUA) 2027-04-08",
+                "[OB]\n[LMP]\n[GA(Clin)]\n[EDD(GA)]\n[Gravida]\n[Para]\n[DOC]\n[Ovulation Date]\n[Composite GA Average]\n[GA(AUA) 12w4d]\n[EDD(AUA) 2027-04-08]"));
+
+            t.Add(Case("GE preset OB must not split",
+                "BPD 81.32mm 3 Trim./OB GA 32w5d EDD 2026-11-18 OFD (HC) 97.37mm HC 291.71mm",
+                "[BPD 81.32mm 3 Trim./OB GA 32w5d EDD 2026-11-18]\n[OFD (HC) 97.37mm]\n[HC 291.71mm]"));
+
+            t.Add(Case("Samsung measurement with interleaved settings",
+                "SAMSUNG [2D] Gen Gn47 BPD 79.28 mm Gen GA 31w6d Gn47 HC 288.76 mm DR116 GA 31w5d FA2 LtFL 61.12 mm GA 31w5d",
+                "[SAMSUNG [2D] Gen Gn47]\n[BPD 79.28 mm Gen GA 31w6d Gn47]\n[HC 288.76 mm DR116 GA 31w5d FA2]\n[LtFL 61.12 mm GA 31w5d]"));
+
+            t.Add(Case("Repeated OCR chunks are preserved",
+                "OB LMP GA(LMP) Fetal Biometry BPD 50.00 mm HC 180.00 mm OB LMP GA(LMP) Fetal Biometry BPD 50.00 mm HC 180.00 mm",
+                "[OB]\n[LMP]\n[GA(LMP)]\n[Fetal Biometry]\n[BPD 50.00 mm]\n[HC 180.00 mm]\n[OB]\n[LMP]\n[GA(LMP)]\n[Fetal Biometry]\n[BPD 50.00 mm]\n[HC 180.00 mm]"));
+
+            t.Add(Case("Composite GA and Estimated Fetal Weight sections",
+                "OB (Fetus Compare) Composite GA A 22w1d B 21w6d Estimated Fetal Weight A 493 g B 470 g Fetal Biometry A B",
+                "[OB (Fetus Compare)]\n[Composite GA A 22w1d B 21w6d]\n[Estimated Fetal Weight A 493 g B 470 g]\n[Fetal Biometry A B]"));
+
             return t;
         }
     }
