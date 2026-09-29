@@ -522,13 +522,20 @@ namespace Smart_Report
             }
 
             // مثال OFD (HC) 97.37mm: این HC بخشی از Title است و Block Starter جدید نیست.
-            // Parentheses Guard فقط برای Keywordهای ساده لازم است، نه Ratioهای کامل.
-            // دلیل: در "OFD (HC) 97.37mm" خود HC نباید Block جدید بسازد.
-            // اما اگر OCR پرانتز Normal Range قبلی را ناقص بخواند، Ratio بعدی باید مستقل بماند.
-            // مثال: "FL/HC ... (13.30~23.90%, 15... HC/AC 1.24".
-            if ((keyword == "BPD" || keyword == "HC" || keyword == "AC" || keyword == "FL") &&
-                IsInsideParentheses(text, index))
-                return false;
+            // به طور معمول Keyword داخل Parentheses نباید Block جدید بسازد.
+            // مثال‌ها: "OFD (HC) 97.37mm"، "CI (BPD/OFD) 83%" و "GA(EFW)".
+            // یک Exception محدود داریم: اگر Keyword یک Ratio کامل باشد و پرانتز قبلی به علت
+            // OCR ناقص با "..." باز مانده باشد، Ratio بعدی باید مستقل شناخته شود.
+            // مثال واقعی: "FL/HC ... (13.30~23.90%, 15... HC/AC 1.24".
+            if (IsInsideParentheses(text, index))
+            {
+                bool ratioAfterTruncatedRange =
+                    keyword.IndexOf("/") >= 0 &&
+                    HasTruncatedOpenParenthesis(text, index);
+
+                if (!ratioAfterTruncatedRange)
+                    return false;
+            }
 
             // GA و EDD ساده عمداً Starter نیستند؛ مثال BPD ... GA ... EDD ... باید یک Block بماند و نقش آنها از Context مشخص شود.
             return true;
@@ -548,6 +555,20 @@ namespace Smart_Report
             if (b > best) best = b;
             if (c > best) best = c;
             return best;
+        }
+
+        // بررسی می‌کند آیا Parentheses باز قبلی به علت OCR ناقص و وجود "..." بسته نشده است.
+        // این Helper فقط برای Exception محدود Ratioها استفاده می‌شود و Guard عمومی Parentheses را ضعیف نمی‌کند.
+        private bool HasTruncatedOpenParenthesis(string text, int index)
+        {
+            int open = text.LastIndexOf('(', index);
+            int close = text.LastIndexOf(')', index);
+
+            if (open < 0 || open <= close)
+                return false;
+
+            string inside = text.Substring(open, index - open);
+            return inside.IndexOf("...", StringComparison.Ordinal) >= 0;
         }
 
         // بررسی می‌کند Keyword فعلی داخل پرانتز باز قرار دارد یا نه.
