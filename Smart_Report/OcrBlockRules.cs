@@ -20,7 +20,9 @@ namespace Smart_Report
         {
             OcrBlockRules r = new OcrBlockRules();
 
+            r.Sections.Add("Estimated Fetal Weight");
             r.Sections.Add("Fetal Biometry");
+            r.Sections.Add("Composite GA");
             r.Sections.Add("2D Measurements");
             r.Sections.Add("2D Calculations");
             r.Sections.Add("Composite GA Average");
@@ -51,6 +53,8 @@ namespace Smart_Report
             r.Measurements.Add("OFD");
             r.Measurements.Add("CRL");
             r.Measurements.Add("FHR");
+            r.Measurements.Add("RT FL");
+            r.Measurements.Add("RTFL");
             r.Measurements.Add("LT FL");
             r.Measurements.Add("LTFL");
             r.Measurements.Add("FL");
