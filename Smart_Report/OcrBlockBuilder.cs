@@ -274,6 +274,20 @@ namespace Smart_Report
             if (independent)
                 return true;
 
+            // A generic keyword must not split a known ratio/calculation.
+            // Examples: FL/AC, FL/BPD, FL/HC and HC/AC.
+            // Without this guard, FL/AC could incorrectly become [FL/] [AC ...].
+            if (keyword == "FL" || keyword == "HC" || keyword == "AC" || keyword == "BPD")
+            {
+                int keywordEnd = index + keyword.Length;
+
+                if (keywordEnd < text.Length && text[keywordEnd] == '/')
+                    return false;
+
+                if (index > 0 && text[index - 1] == '/')
+                    return false;
+            }
+
             // Example: OFD (HC) 97.37mm
             // HC is part of the OFD title, not a new block.
             if (IsInsideParentheses(text, index))
