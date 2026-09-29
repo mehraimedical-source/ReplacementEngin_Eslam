@@ -179,6 +179,10 @@ namespace Smart_Report
                 "SAMSUNG 74309(1988-03-21) DR.TAGHI ZADEH 2026-07-08 soleymanzade, rota 16:44:28 3rd Trimester / CA1-7S / 16.0cm Tls 0.5/TIb 1.9/MI 0.54 [2D] SAMSUNG Gen 10 Gn 47 DR 116 HR 147 bpm FA 2 Time 408 ms P 92% [PW] Gen [u Gn 50 PRF 3.57kHz WF 61Hz P 90% SV 2.0mm A 0° 10 SVD 7.6cm 5 -50 -40 -30 -20 -10 cm/s --10 --20 -30 -40 -50",
                 "[SAMSUNG 74309(1988-03-21) DR.TAGHI ZADEH 2026-07-08 soleymanzade, rota 16:44:28 3rd Trimester / CA1-7S / 16.0cm Tls 0.5/TIb 1.9/MI 0.54 [2D] SAMSUNG Gen 10 Gn 47 DR 116]\n[HR 147 bpm FA 2 Time 408 ms P 92% [PW] Gen [u Gn 50 PRF 3.57kHz WF 61Hz P 90% SV 2.0mm A 0° 10 SVD 7.6cm 5 -50 -40 -30 -20 -10 cm/s --10 --20 -30 -40 -50]"));
 
+            t.Add(Case("Samsung Fetaļ HR OCR glyph variant",
+                "SAMSUNG 57398(1995-03-21) DR. HEMATI CLINIC 2026-09-28 Noori, Mahpare 17:13:41 NT/CA1-7S/14.0cm TIs 0.4 / TIb 1.7 / MI 0.56 [2D] SAMSUNG 79 Res Gn 59 DR 1 90 FA 3 P 92% [PW] 5 Gen Gn 50 PRF 3.57kHz WF 61Hz P 90% SV 2.0mm A 0° SVD 6.4cm 10 -50 -40 -30 -20 10 cm/s -10 -20 -30 40 1 Fetaļ HR158-bpm",
+                "[SAMSUNG 57398(1995-03-21) DR. HEMATI CLINIC 2026-09-28 Noori, Mahpare 17:13:41 NT/CA1-7S/14.0cm TIs 0.4 / TIb 1.7 / MI 0.56 [2D] SAMSUNG 79 Res Gn 59 DR 1 90 FA 3 P 92% [PW] 5 Gen Gn 50 PRF 3.57kHz WF 61Hz P 90% SV 2.0mm A 0° SVD 6.4cm 10 -50 -40 -30 -20 10 cm/s -10 -20 -30 40 1]\n[Fetaļ HR158-bpm]"));
+
             return t;
         }
     }
