@@ -68,6 +68,8 @@ namespace Smart_Report
             _measurementStarters.Add("D1");
             _measurementStarters.Add("D2");
             _measurementStarters.Add("CI");
+            // OCR commonly reads CI as Cl (capital C + lowercase L).
+            _measurementStarters.Add("CL");
 
             // These can start their own block in the examples we have seen.
             // Plain GA and EDD are NOT starters because they can belong to
@@ -273,6 +275,12 @@ namespace Smart_Report
         {
             if (independent)
                 return true;
+
+            // Ratio names can also appear inside a longer EFW formula,
+            // for example: AC/BPD/FL/HC. In that context FL/HC is not a
+            // separate block starter.
+            if (keyword == "FL/HC" && index > 0 && text[index - 1] == '/')
+                return false;
 
             // A generic keyword must not split a known ratio/calculation.
             // Examples: FL/AC, FL/BPD, FL/HC and HC/AC.
