@@ -300,11 +300,15 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 HorizontalClusterDetector clusterDetector = new HorizontalClusterDetector(
                     new HorizontalClusteringOptions());
 
+                List<ContextualClusterResolution> resolvedClusters =
+                    new ContextualClusterResolver(new ContextualClusterResolverOptions())
+                    .Resolve(rows, clusterDetector);
+
                 gridRows.Rows.Clear();
                 for (int i = 0; i < rows.Count; i++)
                 {
                     SpatialRow row = rows[i];
-                    List<SpatialCluster> clusters = clusterDetector.Detect(row);
+                    List<SpatialCluster> clusters = resolvedClusters[i].ResolvedClusters;
                     StringBuilder clusterText = new StringBuilder();
                     for (int j = 0; j < clusters.Count; j++)
                     {
@@ -312,6 +316,12 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         clusterText.Append("[");
                         clusterText.Append(clusters[j].GetText());
                         clusterText.Append("]");
+                    }
+                    if (resolvedClusters[i].WasMerged)
+                    {
+                        clusterText.Append("  <CONTEXT-MERGED support=");
+                        clusterText.Append(resolvedClusters[i].NeighborSupport.ToString("0.00", CultureInfo.InvariantCulture));
+                        clusterText.Append(">");
                     }
 
                     gridRows.Rows.Add(
@@ -324,8 +334,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                         clusterText.ToString());
                 }
                 int clusterCount = 0;
-                for (int i = 0; i < rows.Count; i++)
-                    clusterCount += clusterDetector.Detect(rows[i]).Count;
+                for (int i = 0; i < resolvedClusters.Count; i++)
+                    clusterCount += resolvedClusters[i].ResolvedClusters.Count;
 
                 List<AlignmentAnchor> anchors = new AlignmentAnchorDetector(
                     new AlignmentAnchorOptions()).Detect(rows);
