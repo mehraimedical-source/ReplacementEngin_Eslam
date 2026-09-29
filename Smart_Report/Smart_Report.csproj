@@ -40,6 +40,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SpatialOcrBlockBuilder\SpatialModels.cs" />
+    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrJsonParser.cs" />
+    <Compile Include="SpatialOcrBlockBuilder\AdaptiveRowDetector.cs" />
+    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrTestForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="OcrBlockBuilder\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
