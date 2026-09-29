@@ -327,8 +327,35 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 for (int i = 0; i < rows.Count; i++)
                     clusterCount += clusterDetector.Detect(rows[i]).Count;
 
+                List<AlignmentAnchor> anchors = new AlignmentAnchorDetector(
+                    new AlignmentAnchorOptions()).Detect(rows);
+
                 List<SpatialRegion> regions = new SpatialRegionDetector(
                     new SpatialRegionOptions()).Detect(rows, clusterDetector);
+
+                // Anchorها قبل از Region نمایش داده می‌شوند تا بتوانیم ابتدا شواهد Alignment
+                // را با تصویر مقایسه کنیم و Region را بر پایه حدس یا متن پزشکی تغییر ندهیم.
+                StringBuilder anchorOutput = new StringBuilder();
+                anchorOutput.AppendLine("===== ALIGNMENT ANCHORS =====");
+                for (int i = 0; i < anchors.Count; i++)
+                {
+                    AlignmentAnchor anchor = anchors[i];
+                    anchorOutput.Append("A");
+                    anchorOutput.Append((i + 1).ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  X=");
+                    anchorOutput.Append(anchor.X.ToString("0.0", CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  Rows=");
+                    anchorOutput.Append(anchor.RowCount.ToString(CultureInfo.InvariantCulture));
+                    anchorOutput.Append("  : ");
+
+                    for (int j = 0; j < anchor.Items.Count; j++)
+                    {
+                        if (j > 0) anchorOutput.Append(" / ");
+                        anchorOutput.Append(anchor.Items[j].Text);
+                    }
+                    anchorOutput.AppendLine();
+                }
+                anchorOutput.AppendLine();
 
                 // خروجی Region مستقیماً در TextBox چندخطی نمایش داده می‌شود؛
                 // چون هدف این بخش بررسی سریع ساختار نهایی است و Grid اطلاعات اضافی ایجاد می‌کرد.
@@ -355,11 +382,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     if (i < regions.Count - 1)
                         regionOutput.AppendLine();
                 }
-                txtRegionText.Text = regionOutput.ToString();
+                txtRegionText.Text = anchorOutput.ToString() + regionOutput.ToString();
 
                 lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
                     " rows  |  " + clusterCount + " clusters  |  " +
-                    regions.Count + " regions";
+                    anchors.Count + " anchors  |  " + regions.Count + " regions";
             }
             catch (Exception ex)
             {
