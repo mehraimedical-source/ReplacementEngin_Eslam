@@ -14,17 +14,26 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         /// سازنده فرم فقط اجزای ساخته شده توسط Windows Forms Designer را مقداردهی اولیه می‌کند.
         /// تمام کنترل‌ها، اندازه‌ها و چیدمان فرم در فایل Designer نگهداری می‌شوند.
         /// </summary>
+        private Image _img;
+
+
         public SpatialOcrTestForm()
+            : this(null, String.Empty)
         {
-            InitializeComponent();
         }
 
-        private Image _img;  
+
+        /// <summary>
+        /// تصویر اصلی و JSON همان OCR را کنار هم نگه می‌دارد تا تست Spatial همیشه
+        /// به منبع تصویری واقعی خود متصل باشد و در مراحل بعد بتوان Overlay را روی همان تصویر رسم کرد.
+        /// </summary>
+
         public SpatialOcrTestForm(Image img, string json)
         {
             InitializeComponent();
 
             _img = img;
+            json = json == null ? String.Empty : json;
             txtJson.Text = json;
         }
 
