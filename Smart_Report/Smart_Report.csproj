@@ -43,6 +43,7 @@
     <Compile Include="SpatialOcrBlockBuilder\SpatialModels.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrJsonParser.cs" />
     <Compile Include="SpatialOcrBlockBuilder\AdaptiveRowDetector.cs" />
+    <Compile Include="SpatialOcrBlockBuilder\HorizontalClusterDetector.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrRegressionTests.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrSampleRepository.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrTestForm.cs">
