@@ -176,6 +176,25 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 }
             }
 
+            HorizontalClusterDetector regionClusterDetector = new HorizontalClusterDetector(
+                new HorizontalClusteringOptions());
+            List<SpatialRegion> regions = new SpatialRegionDetector(
+                new SpatialRegionOptions()).Detect(rows, regionClusterDetector);
+
+            b.AppendLine();
+            b.AppendLine("[DETECTED REGIONS]");
+            for (int i = 0; i < regions.Count; i++)
+            {
+                b.Append("Region ");
+                b.Append((i + 1).ToString(CultureInfo.InvariantCulture));
+                b.Append("  X=");
+                b.Append(regions[i].Bounds.Left.ToString("0.0", CultureInfo.InvariantCulture));
+                b.Append("..");
+                b.Append(regions[i].Bounds.Right.ToString("0.0", CultureInfo.InvariantCulture));
+                b.Append("  : ");
+                b.AppendLine(regions[i].GetText());
+            }
+
             return b.ToString();
         }
 
@@ -302,8 +321,12 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 for (int i = 0; i < rows.Count; i++)
                     clusterCount += clusterDetector.Detect(rows[i]).Count;
 
+                List<SpatialRegion> regions = new SpatialRegionDetector(
+                    new SpatialRegionOptions()).Detect(rows, clusterDetector);
+
                 lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
-                    " rows  |  " + clusterCount + " clusters";
+                    " rows  |  " + clusterCount + " clusters  |  " +
+                    regions.Count + " regions";
             }
             catch (Exception ex)
             {
