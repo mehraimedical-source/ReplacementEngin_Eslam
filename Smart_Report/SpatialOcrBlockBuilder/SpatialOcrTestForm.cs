@@ -70,6 +70,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 _img = loadedImage;
                 txtJson.Text = json;
                 gridRows.Rows.Clear();
+                gridRegions.Rows.Clear();
                 txtSampleName.Text = Path.GetFileName(folder);
                 lblStatus.Text = "Sample loaded: " + Path.GetFileName(folder);
 
@@ -323,6 +324,29 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
                 List<SpatialRegion> regions = new SpatialRegionDetector(
                     new SpatialRegionOptions()).Detect(rows, clusterDetector);
+
+                // Regionها جدا از Rowها نمایش داده می‌شوند؛ بنابراین کاربر می‌تواند ببیند
+                // کدام Clusterهای چند Row در مرحله بعد واقعاً به یک ناحیه متصل شده‌اند.
+                gridRegions.Rows.Clear();
+                for (int i = 0; i < regions.Count; i++)
+                {
+                    SpatialRegion region = regions[i];
+                    StringBuilder regionText = new StringBuilder();
+                    for (int j = 0; j < region.Clusters.Count; j++)
+                    {
+                        if (j > 0) regionText.Append("  /  ");
+                        regionText.Append(region.Clusters[j].GetText());
+                    }
+
+                    gridRegions.Rows.Add(
+                        (i + 1).ToString(CultureInfo.InvariantCulture),
+                        region.Bounds.Left.ToString("0.0", CultureInfo.InvariantCulture) + " .. " +
+                            region.Bounds.Right.ToString("0.0", CultureInfo.InvariantCulture),
+                        region.Bounds.Top.ToString("0.0", CultureInfo.InvariantCulture) + " .. " +
+                            region.Bounds.Bottom.ToString("0.0", CultureInfo.InvariantCulture),
+                        region.Clusters.Count.ToString(CultureInfo.InvariantCulture),
+                        regionText.ToString());
+                }
 
                 lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
                     " rows  |  " + clusterCount + " clusters  |  " +
