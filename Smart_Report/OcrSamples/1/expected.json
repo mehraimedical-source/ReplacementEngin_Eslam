@@ -70,5 +70,34 @@
     [
       "HC/AC | 0.97 | (0.87~1.39, 13~42w)"
     ]
+  ],
+  "Regions": [
+    [
+      "Name | Mohtasham, Pega | ID | 116496 | Exam. Date | 2025-06-09",
+      "Gender | Female | BirthDate | 1994-03-21 | Age | 31yr 2m",
+      "Institute | RAD Med.Image ins. | Ref. Physician | Naghmeh Hosn T...",
+      "Description | 1392 T"
+    ],
+    [
+      "[OB]"
+    ],
+    [
+      "AUA | 36w2d | EDD(AUA) | 2025-07-05 | Pctl. Crit... EDD(LMP)",
+      "EFW | 2934g±440g (... EFW Aut... Hadlock3(AC... GA(EFW) | 36w3d"
+    ],
+    [
+      "Fetal Biom... | Last | 1 | 2 | 3 | GA | Pctl.",
+      "BPD | 9.03 | 9.03 | cm | 36w4d±22d Hadl...",
+      "HC | 31.82 31.82 | cm | 35w5d±20d Hadl...",
+      "AC | 32.74 32.74 | cm | 36w4d±21d Hadl...",
+      "FL | 7.16 | 7.16 | cm | 36w4d±21d Hadl..."
+    ],
+    [
+      "Ratio | Value | Normal Range",
+      "FL/AC | 21.86 | % | (20.0~24.0%, >21w)",
+      "FL/BPD | 79.24 | % | (71.0~87.0%, >23w)",
+      "FL/HC | 22.50 | % | (13.30~23.90%, 15...",
+      "HC/AC | 0.97 | (0.87~1.39, 13~42w)"
+    ]
   ]
 }
