@@ -164,11 +164,15 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.gridRows.Columns.Add("Height", "Median H");
             this.gridRows.Columns.Add("Items", "Items");
             this.gridRows.Columns.Add("Text", "Reconstructed Row");
+            this.gridRows.Columns.Add("Clusters", "Clusters");
+            this.gridRows.Columns.Add("ClusterText", "Horizontal Clusters");
             this.gridRows.Columns[0].FillWeight = 10F;
             this.gridRows.Columns[1].FillWeight = 18F;
             this.gridRows.Columns[2].FillWeight = 15F;
             this.gridRows.Columns[3].FillWeight = 12F;
-            this.gridRows.Columns[4].FillWeight = 120F;
+            this.gridRows.Columns[4].FillWeight = 80F;
+            this.gridRows.Columns[5].FillWeight = 12F;
+            this.gridRows.Columns[6].FillWeight = 100F;
             this.splitMain.Panel2.Controls.Add(this.gridRows);
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
