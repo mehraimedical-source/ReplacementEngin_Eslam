@@ -408,5 +408,95 @@ namespace Smart_Report
                 value,
                 StringComparison.OrdinalIgnoreCase);
         }
+
+        // خروجی فعلی Analyzer را به JSON قابل مشاهده برای Debug تبدیل می‌کند.
+        // فعلاً این JSON برای بررسی ساختار ContentType/Category/Section/Field است
+        // و هنوز Valueهای پزشکی مثل BPD=8.63 یا GA=34w5d را Parse نمی‌کند.
+        public string AnalyzeJson(List<OcrBlock> blocks)
+        {
+            string analyzed = Analyze(blocks);
+
+            if (String.IsNullOrEmpty(analyzed))
+                return "{\r\n  \"contentType\": \"Unknown\",\r\n  \"items\": []\r\n}";
+
+            string[] lines = analyzed.Replace("\r\n", "\n").Split('\n');
+
+            string contentType = "Unknown";
+            List<string> itemJson = new List<string>();
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].Trim();
+
+                if (line.Length == 0)
+                    continue;
+
+                if (line.StartsWith("ContentType = "))
+                {
+                    contentType = line.Substring("ContentType = ".Length).Trim();
+                    continue;
+                }
+
+                Match m = Regex.Match(
+                    line,
+                    @"^Block\s+(\d+)\s+\|\s+Category=(.*?)\s+\|\s+Section=(.*?)\s+\|\s+Field=(.*?)\s+\|\s+Text=(.*)$");
+
+                if (!m.Success)
+                    continue;
+
+                StringBuilder item = new StringBuilder();
+                item.Append("    {");
+                item.Append("\"blockIndex\": ");
+                item.Append(m.Groups[1].Value);
+                item.Append(", \"category\": \"");
+                item.Append(JsonEscape(m.Groups[2].Value));
+                item.Append("\", \"section\": \"");
+                item.Append(JsonEscape(m.Groups[3].Value));
+                item.Append("\", \"field\": \"");
+                item.Append(JsonEscape(m.Groups[4].Value));
+                item.Append("\", \"text\": \"");
+                item.Append(JsonEscape(m.Groups[5].Value));
+                item.Append("\"}");
+
+                itemJson.Add(item.ToString());
+            }
+
+            StringBuilder json = new StringBuilder();
+            json.AppendLine("{");
+            json.Append("  \"contentType\": \"");
+            json.Append(JsonEscape(contentType));
+            json.AppendLine("\",");
+            json.AppendLine("  \"items\": [");
+
+            for (int i = 0; i < itemJson.Count; i++)
+            {
+                json.Append(itemJson[i]);
+
+                if (i < itemJson.Count - 1)
+                    json.Append(",");
+
+                json.AppendLine();
+            }
+
+            json.AppendLine("  ]");
+            json.Append("}");
+
+            return json.ToString();
+        }
+
+        // کاراکترهای خاص را Escape می‌کند تا Text خام OCR باعث خراب شدن JSON نشود.
+        private string JsonEscape(string value)
+        {
+            if (value == null)
+                return "";
+
+            return value
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t");
+        }
+
     }
 }
