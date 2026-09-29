@@ -363,9 +363,12 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         private void gridRegions_SelectionChanged(object sender, EventArgs e)
         {
             txtRegionText.Clear();
-            if (gridRegions.SelectedRows.Count == 0) return;
 
-            int index = gridRegions.SelectedRows[0].Index;
+            // DataGridView به صورت پیش‌فرض Cell را انتخاب می‌کند و در آن حالت
+            // SelectedRows خالی می‌ماند. CurrentRow مرجع درست Region انتخاب‌شده است.
+            if (gridRegions.CurrentRow == null) return;
+
+            int index = gridRegions.CurrentRow.Index;
             if (index < 0) return;
 
             try
