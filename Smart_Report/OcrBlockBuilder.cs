@@ -188,6 +188,7 @@ namespace Smart_Report
             FindConditionalMeasurement(text, "NT", found);
             FindConditionalMeasurement(text, "NB", found);
             FindConditionalMeasurement(text, "D", found);
+            FindConditionalHeartRate(text, found);
 
             found.Sort(delegate(BlockStart a, BlockStart b)
             {
@@ -307,6 +308,22 @@ namespace Smart_Report
                 BlockStart start = new BlockStart();
                 start.Index = matches[i].Index;
                 start.Keyword = "Fetal HR";
+                result.Add(start);
+            }
+        }
+
+        private void FindConditionalHeartRate(string text, List<BlockStart> result)
+        {
+            MatchCollection matches = Regex.Matches(
+                text,
+                @"(?<![A-Z0-9])HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?\s*-?\s*bpm(?![A-Z])",
+                RegexOptions.IgnoreCase);
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index;
+                start.Keyword = "HR";
                 result.Add(start);
             }
         }
