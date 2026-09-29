@@ -5,12 +5,26 @@ namespace Smart_Report
 {
     public partial class Form1 : Form
     {
+        private OcrBlockRules _rules;
         private OcrBlockBuilder _blockBuilder;
 
         public Form1()
         {
             InitializeComponent();
-            _blockBuilder = new OcrBlockBuilder();
+            _rules = OcrBlockRules.CreateDefault();
+            _blockBuilder = new OcrBlockBuilder(_rules);
+        }
+
+        private void btnInitialRules_Click(object sender, EventArgs e)
+        {
+            using (InitialRulesForm form = new InitialRulesForm(_rules))
+            {
+                if (form.ShowDialog(this) == DialogResult.OK)
+                {
+                    _rules = form.Rules;
+                    _blockBuilder.SetRules(_rules);
+                }
+            }
         }
 
         private void btnBuildBlocks_Click(object sender, EventArgs e)
