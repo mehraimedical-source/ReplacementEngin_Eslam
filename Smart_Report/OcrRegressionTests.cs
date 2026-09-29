@@ -151,6 +151,26 @@ namespace Smart_Report
                 "SAMSUNG 73202(1994-01-31) DR.TAGHIZADEH 2026-07-06 Gaderi, Neda 20:58:54 Uterus/EA2-11AR /6.0cm /37Hz TIs 0.4/ TIb 0.4 / MI 1.2 [2D] D.4.10 mm Gen Gn 45 DR 102 SAMSUNG FA 3 V8 p 90% 18 11 12 4- 十 3 13 4 5 16",
                 "[SAMSUNG 73202(1994-01-31) DR.TAGHIZADEH 2026-07-06 Gaderi, Neda 20:58:54 Uterus/EA2-11AR /6.0cm /37Hz TIs 0.4/ TIb 0.4 / MI 1.2 [2D]]\n[D.4.10 mm Gen Gn 45 DR 102 SAMSUNG FA 3 V8 p 90% 18 11 12 4- 十 3 13 4 5 16]"));
 
+            t.Add(Case("Samsung TAI quantitative index remains intact",
+                "SAMSUNG 73181(1982-03-21) DR.TAGHIZADEH 2026-07-06 Soleymani, Farshid 19:47:16 Abdomen/CA1-7S/16.0cm / 42Hz TIs 0.3 / TIb 0.3 / MI 1.1 [2D] Pen 2.0 Gn 52 DR 90 SAMSUNG SAMSUNG J FA 5 ōP 90% 10 0.0 70 1 15 115 TAI [dB/cm/MHz] 0.98 (R² 0.69)",
+                "[SAMSUNG 73181(1982-03-21) DR.TAGHIZADEH 2026-07-06 Soleymani, Farshid 19:47:16 Abdomen/CA1-7S/16.0cm / 42Hz TIs 0.3 / TIb 0.3 / MI 1.1 [2D] Pen 2.0 Gn 52 DR 90 SAMSUNG SAMSUNG J FA 5 ōP 90% 10 0.0 70 1 15 115 TAI [dB/cm/MHz] 0.98 (R² 0.69)]"));
+
+            t.Add(Case("Samsung TSI quantitative index remains intact",
+                "SAMSUNG 73181(1982-03-21) DR.TAGHIZADEH 2026-07-06 Soleymani, Farshid 19:47:19 Abdomen /CA1-7S/16.0cm/42Hz TIs 0.3 / TIb 0.3 / MI 1.1 [2D] Pen 200 Gn 52 DR 90 SAMSUNG SAMSUNG UC FA 5 ōP 90% 70 70 15 TSI 110.01",
+                "[SAMSUNG 73181(1982-03-21) DR.TAGHIZADEH 2026-07-06 Soleymani, Farshid 19:47:19 Abdomen /CA1-7S/16.0cm/42Hz TIs 0.3 / TIb 0.3 / MI 1.1 [2D] Pen 200 Gn 52 DR 90 SAMSUNG SAMSUNG UC FA 5 ōP 90% 70 70 15 TSI 110.01]"));
+
+            t.Add(Case("Malformed multi-D OCR preserves raw boundaries",
+                "SAMSUNG 73178(1979-03-21) DR.TAGHI ZADEH 2026-07-06 Faridian, Rana 21:06:33 Uterus /CA1-7S/14.0cm/32Hz TIs 0.1/ TIb 0.1/MI 1.4 1{2D137.04 mm 3 D 37.34 mm 2GD 21.91 mm D 21.77 mm Gn 27 DR 104 SAMSUNG SAMSUNG V8 18 FA 4 P C 90% 10 X 十 -+ 十 次 u T0 10",
+                "[SAMSUNG 73178(1979-03-21) DR.TAGHI ZADEH 2026-07-06 Faridian, Rana 21:06:33 Uterus /CA1-7S/14.0cm/32Hz TIs 0.1/ TIb 0.1/MI 1.4 1{2D137.04 mm 3]\n[D 37.34 mm 2GD 21.91 mm]\n[D 21.77 mm Gn 27 DR 104 SAMSUNG SAMSUNG V8 18 FA 4 P C 90% 10 X 十 -+ 十 次 u T0 10]"));
+
+            t.Add(Case("Generic HR must not start a block",
+                "SAMSUNG 73178(1979-03-21) DR.TAGHIZADEH 2026-07-06 Faridian, Rana 21:06:53 Uterus/CA1-7S/14.0cm/32Hz HR TIs 0.1/ TIb 0.1/ MI 1.4 [2D] D 112.82 mm Gen D 50.98 mm Gn 27 SAMSING DR 104 VB FA 4 P 90% 10 15 10",
+                "[SAMSUNG 73178(1979-03-21) DR.TAGHIZADEH 2026-07-06 Faridian, Rana 21:06:53 Uterus/CA1-7S/14.0cm/32Hz HR TIs 0.1/ TIb 0.1/ MI 1.4 [2D]]\n[D 112.82 mm Gen]\n[D 50.98 mm Gn 27 SAMSING DR 104 VB FA 4 P 90% 10 15 10]"));
+
+            t.Add(Case("Fetal HR measurement",
+                "SAMSUNG 57398 (1995-03-21) DR HEMATLCUINIC 2026-09-28 Noori, Mahpare 17:13:41 NT/CA1-7S/14.0cmS TIs 0.4 / TIb 1.7 / MI 0.56 [2D] SAMSUNG vs Res Gn 59 DR 90 FA 3 P 92% [PW] 15 Gen PRF 3.57kHz Gn 50 WF 61Hz P 90% SV 2.0mm A 0° SVD 6.4cm 10 -50 -40 -30 二20 10 cm/s -10 -20 -30 40 Fetal HR158-bpm",
+                "[SAMSUNG 57398 (1995-03-21) DR HEMATLCUINIC 2026-09-28 Noori, Mahpare 17:13:41 NT/CA1-7S/14.0cmS TIs 0.4 / TIb 1.7 / MI 0.56 [2D] SAMSUNG vs Res Gn 59 DR 90 FA 3 P 92% [PW] 15 Gen PRF 3.57kHz Gn 50 WF 61Hz P 90% SV 2.0mm A 0° SVD 6.4cm 10 -50 -40 -30 二20 10 cm/s -10 -20 -30 40]\n[Fetal HR158-bpm]"));
+
             return t;
         }
     }
