@@ -39,6 +39,38 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
 
         /// <summary>
+        /// Sample جاری را شامل تصویر اصلی، JSON خام OCR و Expected Rowها در بانک دائمی پروژه ذخیره می‌کند.
+        /// Expected از نتیجه‌ای ساخته می‌شود که اکنون در Test Form تحلیل شده و بعداً می‌تواند دستی بازبینی شود.
+        /// </summary>
+        private void SaveSample()
+        {
+            try
+            {
+                RowDetectionOptions options = new RowDetectionOptions();
+                options.MinVerticalOverlapRatio = (double)nudOverlap.Value;
+                options.MaxCenterDistanceFactor = (double)nudCenter.Value;
+
+                List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(txtJson.Text, options);
+                List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
+
+                SpatialOcrSampleRepository repository = new SpatialOcrSampleRepository();
+                string folder = repository.Save(txtSampleName.Text, _img, txtJson.Text, rows);
+
+                lblStatus.Text = "Sample saved: " + Path.GetFileName(folder);
+                MessageBox.Show(this,
+                    "Sample saved successfully." + Environment.NewLine + folder,
+                    "Spatial OCR Sample",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Save Sample",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// تمام اطلاعات لازم برای بررسی یک Sample را در قالب متن استاندارد می‌سازد.
         /// این متن عمداً JSON خام را نیز نگه می‌دارد تا هیچ اطلاعات Spatial هنگام ارسال از بین نرود.
         /// </summary>
