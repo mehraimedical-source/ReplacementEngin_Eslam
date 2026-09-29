@@ -448,6 +448,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.gridRegions.Location = new System.Drawing.Point(0, 0);
             this.gridRegions.Name = "gridRegions";
             this.gridRegions.ReadOnly = true;
+            this.gridRegions.MultiSelect = false;
+            this.gridRegions.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.gridRegions.Size = new System.Drawing.Size(1234, 169);
             this.gridRegions.TabIndex = 0;
             this.gridRegions.SelectionChanged += new System.EventHandler(this.gridRegions_SelectionChanged);
