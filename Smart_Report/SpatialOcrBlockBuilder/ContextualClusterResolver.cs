@@ -14,8 +14,9 @@ namespace Smart_Report.SpatialOcrBlockBuilder
 
     public sealed class ContextualClusterResolverOptions
     {
-        // Row شکسته فقط زمانی Merge می‌شود که Rowهای مجاور از نظر Topology به آن نزدیک باشند.
-        public double MinNeighborSimilarity = 0.70;
+        // برای Merge شدن، حداقل دو Row مجاور باید پیوستگی همان بازه افقی را مستقل تأیید کنند.
+        // Count به جای نسبت استفاده می‌شود تا Header یا Rowهای انتقالی نزدیک، شاهدهای درست را رقیق نکنند.
+        public int MinSupportingRows = 2;
 
         // برای جلوگیری از Merge کردن جزیره‌های واقعی چپ/راست، حداقل یک همسایه باید
         // همان محدوده افقی دو Cluster را به صورت پیوسته پوشش دهد.
@@ -54,7 +55,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                     double support = CalculateNeighborSupport(rows, detector, i, original[0], original[1]);
                     r.NeighborSupport = support;
 
-                    if (support >= options.MinNeighborSimilarity)
+                    if (support >= options.MinSupportingRows)
                     {
                         r.ResolvedClusters.Add(Merge(original[0], original[1]));
                         r.WasMerged = true;
@@ -73,7 +74,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             HorizontalClusterDetector detector, int rowIndex,
             SpatialCluster left, SpatialCluster right)
         {
-            int checkedRows = 0;
             int supportingRows = 0;
 
             for (int distance = 1; distance <= options.NeighborRadius; distance++)
@@ -81,21 +81,19 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 int before = rowIndex - distance;
                 int after = rowIndex + distance;
                 if (before >= 0)
-                    EvaluateNeighbor(rows, detector, before, left, right, ref checkedRows, ref supportingRows);
+                    EvaluateNeighbor(rows, detector, before, left, right, ref supportingRows);
                 if (after < rows.Count)
-                    EvaluateNeighbor(rows, detector, after, left, right, ref checkedRows, ref supportingRows);
+                    EvaluateNeighbor(rows, detector, after, left, right, ref supportingRows);
             }
 
-            if (checkedRows == 0) return 0.0;
-            return (double)supportingRows / checkedRows;
+            return (double)supportingRows;
         }
 
         private static void EvaluateNeighbor(IList<SpatialRow> rows,
             HorizontalClusterDetector detector, int index,
             SpatialCluster left, SpatialCluster right,
-            ref int checkedRows, ref int supportingRows)
+            ref int supportingRows)
         {
-            checkedRows++;
             List<SpatialCluster> neighbor = detector.Detect(rows[index]);
 
             // یک Cluster همسایه باید از داخل Cluster چپ تا داخل Cluster راست امتداد داشته باشد.
