@@ -94,6 +94,7 @@ namespace DicomViewer_ChatGPT
             this.txtFolder.Name = "txtFolder";
             this.txtFolder.Size = new System.Drawing.Size(1268, 25);
             this.txtFolder.TabIndex = 3;
+            this.txtFolder.Text = "SR002";
             // 
             // toolbarPanel
             // 

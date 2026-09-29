@@ -1,0 +1,12 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# DICOM data
+*.dcm
+*.DCM

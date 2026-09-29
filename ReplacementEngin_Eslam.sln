@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegeX_Sample_Eslam", "RegeX
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer_ChatGPT", "DicomViewer_ChatGPT\DicomViewer_ChatGPT.csproj", "{020C6777-EA64-49AB-B45D-5FAD43126C52}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smart_Report", "Smart_Report\Smart_Report.csproj", "{C93283C7-06C1-4E8C-89C8-0722BB458FA5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{020C6777-EA64-49AB-B45D-5FAD43126C52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
