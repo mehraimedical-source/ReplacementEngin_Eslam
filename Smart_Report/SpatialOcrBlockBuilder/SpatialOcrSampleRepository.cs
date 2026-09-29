@@ -78,6 +78,38 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             return result;
         }
 
+
+        /// <summary>
+        /// Sample ذخیره‌شده را با نام پوشه پیدا می‌کند و مسیر فایل‌های آن را برمی‌گرداند.
+        /// خواندن تصویر در Repository انجام نمی‌شود تا مالکیت و Dispose کردن Image در اختیار فرم باشد.
+        /// </summary>
+        public bool TryGetSample(string sampleName, out string folder, out string imagePath,
+            out string ocrPath, out string expectedPath)
+        {
+            folder = null;
+            imagePath = null;
+            ocrPath = null;
+            expectedPath = null;
+
+            string safeName = MakeSafeName(sampleName);
+            if (safeName.Length == 0) return false;
+
+            string candidate = Path.Combine(rootPath, safeName);
+            string candidateOcr = Path.Combine(candidate, "ocr.json");
+            string candidateExpected = Path.Combine(candidate, "expected.json");
+            string candidateImage = Path.Combine(candidate, "image.png");
+
+            if (!Directory.Exists(candidate) || !File.Exists(candidateOcr) ||
+                !File.Exists(candidateExpected) || !File.Exists(candidateImage))
+                return false;
+
+            folder = candidate;
+            imagePath = candidateImage;
+            ocrPath = candidateOcr;
+            expectedPath = candidateExpected;
+            return true;
+        }
+
         /// <summary>
         /// Expected را عمداً ساده و مستقل از Engine نگه می‌داریم تا در آینده Cluster/Region/Table نیز به آن افزوده شود.
         /// </summary>
