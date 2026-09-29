@@ -88,6 +88,19 @@ namespace Smart_Report
             string text = Normalize(rawOcrText);
             List<BlockStart> starts = FindBlockStarts(text);
 
+            // Zero Data Loss:
+            // If no known block starter exists, keep the whole OCR text.
+            if (starts.Count == 0)
+            {
+                AddBlock(blocks, text, "", 0, text.Length);
+                return blocks;
+            }
+
+            // Keep everything before the first recognized starter as a block.
+            // Unknown/header/device text must never disappear.
+            if (starts[0].Index > 0)
+                AddBlock(blocks, text, "", 0, starts[0].Index);
+
             for (int i = 0; i < starts.Count; i++)
             {
                 int startIndex = starts[i].Index;
@@ -105,16 +118,40 @@ namespace Smart_Report
                 if (blockText.Length == 0)
                     continue;
 
-                OcrBlock block = new OcrBlock();
-                block.Text = blockText;
-                block.StartKeyword = starts[i].Keyword;
-                block.StartIndex = startIndex;
-                block.EndIndex = endExclusive - 1;
-
-                blocks.Add(block);
+                AddBlock(
+                    blocks,
+                    text,
+                    starts[i].Keyword,
+                    startIndex,
+                    endExclusive);
             }
 
             return blocks;
+        }
+
+        private void AddBlock(
+            List<OcrBlock> blocks,
+            string text,
+            string startKeyword,
+            int startIndex,
+            int endExclusive)
+        {
+            if (endExclusive <= startIndex)
+                return;
+
+            string blockText = text.Substring(
+                startIndex,
+                endExclusive - startIndex).Trim();
+
+            if (blockText.Length == 0)
+                return;
+
+            OcrBlock block = new OcrBlock();
+            block.Text = blockText;
+            block.StartKeyword = startKeyword;
+            block.StartIndex = startIndex;
+            block.EndIndex = endExclusive - 1;
+            blocks.Add(block);
         }
 
         public string BuildBracketText(string rawOcrText)
