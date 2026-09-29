@@ -44,6 +44,7 @@
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrJsonParser.cs" />
     <Compile Include="SpatialOcrBlockBuilder\AdaptiveRowDetector.cs" />
     <Compile Include="SpatialOcrBlockBuilder\HorizontalClusterDetector.cs" />
+    <Compile Include="SpatialOcrBlockBuilder\AlignmentAnchorDetector.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialRegionDetector.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrRegressionTests.cs" />
     <Compile Include="SpatialOcrBlockBuilder\SpatialOcrSampleRepository.cs" />
