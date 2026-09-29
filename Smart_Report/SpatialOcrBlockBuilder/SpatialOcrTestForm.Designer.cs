@@ -3,18 +3,17 @@ namespace Smart_Report.SpatialOcrBlockBuilder
     partial class SpatialOcrTestForm
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.ToolStrip toolStripMain;
-        private System.Windows.Forms.ToolStripButton btnAnalyzeRows;
-        private System.Windows.Forms.ToolStripButton btnRunRegressionTests;
-        private System.Windows.Forms.ToolStripButton btnCopyTestData;
-        private System.Windows.Forms.ToolStripButton btnSaveTestData;
-        private System.Windows.Forms.ToolStripLabel lblSampleName;
-        private System.Windows.Forms.ToolStripTextBox txtSampleName;
-        private System.Windows.Forms.ToolStripButton btnSaveSample;
-        private System.Windows.Forms.ToolStripButton btnLoadSample;
-        private System.Windows.Forms.ToolStripButton btnClear;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripButton btnLegacyForm;
+        private System.Windows.Forms.Panel pnlCommands;
+        private System.Windows.Forms.Button btnAnalyzeRows;
+        private System.Windows.Forms.Button btnRunRegressionTests;
+        private System.Windows.Forms.Button btnCopyTestData;
+        private System.Windows.Forms.Button btnSaveTestData;
+        private System.Windows.Forms.Label lblSampleName;
+        private System.Windows.Forms.TextBox txtSampleName;
+        private System.Windows.Forms.Button btnSaveSample;
+        private System.Windows.Forms.Button btnLoadSample;
+        private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.Button btnLegacyForm;
         private System.Windows.Forms.Panel pnlSettings;
         private System.Windows.Forms.Label lblOverlap;
         private System.Windows.Forms.NumericUpDown nudOverlap;
@@ -44,18 +43,17 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         /// </summary>
         private void InitializeComponent()
         {
-            this.toolStripMain = new System.Windows.Forms.ToolStrip();
-            this.btnAnalyzeRows = new System.Windows.Forms.ToolStripButton();
-            this.btnRunRegressionTests = new System.Windows.Forms.ToolStripButton();
-            this.btnCopyTestData = new System.Windows.Forms.ToolStripButton();
-            this.btnSaveTestData = new System.Windows.Forms.ToolStripButton();
-            this.lblSampleName = new System.Windows.Forms.ToolStripLabel();
-            this.txtSampleName = new System.Windows.Forms.ToolStripTextBox();
-            this.btnSaveSample = new System.Windows.Forms.ToolStripButton();
-            this.btnLoadSample = new System.Windows.Forms.ToolStripButton();
-            this.btnClear = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.btnLegacyForm = new System.Windows.Forms.ToolStripButton();
+            this.pnlCommands = new System.Windows.Forms.Panel();
+            this.btnAnalyzeRows = new System.Windows.Forms.Button();
+            this.btnRunRegressionTests = new System.Windows.Forms.Button();
+            this.btnCopyTestData = new System.Windows.Forms.Button();
+            this.btnSaveTestData = new System.Windows.Forms.Button();
+            this.lblSampleName = new System.Windows.Forms.Label();
+            this.txtSampleName = new System.Windows.Forms.TextBox();
+            this.btnSaveSample = new System.Windows.Forms.Button();
+            this.btnLoadSample = new System.Windows.Forms.Button();
+            this.btnClear = new System.Windows.Forms.Button();
+            this.btnLegacyForm = new System.Windows.Forms.Button();
             this.pnlSettings = new System.Windows.Forms.Panel();
             this.lblOverlap = new System.Windows.Forms.Label();
             this.nudOverlap = new System.Windows.Forms.NumericUpDown();
@@ -65,7 +63,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.txtJson = new System.Windows.Forms.TextBox();
             this.gridRows = new System.Windows.Forms.DataGridView();
-            this.toolStripMain.SuspendLayout();
+            this.pnlCommands.SuspendLayout();
             this.pnlSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverlap)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudCenter)).BeginInit();
@@ -75,39 +73,77 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).BeginInit();
             this.SuspendLayout();
 
-            this.toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.btnAnalyzeRows,
-                this.btnRunRegressionTests,
-                this.btnCopyTestData,
-                this.btnSaveTestData,
-                this.lblSampleName,
-                this.txtSampleName,
-                this.btnSaveSample,
-                this.btnLoadSample,
-                this.btnClear,
-                this.toolStripSeparator1,
-                this.btnLegacyForm});
-            this.toolStripMain.Location = new System.Drawing.Point(0, 0);
-            this.toolStripMain.Name = "toolStripMain";
-            this.toolStripMain.Size = new System.Drawing.Size(1234, 25);
+            // پنل فرمان‌ها جای ToolStrip را گرفته تا همه کنترل‌ها Button/TextBox استاندارد
+            // و مستقیماً در Visual Studio Designer قابل ویرایش باشند.
+            this.pnlCommands.Controls.Add(this.btnAnalyzeRows);
+            this.pnlCommands.Controls.Add(this.btnRunRegressionTests);
+            this.pnlCommands.Controls.Add(this.btnCopyTestData);
+            this.pnlCommands.Controls.Add(this.btnSaveTestData);
+            this.pnlCommands.Controls.Add(this.lblSampleName);
+            this.pnlCommands.Controls.Add(this.txtSampleName);
+            this.pnlCommands.Controls.Add(this.btnSaveSample);
+            this.pnlCommands.Controls.Add(this.btnLoadSample);
+            this.pnlCommands.Controls.Add(this.btnClear);
+            this.pnlCommands.Controls.Add(this.btnLegacyForm);
+            this.pnlCommands.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlCommands.Location = new System.Drawing.Point(0, 0);
+            this.pnlCommands.Name = "pnlCommands";
+            this.pnlCommands.Size = new System.Drawing.Size(1234, 42);
 
+            this.btnAnalyzeRows.Location = new System.Drawing.Point(8, 8);
+            this.btnAnalyzeRows.Name = "btnAnalyzeRows";
+            this.btnAnalyzeRows.Size = new System.Drawing.Size(95, 26);
             this.btnAnalyzeRows.Text = "Analyze Rows";
             this.btnAnalyzeRows.Click += new System.EventHandler(this.btnAnalyzeRows_Click);
+
+            this.btnRunRegressionTests.Location = new System.Drawing.Point(109, 8);
+            this.btnRunRegressionTests.Name = "btnRunRegressionTests";
+            this.btnRunRegressionTests.Size = new System.Drawing.Size(135, 26);
             this.btnRunRegressionTests.Text = "Run Regression Tests";
             this.btnRunRegressionTests.Click += new System.EventHandler(this.btnRunRegressionTests_Click);
+
+            this.btnCopyTestData.Location = new System.Drawing.Point(250, 8);
+            this.btnCopyTestData.Name = "btnCopyTestData";
+            this.btnCopyTestData.Size = new System.Drawing.Size(105, 26);
             this.btnCopyTestData.Text = "Copy Test Data";
             this.btnCopyTestData.Click += new System.EventHandler(this.btnCopyTestData_Click);
+
+            this.btnSaveTestData.Location = new System.Drawing.Point(361, 8);
+            this.btnSaveTestData.Name = "btnSaveTestData";
+            this.btnSaveTestData.Size = new System.Drawing.Size(105, 26);
             this.btnSaveTestData.Text = "Save Test Data";
             this.btnSaveTestData.Click += new System.EventHandler(this.btnSaveTestData_Click);
+
+            this.lblSampleName.AutoSize = true;
+            this.lblSampleName.Location = new System.Drawing.Point(480, 14);
+            this.lblSampleName.Name = "lblSampleName";
             this.lblSampleName.Text = "Sample:";
+
+            this.txtSampleName.Location = new System.Drawing.Point(530, 11);
             this.txtSampleName.Name = "txtSampleName";
-            this.txtSampleName.Size = new System.Drawing.Size(140, 25);
+            this.txtSampleName.Size = new System.Drawing.Size(110, 20);
+
+            this.btnSaveSample.Location = new System.Drawing.Point(646, 8);
+            this.btnSaveSample.Name = "btnSaveSample";
+            this.btnSaveSample.Size = new System.Drawing.Size(90, 26);
             this.btnSaveSample.Text = "Save Sample";
             this.btnSaveSample.Click += new System.EventHandler(this.btnSaveSample_Click);
+
+            this.btnLoadSample.Location = new System.Drawing.Point(742, 8);
+            this.btnLoadSample.Name = "btnLoadSample";
+            this.btnLoadSample.Size = new System.Drawing.Size(90, 26);
             this.btnLoadSample.Text = "Load Sample";
             this.btnLoadSample.Click += new System.EventHandler(this.btnLoadSample_Click);
+
+            this.btnClear.Location = new System.Drawing.Point(838, 8);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(70, 26);
             this.btnClear.Text = "Clear";
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+
+            this.btnLegacyForm.Location = new System.Drawing.Point(914, 8);
+            this.btnLegacyForm.Name = "btnLegacyForm";
+            this.btnLegacyForm.Size = new System.Drawing.Size(90, 26);
             this.btnLegacyForm.Text = "Legacy Form";
             this.btnLegacyForm.Click += new System.EventHandler(this.btnLegacyForm_Click);
 
@@ -117,7 +153,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.pnlSettings.Controls.Add(this.nudCenter);
             this.pnlSettings.Controls.Add(this.lblStatus);
             this.pnlSettings.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlSettings.Location = new System.Drawing.Point(0, 25);
+            this.pnlSettings.Location = new System.Drawing.Point(0, 42);
             this.pnlSettings.Name = "pnlSettings";
             this.pnlSettings.Size = new System.Drawing.Size(1234, 34);
 
@@ -148,7 +184,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.lblStatus.Name = "lblStatus";
 
             this.splitMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitMain.Location = new System.Drawing.Point(0, 59);
+            this.splitMain.Location = new System.Drawing.Point(0, 76);
             this.splitMain.Name = "splitMain";
             this.splitMain.Orientation = System.Windows.Forms.Orientation.Horizontal;
             this.splitMain.SplitterDistance = 300;
@@ -185,13 +221,13 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.ClientSize = new System.Drawing.Size(1234, 741);
             this.Controls.Add(this.splitMain);
             this.Controls.Add(this.pnlSettings);
-            this.Controls.Add(this.toolStripMain);
-            this.MinimumSize = new System.Drawing.Size(900, 600);
+            this.Controls.Add(this.pnlCommands);
+            this.MinimumSize = new System.Drawing.Size(1050, 600);
             this.Name = "SpatialOcrTestForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Spatial OCR Block Builder - Test";
-            this.toolStripMain.ResumeLayout(false);
-            this.toolStripMain.PerformLayout();
+            this.pnlCommands.ResumeLayout(false);
+            this.pnlCommands.PerformLayout();
             this.pnlSettings.ResumeLayout(false);
             this.pnlSettings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverlap)).EndInit();
@@ -202,7 +238,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitMain.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
         }
 
         #endregion
