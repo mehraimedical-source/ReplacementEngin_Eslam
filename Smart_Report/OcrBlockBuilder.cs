@@ -248,7 +248,14 @@ namespace Smart_Report
             bool independent)
         {
             if (independent)
+            {
+                // OB is a real section label on report pages, but it can also
+                // appear in machine presets such as "3 Trim./OB".
+                if (keyword == "OB" && index > 0 && text[index - 1] == '/')
+                    return false;
+
                 return true;
+            }
 
             // Measurement names separated by commas are references inside
             // formulas such as EFW1 Hadlock2 BPD,AC,FL and must not split.
