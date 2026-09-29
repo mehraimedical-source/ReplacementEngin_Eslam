@@ -147,6 +147,10 @@ namespace Smart_Report
                 "SAMSUNG 73202(1994-01-31) DRTAGHIZADEH 2026-07-06 Gaderi, Neda 20:59:19 Uterus/EA2-11AR/6.0cm/37Hz Tls 0.4 / TIb 0.4 / MI 1.2 [2D] CRL 4.31 mm Gen GA 6w1d±4d 2027-02-28 Gn 45 DR 102 SAMSUNG FA 3 V8 P 90% 18 1 22 4- XX 13 144 5 十 16",
                 "[SAMSUNG 73202(1994-01-31) DRTAGHIZADEH 2026-07-06 Gaderi, Neda 20:59:19 Uterus/EA2-11AR/6.0cm/37Hz Tls 0.4 / TIb 0.4 / MI 1.2 [2D]]\n[CRL 4.31 mm Gen GA 6w1d±4d 2027-02-28 Gn 45 DR 102 SAMSUNG FA 3 V8 P 90% 18 1 22 4- XX 13 144 5 十 16]"));
 
+            t.Add(Case("Samsung D with OCR dot separator",
+                "SAMSUNG 73202(1994-01-31) DR.TAGHIZADEH 2026-07-06 Gaderi, Neda 20:58:54 Uterus/EA2-11AR /6.0cm /37Hz TIs 0.4/ TIb 0.4 / MI 1.2 [2D] D.4.10 mm Gen Gn 45 DR 102 SAMSUNG FA 3 V8 p 90% 18 11 12 4- 十 3 13 4 5 16",
+                "[SAMSUNG 73202(1994-01-31) DR.TAGHIZADEH 2026-07-06 Gaderi, Neda 20:58:54 Uterus/EA2-11AR /6.0cm /37Hz TIs 0.4/ TIb 0.4 / MI 1.2 [2D]]\n[D.4.10 mm Gen Gn 45 DR 102 SAMSUNG FA 3 V8 p 90% 18 11 12 4- 十 3 13 4 5 16]"));
+
             return t;
         }
     }
