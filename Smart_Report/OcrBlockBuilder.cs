@@ -28,8 +28,7 @@ namespace Smart_Report
 
     public class OcrBlockBuilder
     {
-        private readonly List<string> _measurementStarters;
-        private readonly List<string> _independentStarters;
+        private OcrBlockRules _rules;
 
         private class BlockStart
         {
@@ -38,46 +37,18 @@ namespace Smart_Report
         }
 
         public OcrBlockBuilder()
+            : this(OcrBlockRules.CreateDefault())
         {
-            _measurementStarters = new List<string>();
-            _independentStarters = new List<string>();
-            InitializeRules();
         }
 
-        private void InitializeRules()
+        public OcrBlockBuilder(OcrBlockRules rules)
         {
-            // Longer/more specific forms are intentionally included.
-            _measurementStarters.Add("HC/AC");
-            _measurementStarters.Add("FL/AC");
-            _measurementStarters.Add("FL/BPD");
-            _measurementStarters.Add("FL/HC");
+            SetRules(rules);
+        }
 
-            _measurementStarters.Add("EFW1");
-            _measurementStarters.Add("EFW2");
-            _measurementStarters.Add("EFW");
-            _measurementStarters.Add("BPD");
-            _measurementStarters.Add("OFD");
-            _measurementStarters.Add("CRL");
-            _measurementStarters.Add("FHR");
-            _measurementStarters.Add("LT FL");
-            _measurementStarters.Add("LTFL");
-            _measurementStarters.Add("FL");
-            _measurementStarters.Add("HC");
-            _measurementStarters.Add("AC");
-            _measurementStarters.Add("HR");
-            _measurementStarters.Add("D1");
-            _measurementStarters.Add("D2");
-            _measurementStarters.Add("CI");
-            // OCR commonly reads CI as Cl (capital C + lowercase L).
-            _measurementStarters.Add("CL");
-
-            // These can start their own block in the examples we have seen.
-            // Plain GA and EDD are NOT starters because they can belong to
-            // BPD/HC/AC/FL/EFW blocks.
-            _independentStarters.Add("GA(AUA)");
-            _independentStarters.Add("GA(LMP)");
-            _independentStarters.Add("EDD(AUA)");
-            _independentStarters.Add("EDD(LMP)");
+        public void SetRules(OcrBlockRules rules)
+        {
+            _rules = (rules == null) ? OcrBlockRules.CreateDefault() : rules.Clone();
         }
 
         public List<OcrBlock> Build(string rawOcrText)
@@ -187,11 +158,14 @@ namespace Smart_Report
         {
             List<BlockStart> found = new List<BlockStart>();
 
-            for (int i = 0; i < _independentStarters.Count; i++)
-                FindKeyword(text, _independentStarters[i], found, true);
+            for (int i = 0; i < _rules.Sections.Count; i++)
+                FindKeyword(text, _rules.Sections[i], found, true);
 
-            for (int i = 0; i < _measurementStarters.Count; i++)
-                FindKeyword(text, _measurementStarters[i], found, false);
+            for (int i = 0; i < _rules.Parameters.Count; i++)
+                FindKeyword(text, _rules.Parameters[i], found, true);
+
+            for (int i = 0; i < _rules.Measurements.Count; i++)
+                FindKeyword(text, _rules.Measurements[i], found, false);
 
             found.Sort(delegate(BlockStart a, BlockStart b)
             {
@@ -275,6 +249,16 @@ namespace Smart_Report
         {
             if (independent)
                 return true;
+
+            // Measurement names separated by commas are references inside
+            // formulas such as EFW1 Hadlock2 BPD,AC,FL and must not split.
+            if (keyword == "BPD" || keyword == "HC" || keyword == "AC" || keyword == "FL")
+            {
+                int keywordEnd = index + keyword.Length;
+                if ((keywordEnd < text.Length && text[keywordEnd] == ',') ||
+                    (index > 0 && text[index - 1] == ','))
+                    return false;
+            }
 
             // Ratio names can also appear inside a longer EFW formula,
             // for example: AC/BPD/FL/HC. In that context FL/HC is not a
