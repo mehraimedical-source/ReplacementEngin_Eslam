@@ -217,7 +217,7 @@ namespace Smart_Report
             string pattern =
                 @"(?<![A-Z0-9])" +
                 Regex.Escape(keyword) +
-                ((keyword == "D") ? @"(?:\\s+|\\.)" : @"\\s+") +
+                ((keyword == "D") ? @"(?:\s+|\.)" : @"\s+") +
                 @"[+-]?[0-9]+(?:[\.,][0-9]+)?\s*(?:mm|cm)(?![A-Z])";
 
             MatchCollection matches = Regex.Matches(
