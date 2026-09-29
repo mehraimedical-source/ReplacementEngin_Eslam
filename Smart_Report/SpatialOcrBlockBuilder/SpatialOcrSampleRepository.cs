@@ -20,15 +20,13 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         {
             // هنگام اجرای پروژه از bin\Debug یا bin\Release دو سطح بالا می‌رویم تا Sampleها داخل خود پروژه بمانند.
 
-            rootPath = Path.GetFullPath(
-         Path.Combine(
-             Path.Combine(
-                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".."),
-                 ".."
-             ),
-             "OcrSamples"
-         )
-     );
+            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+
+            string projectPath = Path.Combine(basePath, "..");
+            projectPath = Path.Combine(projectPath, "..");
+            projectPath = Path.Combine(projectPath, "OcrSamples");
+
+            rootPath = Path.GetFullPath(projectPath);
         }
 
         public string RootPath { get { return rootPath; } }
