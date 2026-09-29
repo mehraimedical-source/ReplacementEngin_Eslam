@@ -295,7 +295,7 @@ namespace Smart_Report
         private void FindFetalHeartRate(string text, List<BlockStart> result)
         {
             string pattern =
-                @"(?<![A-Z0-9])Fetal\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?\s*-?\s*(?:bpm)(?![A-Z])";
+                @"(?<![A-Z0-9])Fetal\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?(?:\s+[+-]?[0-9]+(?:[\.,][0-9]+)?)?\s*-?\s*(?:bpm)(?![A-Z])";
 
             MatchCollection matches = Regex.Matches(
                 text,
@@ -400,7 +400,11 @@ namespace Smart_Report
                     if (distance <= 45)
                     {
                         string between = text.Substring(previousEfw, distance);
-                        if (between.IndexOf("g ", StringComparison.OrdinalIgnoreCase) < 0 &&
+
+                        // A report section header ends the EFW formula-reference
+                        // context even when OCR truncates "Fetal Biometry".
+                        if (between.IndexOf("Fetal Biom", StringComparison.OrdinalIgnoreCase) < 0 &&
+                            between.IndexOf("g ", StringComparison.OrdinalIgnoreCase) < 0 &&
                             between.IndexOf("mm ", StringComparison.OrdinalIgnoreCase) < 0)
                             return false;
                     }
