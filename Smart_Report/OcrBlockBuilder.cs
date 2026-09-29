@@ -522,7 +522,12 @@ namespace Smart_Report
             }
 
             // مثال OFD (HC) 97.37mm: این HC بخشی از Title است و Block Starter جدید نیست.
-            if (IsInsideParentheses(text, index))
+            // Parentheses Guard فقط برای Keywordهای ساده لازم است، نه Ratioهای کامل.
+            // دلیل: در "OFD (HC) 97.37mm" خود HC نباید Block جدید بسازد.
+            // اما اگر OCR پرانتز Normal Range قبلی را ناقص بخواند، Ratio بعدی باید مستقل بماند.
+            // مثال: "FL/HC ... (13.30~23.90%, 15... HC/AC 1.24".
+            if ((keyword == "BPD" || keyword == "HC" || keyword == "AC" || keyword == "FL") &&
+                IsInsideParentheses(text, index))
                 return false;
 
             // GA و EDD ساده عمداً Starter نیستند؛ مثال BPD ... GA ... EDD ... باید یک Block بماند و نقش آنها از Context مشخص شود.
