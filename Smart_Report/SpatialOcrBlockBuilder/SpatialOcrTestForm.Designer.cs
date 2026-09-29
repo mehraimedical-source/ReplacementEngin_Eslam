@@ -23,6 +23,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.TextBox txtJson;
         private System.Windows.Forms.DataGridView gridRows;
+        private System.Windows.Forms.SplitContainer splitResults;
+        private System.Windows.Forms.DataGridView gridRegions;
 
         /// <summary>
         /// منابع استفاده شده توسط فرم را آزاد می‌کند.
@@ -63,6 +65,8 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.txtJson = new System.Windows.Forms.TextBox();
             this.gridRows = new System.Windows.Forms.DataGridView();
+            this.splitResults = new System.Windows.Forms.SplitContainer();
+            this.gridRegions = new System.Windows.Forms.DataGridView();
             this.pnlCommands.SuspendLayout();
             this.pnlSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudOverlap)).BeginInit();
@@ -70,7 +74,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
             this.splitMain.SuspendLayout();
+            this.splitResults.Panel1.SuspendLayout();
+            this.splitResults.Panel2.SuspendLayout();
+            this.splitResults.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gridRegions)).BeginInit();
             this.SuspendLayout();
 
             // پنل فرمان‌ها جای ToolStrip را گرفته تا همه کنترل‌ها Button/TextBox استاندارد
@@ -214,7 +222,34 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.gridRows.Columns[4].FillWeight = 80F;
             this.gridRows.Columns[5].FillWeight = 12F;
             this.gridRows.Columns[6].FillWeight = 100F;
-            this.splitMain.Panel2.Controls.Add(this.gridRows);
+            this.splitResults.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitResults.Location = new System.Drawing.Point(0, 0);
+            this.splitResults.Name = "splitResults";
+            this.splitResults.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.splitResults.SplitterDistance = 190;
+
+            // Grid بالا تصمیم Row و Cluster را نشان می‌دهد.
+            this.splitResults.Panel1.Controls.Add(this.gridRows);
+
+            // Grid پایین نتیجه مرحله Region را مستقل نشان می‌دهد تا اتصال عمودی Clusterها
+            // مستقیماً روی فرم قابل مشاهده و قابل بررسی باشد.
+            this.gridRegions.AllowUserToAddRows = false;
+            this.gridRegions.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.gridRegions.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridRegions.ReadOnly = true;
+            this.gridRegions.Columns.Add("Region", "Region");
+            this.gridRegions.Columns.Add("XRange", "X Range");
+            this.gridRegions.Columns.Add("YRange", "Y Range");
+            this.gridRegions.Columns.Add("RegionClusters", "Clusters");
+            this.gridRegions.Columns.Add("RegionText", "Region Text (top -> bottom)");
+            this.gridRegions.Columns[0].FillWeight = 12F;
+            this.gridRegions.Columns[1].FillWeight = 22F;
+            this.gridRegions.Columns[2].FillWeight = 22F;
+            this.gridRegions.Columns[3].FillWeight = 14F;
+            this.gridRegions.Columns[4].FillWeight = 120F;
+            this.splitResults.Panel2.Controls.Add(this.gridRegions);
+
+            this.splitMain.Panel2.Controls.Add(this.splitResults);
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -236,7 +271,11 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             this.splitMain.Panel1.PerformLayout();
             this.splitMain.Panel2.ResumeLayout(false);
             this.splitMain.ResumeLayout(false);
+            this.splitResults.Panel1.ResumeLayout(false);
+            this.splitResults.Panel2.ResumeLayout(false);
+            this.splitResults.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridRows)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gridRegions)).EndInit();
             this.ResumeLayout(false);
         }
 
@@ -279,6 +318,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
         {
             txtJson.Clear();
             gridRows.Rows.Clear();
+            gridRegions.Rows.Clear();
             lblStatus.Text = "";
         }
 
