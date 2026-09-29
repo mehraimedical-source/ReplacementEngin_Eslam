@@ -61,10 +61,23 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             List<SpatialRegion> regions = new List<SpatialRegion>();
             if (rows == null || clusterDetector == null) return regions;
 
+            // Region باید همان Clusterهای Contextual را مصرف کند که در Grid دیده می‌شوند.
+            // در غیر این صورت UI یک BPD Merge شده نشان می‌دهد ولی Region دوباره Split خام را می‌سازد.
+            List<ContextualClusterResolution> resolved =
+                new ContextualClusterResolver(new ContextualClusterResolverOptions())
+                .Resolve(rows, clusterDetector);
+            return DetectResolved(resolved);
+        }
+
+        public List<SpatialRegion> DetectResolved(IList<ContextualClusterResolution> resolved)
+        {
+            List<SpatialRegion> regions = new List<SpatialRegion>();
+            if (resolved == null) return regions;
+
             List<SpatialCluster> clusters = new List<SpatialCluster>();
-            for (int i = 0; i < rows.Count; i++)
+            for (int i = 0; i < resolved.Count; i++)
             {
-                List<SpatialCluster> rowClusters = clusterDetector.Detect(rows[i]);
+                List<SpatialCluster> rowClusters = resolved[i].ResolvedClusters;
                 for (int j = 0; j < rowClusters.Count; j++)
                     clusters.Add(rowClusters[j]);
             }
