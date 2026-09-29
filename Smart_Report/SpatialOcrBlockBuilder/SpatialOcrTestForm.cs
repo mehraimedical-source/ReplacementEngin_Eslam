@@ -75,7 +75,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 picSource.Image = _img;
                 txtJson.Text = json;
                 gridRows.Rows.Clear();
-                gridRegions.Rows.Clear();
                 txtRegionText.Clear();
                 txtSampleName.Text = Path.GetFileName(folder);
                 lblStatus.Text = "Sample loaded: " + Path.GetFileName(folder);
@@ -331,20 +330,32 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 List<SpatialRegion> regions = new SpatialRegionDetector(
                     new SpatialRegionOptions()).Detect(rows, clusterDetector);
 
-                // Regionها جدا از Rowها نمایش داده می‌شوند؛ بنابراین کاربر می‌تواند ببیند
-                // کدام Clusterهای چند Row در مرحله بعد واقعاً به یک ناحیه متصل شده‌اند.
-                gridRegions.Rows.Clear();
+                // خروجی Region مستقیماً در TextBox چندخطی نمایش داده می‌شود؛
+                // چون هدف این بخش بررسی سریع ساختار نهایی است و Grid اطلاعات اضافی ایجاد می‌کرد.
+                StringBuilder regionOutput = new StringBuilder();
                 for (int i = 0; i < regions.Count; i++)
                 {
                     SpatialRegion region = regions[i];
-                    gridRegions.Rows.Add(
-                        (i + 1).ToString(CultureInfo.InvariantCulture),
-                        region.Bounds.Left.ToString("0.0", CultureInfo.InvariantCulture) + " .. " +
-                            region.Bounds.Right.ToString("0.0", CultureInfo.InvariantCulture),
-                        region.Bounds.Top.ToString("0.0", CultureInfo.InvariantCulture) + " .. " +
-                            region.Bounds.Bottom.ToString("0.0", CultureInfo.InvariantCulture),
-                        region.Clusters.Count.ToString(CultureInfo.InvariantCulture));
+
+                    regionOutput.Append("===== Region ");
+                    regionOutput.Append((i + 1).ToString(CultureInfo.InvariantCulture));
+                    regionOutput.Append("  X=");
+                    regionOutput.Append(region.Bounds.Left.ToString("0.0", CultureInfo.InvariantCulture));
+                    regionOutput.Append("..");
+                    regionOutput.Append(region.Bounds.Right.ToString("0.0", CultureInfo.InvariantCulture));
+                    regionOutput.Append("  Y=");
+                    regionOutput.Append(region.Bounds.Top.ToString("0.0", CultureInfo.InvariantCulture));
+                    regionOutput.Append("..");
+                    regionOutput.Append(region.Bounds.Bottom.ToString("0.0", CultureInfo.InvariantCulture));
+                    regionOutput.AppendLine(" =====");
+
+                    for (int j = 0; j < region.Clusters.Count; j++)
+                        regionOutput.AppendLine(region.Clusters[j].GetText());
+
+                    if (i < regions.Count - 1)
+                        regionOutput.AppendLine();
                 }
+                txtRegionText.Text = regionOutput.ToString();
 
                 lblStatus.Text = items.Count + " OCR items  |  " + rows.Count +
                     " rows  |  " + clusterCount + " clusters  |  " +
@@ -353,51 +364,6 @@ namespace Smart_Report.SpatialOcrBlockBuilder
             catch (Exception ex)
             {
                 MessageBox.Show(this, ex.Message, "Spatial OCR", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// متن Region انتخاب‌شده را به صورت چندخطی نشان می‌دهد تا هر Cluster
-        /// مستقل و خوانا باشد و بررسی نتیجه Spatial روی فرم ساده شود.
-        /// </summary>
-        private void gridRegions_SelectionChanged(object sender, EventArgs e)
-        {
-            txtRegionText.Clear();
-
-            // DataGridView به صورت پیش‌فرض Cell را انتخاب می‌کند و در آن حالت
-            // SelectedRows خالی می‌ماند. CurrentRow مرجع درست Region انتخاب‌شده است.
-            if (gridRegions.CurrentRow == null) return;
-
-            int index = gridRegions.CurrentRow.Index;
-            if (index < 0) return;
-
-            try
-            {
-                RowDetectionOptions options = new RowDetectionOptions();
-                options.MinVerticalOverlapRatio = (double)nudOverlap.Value;
-                options.MaxCenterDistanceFactor = (double)nudCenter.Value;
-
-                List<SpatialOcrItem> items = SpatialOcrJsonParser.Parse(txtJson.Text, options);
-                List<SpatialRow> rows = new AdaptiveRowDetector(options).Detect(items);
-                HorizontalClusterDetector clusterDetector = new HorizontalClusterDetector(
-                    new HorizontalClusteringOptions());
-                List<SpatialRegion> regions = new SpatialRegionDetector(
-                    new SpatialRegionOptions()).Detect(rows, clusterDetector);
-
-                if (index >= regions.Count) return;
-
-                StringBuilder text = new StringBuilder();
-                for (int i = 0; i < regions[index].Clusters.Count; i++)
-                {
-                    if (i > 0) text.AppendLine();
-                    text.Append(regions[index].Clusters[i].GetText());
-                }
-                txtRegionText.Text = text.ToString();
-            }
-            catch
-            {
-                // نمایش جزئیات نباید Analyze اصلی فرم را مختل کند.
-                txtRegionText.Clear();
             }
         }
 
