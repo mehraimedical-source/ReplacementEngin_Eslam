@@ -144,7 +144,7 @@ namespace Smart_Report.SpatialOcrBlockBuilder
                 if (inString)
                 {
                     if (escaped) escaped = false;
-                    else if (ch == '\\\\') escaped = true;
+                    else if (ch == '\\') escaped = true;
                     else if (ch == '\"') inString = false;
                     continue;
                 }
