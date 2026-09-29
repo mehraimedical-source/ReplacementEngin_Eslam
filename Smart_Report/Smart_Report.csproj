@@ -48,6 +48,7 @@
     </Compile>
     <Compile Include="OcrBlockBuilder.cs" />
     <Compile Include="OcrBlockRules.cs" />
+    <Compile Include="OcrRegressionTests.cs" />
     <Compile Include="InitialRulesForm.cs">
       <SubType>Form</SubType>
     </Compile>
