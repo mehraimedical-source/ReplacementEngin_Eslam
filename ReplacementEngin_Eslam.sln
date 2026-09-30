@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DicomViewer_ChatGPT", "Dico
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smart_Report", "Smart_Report\Smart_Report.csproj", "{C93283C7-06C1-4E8C-89C8-0722BB458FA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseGenerator", "LicenseGenerator\LicenseGenerator.csproj", "{F9798593-B95B-430D-A6B0-A0F58826D885}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C93283C7-06C1-4E8C-89C8-0722BB458FA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9798593-B95B-430D-A6B0-A0F58826D885}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9798593-B95B-430D-A6B0-A0F58826D885}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9798593-B95B-430D-A6B0-A0F58826D885}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9798593-B95B-430D-A6B0-A0F58826D885}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
