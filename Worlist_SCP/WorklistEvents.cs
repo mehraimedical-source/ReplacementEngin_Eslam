@@ -18,6 +18,7 @@ namespace Worlist_SCP
 
         internal static void WriteLog(WorklistLogEntry entry)
         {
+            DebugTrace.Write(entry);
             Log?.Invoke(entry);
         }
     }
