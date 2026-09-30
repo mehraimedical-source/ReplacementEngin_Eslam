@@ -1,22 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using FellowOakDicom.Network;
 
 namespace Worlist_SCP
 {
     public partial class Form1 : Form
     {
+        private IDicomServer _server;
+        private int _associationCount;
+        private int _requestCount;
+        private int _responseCount;
+
         public Form1()
         {
             InitializeComponent();
-<<<<<<< Updated upstream
-=======
             ConfigureGrid();
 
             WorklistEvents.Log += OnWorklistLog;
@@ -319,7 +319,6 @@ namespace Worlist_SCP
             WorklistEvents.Log -= OnWorklistLog;
             WorklistEvents.WorklistRequested -= OnWorklistRequestedAsync;
             StopServer();
->>>>>>> Stashed changes
         }
     }
 }
