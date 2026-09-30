@@ -15,14 +15,17 @@ namespace LicenseGenerator
     public static class LicenseCodec
     {
         private const string Alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+        // Framework 2.0 RNG has no IDisposable contract. Reuse one provider for
+        // the application lifetime and serialize access for thread safety.
+        private static readonly RandomNumberGenerator SecureRandom = RandomNumberGenerator.Create();
+        private static readonly object RandomLock = new object();
         private static readonly byte[] Domain = Encoding.ASCII.GetBytes("LicenseGenerator/v1:");
 
         // Generate once, then store securely and reuse. Rotating it invalidates old codes.
         public static byte[] GenerateSecretKey()
         {
             byte[] key = new byte[32];
-            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-                rng.GetBytes(key);
+            FillRandomBytes(key);
             return key;
         }
 
@@ -37,8 +40,7 @@ namespace LicenseGenerator
             bytes[0] = (byte)(fields >> 8);
             bytes[1] = (byte)fields;
             byte[] nonce = new byte[3];
-            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-                rng.GetBytes(nonce);
+            FillRandomBytes(nonce);
             Buffer.BlockCopy(nonce, 0, bytes, 2, 3);
             byte[] tag = ComputeTag(bytes, secretKey);
             Buffer.BlockCopy(tag, 0, bytes, 5, 5);
@@ -104,6 +106,12 @@ namespace LicenseGenerator
             if (info.ProductID != expectedProductID)
                 throw new CryptographicException("License belongs to another product.");
             return info;
+        }
+
+        private static void FillRandomBytes(byte[] buffer)
+        {
+            lock (RandomLock)
+                SecureRandom.GetBytes(buffer);
         }
 
         private static byte[] ComputeTag(byte[] bytes, byte[] key)
