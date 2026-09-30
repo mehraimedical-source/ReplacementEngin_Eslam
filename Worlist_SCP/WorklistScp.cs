@@ -18,13 +18,31 @@ namespace Worlist_SCP
             Microsoft.Extensions.Logging.ILogger log, DicomServiceDependencies dependencies)
             : base(stream, fallbackEncoding, log, dependencies)
         {
+            _remoteIP = stream?.RemoteHost ?? "";
+
+            WorklistEvents.WriteLog(Log(
+                "TCP",
+                "CONNECTED",
+                null,
+                null,
+                null,
+                "TCP client connected" +
+                (stream == null ? "" : " from " + stream.RemoteHost + ":" + stream.RemotePort)));
+
+            WorklistEvents.WriteLog(Log(
+                "DICOM",
+                "WAITING",
+                null,
+                null,
+                null,
+                "Waiting for DICOM A-ASSOCIATE-RQ"));
         }
 
         public Task OnReceiveAssociationRequestAsync(DicomAssociation association)
         {
             _callingAE = association.CallingAE ?? "";
             _calledAE = association.CalledAE ?? "";
-            _remoteIP = association.RemoteHost ?? "";
+            _remoteIP = association.RemoteHost ?? _remoteIP;
 
             WorklistEvents.WriteLog(Log("ASSOCIATE", "STARTED", null, null, null,
                 "Association request received"));
