@@ -24,7 +24,7 @@ namespace Worlist_SCP
         {
             _callingAE = association.CallingAE ?? "";
             _calledAE = association.CalledAE ?? "";
-            _remoteIP = RemoteHost ?? "";
+            _remoteIP = association.RemoteHost ?? "";
 
             WorklistEvents.WriteLog(Log("ASSOCIATE", "STARTED", null, null, null,
                 "Association request received"));
