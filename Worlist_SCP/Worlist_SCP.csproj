@@ -121,6 +121,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DebugTrace.cs" />
     <Compile Include="WorklistItem.cs" />
     <Compile Include="WorklistRequestEventArgs.cs" />
     <Compile Include="WorklistEvents.cs" />
