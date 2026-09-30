@@ -1,40 +1,235 @@
-﻿namespace LicenseGenerator
+namespace LicenseGenerator
 {
     partial class Form1
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                if (secretKey != null)
+                {
+                    System.Array.Clear(secretKey, 0, secretKey.Length);
+                    secretKey = null;
+                }
+                if (components != null) components.Dispose();
             }
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
-
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            this.grpKey = new System.Windows.Forms.GroupBox();
+            this.lblKeyStatus = new System.Windows.Forms.Label();
+            this.btnLoadKey = new System.Windows.Forms.Button();
+            this.btnSaveKey = new System.Windows.Forms.Button();
+            this.lblKeyNote = new System.Windows.Forms.Label();
+            this.grpInput = new System.Windows.Forms.GroupBox();
+            this.lblProduct = new System.Windows.Forms.Label();
+            this.numProductID = new System.Windows.Forms.NumericUpDown();
+            this.lblCout = new System.Windows.Forms.Label();
+            this.numCout = new System.Windows.Forms.NumericUpDown();
+            this.btnCode = new System.Windows.Forms.Button();
+            this.lblLicense = new System.Windows.Forms.Label();
+            this.txtLicense = new System.Windows.Forms.TextBox();
+            this.btnCopy = new System.Windows.Forms.Button();
+            this.grpDecode = new System.Windows.Forms.GroupBox();
+            this.lblDecodedProduct = new System.Windows.Forms.Label();
+            this.txtDecodedProduct = new System.Windows.Forms.TextBox();
+            this.lblDecodedCout = new System.Windows.Forms.Label();
+            this.txtDecodedCout = new System.Windows.Forms.TextBox();
+            this.btnDecode = new System.Windows.Forms.Button();
+            this.lblStatus = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.numProductID)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numCout)).BeginInit();
+            this.SuspendLayout();
+            this.grpKey.Name = "grpKey";
+            this.grpKey.Location = new System.Drawing.Point(16, 12);
+            this.grpKey.Size = new System.Drawing.Size(608, 108);
+            this.grpKey.TabIndex = 0;
+            this.grpKey.Text = "کلید محرمانه";
+            this.Controls.Add(this.grpKey);
+            this.lblKeyStatus.Name = "lblKeyStatus";
+            this.lblKeyStatus.Location = new System.Drawing.Point(16, 25);
+            this.lblKeyStatus.Size = new System.Drawing.Size(568, 22);
+            this.lblKeyStatus.TabIndex = 1;
+            this.lblKeyStatus.Text = "در حال بارگذاری کلید...";
+            this.lblKeyStatus.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.grpKey.Controls.Add(this.lblKeyStatus);
+            this.btnLoadKey.Name = "btnLoadKey";
+            this.btnLoadKey.Location = new System.Drawing.Point(16, 58);
+            this.btnLoadKey.Size = new System.Drawing.Size(130, 30);
+            this.btnLoadKey.TabIndex = 2;
+            this.btnLoadKey.Text = "Load Key";
+            this.btnLoadKey.UseVisualStyleBackColor = true;
+            this.btnLoadKey.Click += new System.EventHandler(this.btnLoadKey_Click);
+            this.grpKey.Controls.Add(this.btnLoadKey);
+            this.btnSaveKey.Name = "btnSaveKey";
+            this.btnSaveKey.Location = new System.Drawing.Point(156, 58);
+            this.btnSaveKey.Size = new System.Drawing.Size(130, 30);
+            this.btnSaveKey.TabIndex = 3;
+            this.btnSaveKey.Text = "Save Key";
+            this.btnSaveKey.Enabled = false;
+            this.btnSaveKey.UseVisualStyleBackColor = true;
+            this.btnSaveKey.Click += new System.EventHandler(this.btnSaveKey_Click);
+            this.grpKey.Controls.Add(this.btnSaveKey);
+            this.lblKeyNote.Name = "lblKeyNote";
+            this.lblKeyNote.Location = new System.Drawing.Point(296, 58);
+            this.lblKeyNote.Size = new System.Drawing.Size(288, 35);
+            this.lblKeyNote.TabIndex = 4;
+            this.lblKeyNote.Text = "پشتیبان کلید فقط با همین حساب ویندوز بازیابی می‌شود.";
+            this.lblKeyNote.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.grpKey.Controls.Add(this.lblKeyNote);
+            this.grpInput.Name = "grpInput";
+            this.grpInput.Location = new System.Drawing.Point(16, 130);
+            this.grpInput.Size = new System.Drawing.Size(608, 84);
+            this.grpInput.TabIndex = 5;
+            this.grpInput.Text = "اطلاعات برای Code";
+            this.Controls.Add(this.grpInput);
+            this.lblProduct.Name = "lblProduct";
+            this.lblProduct.Location = new System.Drawing.Point(16, 32);
+            this.lblProduct.Size = new System.Drawing.Size(92, 23);
+            this.lblProduct.TabIndex = 6;
+            this.lblProduct.Text = "ProductID";
+            this.grpInput.Controls.Add(this.lblProduct);
+            this.numProductID.Name = "numProductID";
+            this.numProductID.Location = new System.Drawing.Point(110, 29);
+            this.numProductID.Size = new System.Drawing.Size(124, 25);
+            this.numProductID.TabIndex = 7;
+            this.numProductID.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numProductID.Maximum = new decimal(new int[] { 31, 0, 0, 0 });
+            this.numProductID.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            this.grpInput.Controls.Add(this.numProductID);
+            this.lblCout.Name = "lblCout";
+            this.lblCout.Location = new System.Drawing.Point(260, 32);
+            this.lblCout.Size = new System.Drawing.Size(65, 23);
+            this.lblCout.TabIndex = 8;
+            this.lblCout.Text = "Cout";
+            this.grpInput.Controls.Add(this.lblCout);
+            this.numCout.Name = "numCout";
+            this.numCout.Location = new System.Drawing.Point(330, 29);
+            this.numCout.Size = new System.Drawing.Size(124, 25);
+            this.numCout.TabIndex = 9;
+            this.numCout.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            this.numCout.Maximum = new decimal(new int[] { 2047, 0, 0, 0 });
+            this.numCout.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            this.grpInput.Controls.Add(this.numCout);
+            this.btnCode.Name = "btnCode";
+            this.btnCode.Location = new System.Drawing.Point(470, 26);
+            this.btnCode.Size = new System.Drawing.Size(112, 32);
+            this.btnCode.TabIndex = 10;
+            this.btnCode.Text = "Code";
+            this.btnCode.Enabled = false;
+            this.btnCode.UseVisualStyleBackColor = true;
+            this.btnCode.Click += new System.EventHandler(this.btnCode_Click);
+            this.grpInput.Controls.Add(this.btnCode);
+            this.lblLicense.Name = "lblLicense";
+            this.lblLicense.Location = new System.Drawing.Point(16, 228);
+            this.lblLicense.Size = new System.Drawing.Size(120, 22);
+            this.lblLicense.TabIndex = 11;
+            this.lblLicense.Text = "License Code";
+            this.Controls.Add(this.lblLicense);
+            this.txtLicense.Name = "txtLicense";
+            this.txtLicense.Location = new System.Drawing.Point(16, 254);
+            this.txtLicense.Size = new System.Drawing.Size(470, 30);
+            this.txtLicense.TabIndex = 12;
+            this.txtLicense.Font = new System.Drawing.Font("Consolas", 14F);
+            this.txtLicense.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            this.txtLicense.MaxLength = 64;
+            this.txtLicense.TextChanged += new System.EventHandler(this.txtLicense_TextChanged);
+            this.Controls.Add(this.txtLicense);
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Location = new System.Drawing.Point(498, 253);
+            this.btnCopy.Size = new System.Drawing.Size(126, 30);
+            this.btnCopy.TabIndex = 13;
+            this.btnCopy.Text = "Copy";
+            this.btnCopy.UseVisualStyleBackColor = true;
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
+            this.Controls.Add(this.btnCopy);
+            this.grpDecode.Name = "grpDecode";
+            this.grpDecode.Location = new System.Drawing.Point(16, 298);
+            this.grpDecode.Size = new System.Drawing.Size(608, 85);
+            this.grpDecode.TabIndex = 14;
+            this.grpDecode.Text = "نتیجه Decode";
+            this.Controls.Add(this.grpDecode);
+            this.lblDecodedProduct.Name = "lblDecodedProduct";
+            this.lblDecodedProduct.Location = new System.Drawing.Point(16, 33);
+            this.lblDecodedProduct.Size = new System.Drawing.Size(92, 22);
+            this.lblDecodedProduct.TabIndex = 15;
+            this.lblDecodedProduct.Text = "ProductID";
+            this.grpDecode.Controls.Add(this.lblDecodedProduct);
+            this.txtDecodedProduct.Name = "txtDecodedProduct";
+            this.txtDecodedProduct.Location = new System.Drawing.Point(110, 30);
+            this.txtDecodedProduct.Size = new System.Drawing.Size(124, 25);
+            this.txtDecodedProduct.TabIndex = 16;
+            this.txtDecodedProduct.ReadOnly = true;
+            this.grpDecode.Controls.Add(this.txtDecodedProduct);
+            this.lblDecodedCout.Name = "lblDecodedCout";
+            this.lblDecodedCout.Location = new System.Drawing.Point(260, 33);
+            this.lblDecodedCout.Size = new System.Drawing.Size(65, 22);
+            this.lblDecodedCout.TabIndex = 17;
+            this.lblDecodedCout.Text = "Cout";
+            this.grpDecode.Controls.Add(this.lblDecodedCout);
+            this.txtDecodedCout.Name = "txtDecodedCout";
+            this.txtDecodedCout.Location = new System.Drawing.Point(330, 30);
+            this.txtDecodedCout.Size = new System.Drawing.Size(124, 25);
+            this.txtDecodedCout.TabIndex = 18;
+            this.txtDecodedCout.ReadOnly = true;
+            this.grpDecode.Controls.Add(this.txtDecodedCout);
+            this.btnDecode.Name = "btnDecode";
+            this.btnDecode.Location = new System.Drawing.Point(470, 27);
+            this.btnDecode.Size = new System.Drawing.Size(112, 32);
+            this.btnDecode.TabIndex = 19;
+            this.btnDecode.Text = "Decode";
+            this.btnDecode.Enabled = false;
+            this.btnDecode.UseVisualStyleBackColor = true;
+            this.btnDecode.Click += new System.EventHandler(this.btnDecode_Click);
+            this.grpDecode.Controls.Add(this.btnDecode);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Location = new System.Drawing.Point(16, 395);
+            this.lblStatus.Size = new System.Drawing.Size(608, 50);
+            this.lblStatus.TabIndex = 20;
+            this.lblStatus.Text = "";
+            this.lblStatus.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+            this.Controls.Add(this.lblStatus);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form1";
+            this.Font = new System.Drawing.Font("Tahoma", 9F);
+            this.ClientSize = new System.Drawing.Size(640, 458);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "License Generator - Code / Decode";
+            this.Name = "Form1";
+            this.Shown += new System.EventHandler(this.Form1_Shown);
+            ((System.ComponentModel.ISupportInitialize)(this.numProductID)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numCout)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
         }
 
-        #endregion
+        private System.Windows.Forms.GroupBox grpKey;
+        private System.Windows.Forms.Label lblKeyStatus;
+        private System.Windows.Forms.Button btnLoadKey;
+        private System.Windows.Forms.Button btnSaveKey;
+        private System.Windows.Forms.Label lblKeyNote;
+        private System.Windows.Forms.GroupBox grpInput;
+        private System.Windows.Forms.Label lblProduct;
+        private System.Windows.Forms.NumericUpDown numProductID;
+        private System.Windows.Forms.Label lblCout;
+        private System.Windows.Forms.NumericUpDown numCout;
+        private System.Windows.Forms.Button btnCode;
+        private System.Windows.Forms.Label lblLicense;
+        private System.Windows.Forms.TextBox txtLicense;
+        private System.Windows.Forms.Button btnCopy;
+        private System.Windows.Forms.GroupBox grpDecode;
+        private System.Windows.Forms.Label lblDecodedProduct;
+        private System.Windows.Forms.TextBox txtDecodedProduct;
+        private System.Windows.Forms.Label lblDecodedCout;
+        private System.Windows.Forms.TextBox txtDecodedCout;
+        private System.Windows.Forms.Button btnDecode;
+        private System.Windows.Forms.Label lblStatus;
     }
 }
-
