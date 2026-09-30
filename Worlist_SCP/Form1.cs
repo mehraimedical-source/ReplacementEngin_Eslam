@@ -21,6 +21,8 @@ namespace Worlist_SCP
 
             WorklistEvents.Log += OnWorklistLog;
             WorklistEvents.WorklistRequested += OnWorklistRequestedAsync;
+
+            AddLocalLog("DEBUG", "STARTED", "Debug file: " + DebugTrace.CurrentFile);
         }
 
         private void ConfigureGrid()
@@ -277,6 +279,34 @@ namespace Worlist_SCP
             lblServerStatus.BackColor = running
                 ? Color.FromArgb(236, 253, 245)
                 : Color.FromArgb(241, 245, 249);
+        }
+
+        private void btnExportDebug_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var dialog = new SaveFileDialog())
+                {
+                    dialog.Title = "Export DICOM Worklist Debug Report";
+                    dialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                    dialog.FileName = "WorklistDebug_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+
+                    if (dialog.ShowDialog(this) == DialogResult.OK)
+                    {
+                        DebugTrace.ExportTo(dialog.FileName);
+                        MessageBox.Show(this,
+                            "Debug report exported successfully.\r\n\r\n" + dialog.FileName,
+                            "Debug Export",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Debug Export Failed",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void btnClearLog_Click(object sender, EventArgs e)
