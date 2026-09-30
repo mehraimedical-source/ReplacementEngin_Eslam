@@ -47,6 +47,12 @@ namespace Worlist_SCP
             WorklistEvents.WriteLog(Log("ASSOCIATE", "STARTED", null, null, null,
                 "Association request received"));
 
+            DebugTrace.WriteSection("ASSOCIATION REQUEST",
+                "Remote Host : " + _remoteIP + Environment.NewLine +
+                "Calling AE  : " + _callingAE + Environment.NewLine +
+                "Called AE   : " + _calledAE + Environment.NewLine +
+                "Contexts    : " + association.PresentationContexts.Count);
+
             // Intentionally do NOT validate Called AE Title.
             foreach (var pc in association.PresentationContexts)
             {
@@ -96,6 +102,7 @@ namespace Worlist_SCP
         public async IAsyncEnumerable<DicomCFindResponse> OnCFindRequestAsync(DicomCFindRequest request)
         {
             var sw = Stopwatch.StartNew();
+            DebugTrace.WriteDataset("C-FIND REQUEST DATASET", request.Dataset);
             var args = BuildEventArgs(request.Dataset);
             WorklistEvents.WriteLog(Log("C-FIND MWL", "STARTED", Summarize(args), null, null,
                 "Worklist request received"));
@@ -125,9 +132,12 @@ namespace Worlist_SCP
                 WorklistEvents.WriteLog(Log("C-FIND MWL", "PENDING", Summarize(args), sent, null,
                     item.PatientID + " / " + item.PatientName));
 
+                var responseDataset = ToDataset(item);
+                DebugTrace.WriteDataset("C-FIND RESPONSE DATASET #" + sent, responseDataset);
+
                 yield return new DicomCFindResponse(request, DicomStatus.Pending)
                 {
-                    Dataset = ToDataset(item)
+                    Dataset = responseDataset
                 };
             }
 
