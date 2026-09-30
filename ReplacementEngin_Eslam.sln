@@ -14,13 +14,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LicenseGenerator", "License
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worlist_SCP", "Worlist_SCP\Worlist_SCP.csproj", "{F32A2305-ED33-4CEB-8DFC-9667B21B15B0}"
 EndProject
-<<<<<<< Updated upstream
-=======
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Worklist_Client", "Worklist_Client\Worklist_Client.csproj", "{8F1B2A77-8C34-4D47-9D8B-4D8275B1C9A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Print_SCP", "Print_SCP\Print_SCP.csproj", "{905568EF-8F7F-4A5A-BFFB-D2409B6F5C68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Print_SCP", "Print_SCP\\Print_SCP.csproj", "{905568EF-8F7F-4A5A-BFFB-D2409B6F5C68}"
 EndProject
->>>>>>> Stashed changes
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,8 +48,6 @@ Global
 		{F32A2305-ED33-4CEB-8DFC-9667B21B15B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F32A2305-ED33-4CEB-8DFC-9667B21B15B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F32A2305-ED33-4CEB-8DFC-9667B21B15B0}.Release|Any CPU.Build.0 = Release|Any CPU
-<<<<<<< Updated upstream
-=======
 		{8F1B2A77-8C34-4D47-9D8B-4D8275B1C9A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8F1B2A77-8C34-4D47-9D8B-4D8275B1C9A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F1B2A77-8C34-4D47-9D8B-4D8275B1C9A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -61,7 +56,6 @@ Global
 		{905568EF-8F7F-4A5A-BFFB-D2409B6F5C68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{905568EF-8F7F-4A5A-BFFB-D2409B6F5C68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{905568EF-8F7F-4A5A-BFFB-D2409B6F5C68}.Release|Any CPU.Build.0 = Release|Any CPU
->>>>>>> Stashed changes
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
