@@ -24,6 +24,7 @@ namespace Worlist_SCP
         private System.Windows.Forms.DataGridView dgvLog;
         private System.Windows.Forms.Panel pnlBottom;
         private System.Windows.Forms.Button btnClearLog;
+        private System.Windows.Forms.Button btnExportDebug;
         private System.Windows.Forms.Label lblHint;
 
         protected override void Dispose(bool disposing)
@@ -59,6 +60,7 @@ namespace Worlist_SCP
             this.pnlBottom = new System.Windows.Forms.Panel();
             this.lblHint = new System.Windows.Forms.Label();
             this.btnClearLog = new System.Windows.Forms.Button();
+            this.btnExportDebug = new System.Windows.Forms.Button();
             this.pnlHeader.SuspendLayout();
             this.pnlConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
@@ -246,6 +248,7 @@ namespace Worlist_SCP
             // pnlBottom
             this.pnlBottom.BackColor = System.Drawing.Color.White;
             this.pnlBottom.Controls.Add(this.lblHint);
+            this.pnlBottom.Controls.Add(this.btnExportDebug);
             this.pnlBottom.Controls.Add(this.btnClearLog);
             this.pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlBottom.Height = 48;
@@ -259,6 +262,16 @@ namespace Worlist_SCP
             this.btnClearLog.Size = new System.Drawing.Size(100, 30);
             this.btnClearLog.Text = "Clear Log";
             this.btnClearLog.Click += new System.EventHandler(this.btnClearLog_Click);
+
+            // btnExportDebug
+            this.btnExportDebug.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExportDebug.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnExportDebug.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.btnExportDebug.ForeColor = System.Drawing.Color.FromArgb(37, 99, 235);
+            this.btnExportDebug.Location = new System.Drawing.Point(835, 9);
+            this.btnExportDebug.Size = new System.Drawing.Size(110, 30);
+            this.btnExportDebug.Text = "Export Debug";
+            this.btnExportDebug.Click += new System.EventHandler(this.btnExportDebug_Click);
 
             // lblHint
             this.lblHint.AutoSize = true;
