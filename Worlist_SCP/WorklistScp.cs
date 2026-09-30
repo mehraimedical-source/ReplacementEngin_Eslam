@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using FellowOakDicom;
 using FellowOakDicom.Network;
-using FellowOakDicom.Network.Server;
 
 namespace Worlist_SCP
 {
@@ -84,14 +82,20 @@ namespace Worlist_SCP
             WorklistEvents.WriteLog(Log("C-FIND MWL", "STARTED", Summarize(args), null, null,
                 "Worklist request received"));
 
-            List<WorklistItem> items;
+            List<WorklistItem> items = null;
+            Exception requestError = null;
             try
             {
                 items = await WorklistEvents.RequestAsync(args).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                WorklistEvents.WriteLog(Log("C-FIND MWL", "FAILED", Summarize(args), 0, sw.ElapsedMilliseconds, ex.Message));
+                requestError = ex;
+            }
+
+            if (requestError != null)
+            {
+                WorklistEvents.WriteLog(Log("C-FIND MWL", "FAILED", Summarize(args), 0, sw.ElapsedMilliseconds, requestError.Message));
                 yield return new DicomCFindResponse(request, DicomStatus.ProcessingFailure);
                 yield break;
             }
