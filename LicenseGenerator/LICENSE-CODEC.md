@@ -58,3 +58,34 @@ Expected code: `33X1-4D2P-BAAH-64FM`. Never use this public key in production.
 Validation performed in the creation environment: an independent Python model
 checked all 63,457 allowed product/count combinations and the known vector.
 The C# harness and the WinForms build were not run: no C#/.NET compiler was available.
+
+## WinForms generator
+
+The form provides ProductID/Cout numeric inputs, Code, an editable license field,
+Copy, Decode, and separate read-only decoded ProductID/Cout fields. Decode
+inspects the product encoded in the license independently of the generation
+inputs. Invalid or edited input clears previous decoded results.
+
+On first launch the form creates a random issuer key. Later launches reuse it
+from %LOCALAPPDATA%/LicenseGenerator/issuer-key.dat. The key file is protected
+with Windows DPAPI CurrentUser; no secret is displayed or committed. Save Key
+exports a protected backup; Load Key imports and persists it, asking before
+switching to a different key. Backups should be restored on the same Windows
+computer/account, not treated as portable keys. Back up the key before deleting
+the application data or resetting the Windows account. If an existing key file
+cannot be read, generation stays disabled rather than silently rotating it.
+
+This form is an issuer/admin tool. Do not distribute it or its issuer key with
+customer products.
+
+Static checks verified event-handler wiring, control initialization and parent
+assignment, codec calls, clearing of decode results, and the System.Security
+assembly reference required by DPAPI. Windows UI execution, DPAPI round trips,
+and a C# build remain unverified in this environment.
+
+Manual Windows checks:
+1. Build and launch, generate ProductID=3/Cout=250, then Decode and verify both fields.
+2. Copy the code, close and reopen, paste and Decode to check persisted key reuse.
+3. Edit one character and Decode; results must clear and an error must appear.
+4. Save Key and Load Key under the same Windows account; previous codes stay valid.
+5. Check boundaries ProductID=1/31 and Cout=1/2047 and inspect at normal/high DPI.
