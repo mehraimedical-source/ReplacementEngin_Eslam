@@ -36,6 +36,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="VoiceRecorder\VoiceResult.cs" />
+    <Compile Include="VoiceRecorder\VoiceCommand.cs" />
+    <Compile Include="VoiceRecorder\WaveInRecorder.cs" />
+    <Compile Include="VoiceRecorder\VoiceLevelMeter.cs" />
+    <Compile Include="VoiceRecorder\uc_VoiceRecorder.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="VoiceRecorder\VoiceRecorderTestForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
