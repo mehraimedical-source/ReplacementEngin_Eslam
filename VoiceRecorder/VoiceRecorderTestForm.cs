@@ -8,7 +8,7 @@ namespace MEHR_PACSViewer
         {
             Text="MEHR Voice Recorder Test"; ClientSize=new Size(360,145);
             StartPosition=FormStartPosition.CenterScreen; BackColor=Color.FromArgb(35,35,35);
-            uc_VoiceRecorder r=new uc_VoiceRecorder(); r.Location=new Point(105,25); Controls.Add(r);
+            uc_VoiceRecorderNew r=new uc_VoiceRecorderNew(); r.Location=new Point(105,25); Controls.Add(r);
             PacsResult.PacsInfo p=new PacsResult.PacsInfo();
             p.PID=1001; p.pacsID=1; p.serverID=1; p.studyDate=20260101; p.patientID="TEST"; p.patientName="Voice Test";
             r.Active(p);
