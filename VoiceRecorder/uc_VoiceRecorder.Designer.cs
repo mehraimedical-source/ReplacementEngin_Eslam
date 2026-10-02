@@ -3,7 +3,7 @@ namespace MEHR_PACSViewer
     partial class uc_VoiceRecorder
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.Label picMicrophone;
+        private System.Windows.Forms.PictureBox picMicrophone;
         private VoiceLevelMeter levelMeter;
         private System.Windows.Forms.Label lbPause;
         private System.Windows.Forms.Label lbTime;
@@ -25,7 +25,7 @@ namespace MEHR_PACSViewer
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.picMicrophone = new System.Windows.Forms.Label();
+            this.picMicrophone = new System.Windows.Forms.PictureBox();
             this.levelMeter = new MEHR_PACSViewer.VoiceLevelMeter();
             this.lbPause = new System.Windows.Forms.Label();
             this.lbTime = new System.Windows.Forms.Label();
@@ -35,15 +35,13 @@ namespace MEHR_PACSViewer
             this.SuspendLayout();
             // picMicrophone
             this.picMicrophone.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.picMicrophone.Font = new System.Drawing.Font("Arial",20F,System.Drawing.FontStyle.Bold);
-            this.picMicrophone.ForeColor = System.Drawing.Color.DodgerBlue;
+            this.picMicrophone.Image = global::MEHR_PACSViewer.Properties.Resources.Blue;
+            this.picMicrophone.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             this.picMicrophone.Location = new System.Drawing.Point(2,8);
             this.picMicrophone.Name = "picMicrophone";
             this.picMicrophone.Size = new System.Drawing.Size(24,34);
             this.picMicrophone.TabIndex = 0;
-            this.picMicrophone.Text = "●";
-            this.picMicrophone.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.picMicrophone.Click += new System.EventHandler(this.picMicrophone_Click);
+                        this.picMicrophone.Click += new System.EventHandler(this.picMicrophone_Click);
             // levelMeter
             this.levelMeter.BackColor = System.Drawing.Color.Black;
             this.levelMeter.Location = new System.Drawing.Point(27,6);
