@@ -31,7 +31,7 @@ namespace MEHR_PACSViewer
                 _tempFile=Path.Combine(Path.GetTempPath(),"MEHRVoice_"+Guid.NewGuid().ToString("N")+".wav");
                 _recorder.Start(_tempFile);
                 VoiceRecorderStatus=VOICERECORDERSTATUS.Recordording;
-                picMicrophone.ForeColor=Color.Red;
+                picMicrophone.Image=Properties.Resources.RedMicrophone;
                 ShowRecording(true);
                 tmrVoiceTiming.Start();
             }
@@ -47,12 +47,12 @@ namespace MEHR_PACSViewer
             if(VoiceRecorderStatus==VOICERECORDERSTATUS.Recordording)
             {
                 _recorder.Pause();VoiceRecorderStatus=VOICERECORDERSTATUS.Pause;
-                picMicrophone.ForeColor=Color.LightSkyBlue;lbPause.Text=">";
+                picMicrophone.Image=Properties.Resources.LightBlue;lbPause.Text=">";
             }
             else if(VoiceRecorderStatus==VOICERECORDERSTATUS.Pause)
             {
                 _recorder.Resume();VoiceRecorderStatus=VOICERECORDERSTATUS.Recordording;
-                picMicrophone.ForeColor=Color.Red;lbPause.Text="II";
+                picMicrophone.Image=Properties.Resources.RedMicrophone;lbPause.Text="II";
             }
         }
 
@@ -103,7 +103,7 @@ namespace MEHR_PACSViewer
         private void SetStopped()
         {
             VoiceRecorderStatus=VOICERECORDERSTATUS.Stop;
-            picMicrophone.ForeColor=Color.DodgerBlue;levelMeter.Value=0;
+            picMicrophone.Image=Properties.Resources.Blue;levelMeter.Value=0;
             ShowRecording(false);lbPause.Text="II";lbTime.Text="00:00";
         }
     }
