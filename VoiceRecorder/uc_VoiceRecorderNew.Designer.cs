@@ -25,6 +25,7 @@ namespace MEHR_PACSViewer
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(uc_VoiceRecorderNew));
             this.picMicrophone = new System.Windows.Forms.PictureBox();
             this.levelMeter = new MEHR_PACSViewer.VoiceLevelMeter();
             this.lbPause = new System.Windows.Forms.Label();
@@ -38,7 +39,7 @@ namespace MEHR_PACSViewer
             // picMicrophone
             // 
             this.picMicrophone.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.picMicrophone.Image = global::MEHR_PACSViewer.Properties.Resources.Microphone_Blue;
+            this.picMicrophone.Image = ((System.Drawing.Image)(resources.GetObject("picMicrophone.Image")));
             this.picMicrophone.Location = new System.Drawing.Point(2, 8);
             this.picMicrophone.Name = "picMicrophone";
             this.picMicrophone.Size = new System.Drawing.Size(24, 34);
@@ -52,7 +53,7 @@ namespace MEHR_PACSViewer
             this.levelMeter.BackColor = System.Drawing.Color.Black;
             this.levelMeter.Location = new System.Drawing.Point(27, 6);
             this.levelMeter.Name = "levelMeter";
-            this.levelMeter.Size = new System.Drawing.Size(8, 37);
+            this.levelMeter.Size = new System.Drawing.Size(15, 37);
             this.levelMeter.TabIndex = 1;
             this.levelMeter.Value = 0;
             // 
@@ -111,7 +112,7 @@ namespace MEHR_PACSViewer
             this.tmrVoiceTiming.Interval = 80;
             this.tmrVoiceTiming.Tick += new System.EventHandler(this.tmrVoiceTiming_Tick);
             // 
-            // uc_VoiceRecorder
+            // uc_VoiceRecorderNew
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -122,7 +123,7 @@ namespace MEHR_PACSViewer
             this.Controls.Add(this.lbPause);
             this.Controls.Add(this.levelMeter);
             this.Controls.Add(this.picMicrophone);
-            this.Name = "uc_VoiceRecorder";
+            this.Name = "uc_VoiceRecorderNew";
             this.Size = new System.Drawing.Size(144, 49);
             ((System.ComponentModel.ISupportInitialize)(this.picMicrophone)).EndInit();
             this.ResumeLayout(false);

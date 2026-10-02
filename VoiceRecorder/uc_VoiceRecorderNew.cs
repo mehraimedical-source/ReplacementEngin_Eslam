@@ -46,8 +46,10 @@ namespace MEHR_PACSViewer
         {
             if (VoiceRecorderStatus == VOICERECORDERSTATUS.Recordording)
             {
-                _recorder.Pause(); VoiceRecorderStatus = VOICERECORDERSTATUS.Pause;
-                picMicrophone.Image = Properties.Resources.Microphone_LightBlue; lbPause.Text = ">";
+                _recorder.Pause();
+                VoiceRecorderStatus = VOICERECORDERSTATUS.Pause;
+                picMicrophone.Image = Properties.Resources.Microphone_LightBlue;
+                lbPause.Text = "Resume";
             }
             else if (VoiceRecorderStatus == VOICERECORDERSTATUS.Pause)
             {
