@@ -27,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="Properties\Resources.Designer.cs"><AutoGen>True</AutoGen><DesignTime>True</DesignTime></Compile>
     <Compile Include="VoiceRecorderTestForm.cs"><SubType>Form</SubType></Compile>
     <Compile Include="uc_VoiceRecorder.cs"><SubType>UserControl</SubType></Compile>
     <Compile Include="uc_VoiceRecorder.Designer.cs"><DependentUpon>uc_VoiceRecorder.cs</DependentUpon></Compile>
