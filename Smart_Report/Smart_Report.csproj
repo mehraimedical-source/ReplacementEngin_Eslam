@@ -40,22 +40,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SpatialOcrBlockBuilder\SpatialModels.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrJsonParser.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\AdaptiveRowDetector.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\HorizontalClusterDetector.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\ContextualClusterResolver.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\AlignmentAnchorDetector.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\AlignmentPatternDetector.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\SpatialRegionDetector.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrRegressionTests.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrSampleRepository.cs" />
-    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrTestForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SpatialOcrBlockBuilder\SpatialOcrTestForm.Designer.cs">
-      <DependentUpon>SpatialOcrTestForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="OcrBlockBuilder\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -83,9 +67,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="SpatialOcrBlockBuilder\SpatialOcrTestForm.resx">
-      <DependentUpon>SpatialOcrTestForm.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

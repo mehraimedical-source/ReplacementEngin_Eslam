@@ -62,9 +62,9 @@ namespace MEHR_PACSViewer
             this.lbPause.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lbPause.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Bold);
             this.lbPause.ForeColor = System.Drawing.Color.White;
-            this.lbPause.Location = new System.Drawing.Point(39, 2);
+            this.lbPause.Location = new System.Drawing.Point(48, 2);
             this.lbPause.Name = "lbPause";
-            this.lbPause.Size = new System.Drawing.Size(56, 18);
+            this.lbPause.Size = new System.Drawing.Size(67, 18);
             this.lbPause.TabIndex = 2;
             this.lbPause.Text = "II";
             this.lbPause.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

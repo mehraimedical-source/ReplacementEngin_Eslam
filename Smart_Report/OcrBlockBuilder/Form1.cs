@@ -9,9 +9,10 @@ namespace Smart_Report
         private OcrBlockBuilder _blockBuilder;
         private OcrContentAnalyzer _contentAnalyzer;
 
-        public Form1()
+        public Form1(string input = "")
         {
             InitializeComponent();
+            txtOcrInput.Text = input;
             _rules = OcrBlockRules.CreateDefault();
             _blockBuilder = new OcrBlockBuilder(_rules);
             _contentAnalyzer = new OcrContentAnalyzer();
@@ -44,8 +45,7 @@ namespace Smart_Report
         // سپس Content Analyzer روی Blockها اجرا می‌شود و خروجی JSON در کادر جدا نمایش داده می‌شود.
         private void btnAnalyzeJson_Click(object sender, EventArgs e)
         {
-            txtJsonOutput.Text = _contentAnalyzer.AnalyzeJson(
-                _blockBuilder.Build(txtOcrInput.Text));
+            txtJsonOutput.Text = _contentAnalyzer.AnalyzeJson(_blockBuilder.Build(txtOcrInput.Text));
         }
     }
 }
