@@ -138,11 +138,13 @@ namespace Smart_Report
             while (remaining.Length > 0)
             {
                 int fetalBiometryIndex = IndexOf(remaining, "Fetal Biom");
+                int fetalLongIndex = IndexOf(remaining, "Fetal Long");
                 int fetalHrIndex = FindFetalHrHeaderIndex(remaining);
                 int ratioIndex = IndexOf(remaining, "Ratio Value Normal Range");
 
                 int markerIndex = FindFirstPositiveIndex(
                     fetalBiometryIndex,
+                    fetalLongIndex,
                     fetalHrIndex,
                     ratioIndex);
 
@@ -194,6 +196,26 @@ namespace Smart_Report
                         remaining,
                         markerIndex,
                         "Fetal Biom");
+
+                    continue;
+                }
+
+                if (markerIndex == fetalLongIndex)
+                {
+                    currentSection = "FetalLong";
+
+                    AppendResult(
+                        output,
+                        blockIndex,
+                        "Fetal Long Bones",
+                        "OB",
+                        currentSection,
+                        "SectionMarker");
+
+                    remaining = RemoveMarkerAndContinue(
+                        remaining,
+                        markerIndex,
+                        "Fetal Long");
 
                     continue;
                 }
@@ -267,6 +289,26 @@ namespace Smart_Report
                 return "BiometryData";
             }
 
+            if (section == "FetalLong")
+            {
+                if (StartsWith(text, "LT. HUM") || StartsWith(text, "LT HUM"))
+                    return "LT_HUM";
+
+                if (StartsWith(text, "ULNA"))
+                    return "ULNA";
+
+                if (StartsWith(text, "RT. TIB") || StartsWith(text, "RT TIB"))
+                    return "RT_TIB";
+
+                if (StartsWith(text, "RT. HUM") || StartsWith(text, "RT HUM"))
+                    return "RT_HUM";
+
+                if (StartsWith(text, "LT. TIB") || StartsWith(text, "LT TIB"))
+                    return "LT_TIB";
+
+                return "FetalLongData";
+            }
+
             if (section == "FetalHR")
             {
                 if (StartsWith(text, "Fetal HR") || StartsWith(text, "FHR"))
@@ -328,7 +370,7 @@ namespace Smart_Report
             return m.Index;
         }
 
-        private int FindFirstPositiveIndex(int a, int b, int c)
+        private int FindFirstPositiveIndex(int a, int b, int c, int d)
         {
             int result = -1;
 
@@ -340,6 +382,9 @@ namespace Smart_Report
 
             if (c >= 0 && (result < 0 || c < result))
                 result = c;
+
+            if (d >= 0 && (result < 0 || d < result))
+                result = d;
 
             return result;
         }
