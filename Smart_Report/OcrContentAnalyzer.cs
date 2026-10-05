@@ -29,6 +29,7 @@ namespace Smart_Report
 
             string currentCategory = "PatientData";
             string currentSection = "";
+            bool isUltrasoundImage = (contentType == "UltrasoundImage");
 
             StringBuilder output = new StringBuilder();
 
@@ -56,6 +57,25 @@ namespace Smart_Report
                         currentCategory,
                         currentSection,
                         "SectionMarker");
+
+                    continue;
+                }
+
+                // Ultrasound image measurements do not need an [OB] report marker.
+                // Reuse the same OCR variants already accepted by the Builder for Fetal HR.
+                // Raw OCR text is preserved; variants are used only for semantic detection.
+                if (isUltrasoundImage && IsFetalHrMeasurement(text))
+                {
+                    currentCategory = "OB";
+                    currentSection = "FetalHR";
+
+                    AppendResult(
+                        output,
+                        i,
+                        text,
+                        currentCategory,
+                        currentSection,
+                        "FHR");
 
                     continue;
                 }
@@ -184,6 +204,24 @@ namespace Smart_Report
             {
                 return "UltrasoundReport";
             }
+
+            // Ultrasound image overlays contain several machine/acquisition markers together.
+            // Require multiple independent signals so report pages are not classified as images
+            // merely because they contain measurements such as BPD, HC or Fetal HR.
+            int imageEvidence = 0;
+            string allText = JoinBlockText(blocks);
+
+            if (Contains(allText, "SAMSUNG")) imageEvidence++;
+            if (Contains(allText, "[2D]")) imageEvidence++;
+            if (Contains(allText, "TIs") || Contains(allText, "Tls")) imageEvidence++;
+            if (Contains(allText, "TIb")) imageEvidence++;
+            if (Contains(allText, " MI ")) imageEvidence++;
+            if (Contains(allText, "Gn ") && Contains(allText, "DR ")) imageEvidence++;
+            if (Contains(allText, "[PW]") || Contains(allText, "PRF ")) imageEvidence++;
+            if (Contains(allText, "SV ") || Contains(allText, "SVD ")) imageEvidence++;
+
+            if (imageEvidence >= 4)
+                return "UltrasoundImage";
 
             return "Unknown";
         }
@@ -466,6 +504,38 @@ namespace Smart_Report
             clean = clean.Trim('[', ']', ' ');
 
             return String.Compare(clean, "OB", true) == 0;
+        }
+
+        // Measurement واقعی Fetal HR روی Image. این Pattern با Variantهای OCR
+        // موجود Builder هماهنگ است: Fetal HR، Fetaļ HR و Feta HR.
+        // وجود مقدار عددی و bpm الزامی است تا Header یا متن عادی اشتباه نشود.
+        private bool IsFetalHrMeasurement(string text)
+        {
+            if (String.IsNullOrEmpty(text))
+                return false;
+
+            return Regex.IsMatch(
+                text.Trim(),
+                @"^(?:Fetal|Fetaļ|Feta)\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?\s*-?\s*bpm\b",
+                RegexOptions.IgnoreCase);
+        }
+
+        private string JoinBlockText(List<OcrBlock> blocks)
+        {
+            StringBuilder text = new StringBuilder();
+
+            for (int i = 0; i < blocks.Count; i++)
+            {
+                if (blocks[i] == null || String.IsNullOrEmpty(blocks[i].Text))
+                    continue;
+
+                if (text.Length > 0)
+                    text.Append(" ");
+
+                text.Append(blocks[i].Text);
+            }
+
+            return text.ToString();
         }
 
         // Fetal HR فقط وقتی Header Section است که بعد از آن Last دیده شود.
