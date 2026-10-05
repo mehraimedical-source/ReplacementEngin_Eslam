@@ -202,7 +202,21 @@ namespace Smart_Report
 
             while (remaining.Length > 0)
             {
-                int fetalBiometryIndex = IndexOf(remaining, "Fetal Biom");
+                string fetalBiometryMarker = null;
+                int fetalBiometryIndex = IndexOf(remaining, "Fetal Biometry");
+
+                if (fetalBiometryIndex >= 0)
+                {
+                    fetalBiometryMarker = "Fetal Biometry";
+                }
+                else
+                {
+                    fetalBiometryIndex = IndexOf(remaining, "Fetal Biom");
+
+                    if (fetalBiometryIndex >= 0)
+                        fetalBiometryMarker = "Fetal Biom";
+                }
+
                 int fetalLongIndex = IndexOf(remaining, "Fetal Long");
                 int fetalHrIndex = FindFetalHrHeaderIndex(remaining);
                 int ratioIndex = IndexOf(remaining, "Ratio Value Normal Range");
@@ -257,10 +271,12 @@ namespace Smart_Report
                         currentSection,
                         "SectionMarker");
 
-                    remaining = RemoveMarkerAndContinue(
-                        remaining,
-                        markerIndex,
-                        "Fetal Biom");
+                    remaining = remaining.Substring(
+                        markerIndex + fetalBiometryMarker.Length).Trim();
+
+                    // OCRهای ناقص ممکن است Marker را به شکل "Fetal Biom..." بدهند.
+                    // نقطه‌های باقی‌مانده بخشی از Header نیستند.
+                    remaining = remaining.TrimStart('.', ' ', '\t');
 
                     continue;
                 }
@@ -348,6 +364,7 @@ namespace Smart_Report
 
             if (section == "FetalBiometry")
             {
+                if (IsFetalBiometryTableHeader(text)) return "TableHeader";
                 if (StartsWith(text, "BPD")) return "BPD";
                 if (StartsWith(text, "HC")) return "HC";
                 if (StartsWith(text, "AC")) return "AC";
@@ -393,6 +410,36 @@ namespace Smart_Report
             }
 
             return "Unknown";
+        }
+
+        // Header ستون‌های جدول Biometry داده پزشکی نیست، اما برای حفظ Raw Data
+        // آن را حذف نمی‌کنیم و با Label مستقل نگه می‌داریم.
+        private bool IsFetalBiometryTableHeader(string text)
+        {
+            if (String.IsNullOrWhiteSpace(text))
+                return false;
+
+            string value = text.Trim();
+
+            // Samsung: m1 m2 m3 GA GP
+            if (Regex.IsMatch(
+                value,
+                @"^m1\s+m2\s+m3\s+GA\s+GP\b",
+                RegexOptions.IgnoreCase))
+            {
+                return true;
+            }
+
+            // نمونه‌های OCR قبلی: Last 1 2 3 GA Pctl.
+            if (Regex.IsMatch(
+                value,
+                @"^Last\s+1\s+2\s+3\s+GA\s+Pctl\.?\b",
+                RegexOptions.IgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         // فعلاً PatientData را به صورت کلی Label می‌کنیم.
