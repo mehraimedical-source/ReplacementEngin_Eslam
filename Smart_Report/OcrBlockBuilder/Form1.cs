@@ -9,9 +9,10 @@ namespace Smart_Report
         private OcrBlockBuilder _blockBuilder;
         private OcrContentAnalyzer _contentAnalyzer;
 
-        public Form1()
+        public Form1(string text ="")
         {
             InitializeComponent();
+            txtOcrInput.Text = text;
             _rules = OcrBlockRules.CreateDefault();
             _blockBuilder = new OcrBlockBuilder(_rules);
             _contentAnalyzer = new OcrContentAnalyzer();
