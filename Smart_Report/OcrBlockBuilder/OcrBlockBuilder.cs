@@ -204,6 +204,7 @@ namespace Smart_Report
             // and a measurement unit immediately follow them.
             FindConditionalMeasurement(text, "NT", found);
             FindConditionalMeasurement(text, "NB", found);
+            FindIndexedDMeasurement(text, found);
             FindConditionalMeasurement(text, "D", found);
             FindConditionalHeartRate(text, found);
 
@@ -393,6 +394,28 @@ namespace Smart_Report
         // به جای فاصله، نقطه بین D و مقدار داشته باشد. Raw OCR همچنان دست‌نخورده می‌ماند.
         // این منطق را نباید به هر "کلمه + عدد + واحد" تعمیم داد؛ چون مواردی مثل
         // SV 2.0mm، SVD 6.4cm، PRF و WF تنظیمات Doppler هستند و لزوماً Block Starter نیستند.
+        // OCR may attach a one-digit measurement index directly to D, e.g. "1D 5.77 mm".
+        // Keep the existing generic D rule unchanged. This helper is intentionally strict:
+        // exactly one digit must be attached to D, D must be followed by whitespace,
+        // then a numeric value and mm/cm. This avoids [2D], 2D Calculations, SVD,
+        // 2GD and malformed compact OCR such as 1{2D137.04 mm.
+        private void FindIndexedDMeasurement(string text, List<BlockStart> result)
+        {
+            string pattern = @"(?<![A-Z0-9])[0-9]D\\s+[+-]?[0-9]+(?:[\\.,][0-9]+)?\\s*(?:mm|cm)(?![A-Z])";
+
+            MatchCollection matches = Regex.Matches(text, pattern, RegexOptions.IgnoreCase);
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                // Start at D rather than the ordinal digit so the index remains
+                // in the preceding block, matching existing behavior for "1 D 5.77 mm".
+                BlockStart start = new BlockStart();
+                start.Index = matches[i].Index + 1;
+                start.Keyword = "D";
+                result.Add(start);
+            }
+        }
+
         private void FindConditionalMeasurement(string text, string keyword, List<BlockStart> result)
         {
             string pattern =
