@@ -47,7 +47,7 @@ namespace Smart_Report
             }
 
             int analyzerPassed = RunAnalyzerRegressionTests(builder, result);
-            int total = tests.Count + 3;
+            int total = tests.Count + 4;
             int totalPassed = passed + analyzerPassed;
 
             result.Insert(0,
@@ -95,6 +95,16 @@ namespace Smart_Report
 
             AppendAnalyzerResult(result, "Analyzer ultrasound image + Fetaļ HR section", imageOk, imageResult);
             if (imageOk) passed++;
+
+            string leftFemurRaw = "SAMSUNG 57520(2005-03-21) DR. HEMATI CLINIC 2026-10-04 Nasrollahi, Fateme 15:37:53 3rd Trimester / CV1-8A/ 16.0cm / 31Hz HA TIs 0.1/ TIb 0.1/ MI 1.0 [2D] SAMSUNG Pen1 Gn 52 DR 112 FA 5 P 90% t0 7X000000000O 10 1 Lt FL 26.19 mm GA 18w0d±10d EDD 2027-03-07";
+            string leftFemurResult = analyzer.Analyze(builder.Build(leftFemurRaw));
+
+            bool leftFemurOk =
+                leftFemurResult.Contains("ContentType = UltrasoundImage") &&
+                leftFemurResult.Contains("Category=OB | Section=FetalBiometry | Field=LT_FL | Text=Lt FL 26.19 mm GA 18w0d±10d EDD 2027-03-07");
+
+            AppendAnalyzerResult(result, "Analyzer ultrasound image + Lt FL biometry", leftFemurOk, leftFemurResult);
+            if (leftFemurOk) passed++;
 
             return passed;
         }
