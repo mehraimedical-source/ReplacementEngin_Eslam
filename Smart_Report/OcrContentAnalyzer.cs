@@ -80,6 +80,24 @@ namespace Smart_Report
                     continue;
                 }
 
+                // Side-specific femur measurement printed directly on an ultrasound image.
+                // Keep the raw OCR text and preserve the explicit Left information in the field.
+                if (isUltrasoundImage && IsLeftFemurMeasurement(text))
+                {
+                    currentCategory = "OB";
+                    currentSection = "FetalBiometry";
+
+                    AppendResult(
+                        output,
+                        i,
+                        text,
+                        currentCategory,
+                        currentSection,
+                        "LT_FL");
+
+                    continue;
+                }
+
                 if (currentCategory == "PatientData")
                 {
                     int ratioHeaderIndex = IndexOf(text, "Ratio Value Normal Range");
@@ -517,6 +535,17 @@ namespace Smart_Report
             return Regex.IsMatch(
                 text.Trim(),
                 @"^(?:Fetal|Fetaļ|Feta)\s+HR\s*[+-]?[0-9]+(?:[\.,][0-9]+)?\s*-?\s*bpm\b",
+                RegexOptions.IgnoreCase);
+        }
+
+        private bool IsLeftFemurMeasurement(string text)
+        {
+            if (String.IsNullOrEmpty(text))
+                return false;
+
+            return Regex.IsMatch(
+                text.Trim(),
+                @"^Lt\.?\s+FL\s+[+-]?[0-9]+(?:[\.,][0-9]+)?\s*(?:mm|cm)\b",
                 RegexOptions.IgnoreCase);
         }
 
