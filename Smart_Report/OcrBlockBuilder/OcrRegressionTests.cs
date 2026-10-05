@@ -47,7 +47,7 @@ namespace Smart_Report
             }
 
             int analyzerPassed = RunAnalyzerRegressionTests(builder, result);
-            int total = tests.Count + 4;
+            int total = tests.Count + 5;
             int totalPassed = passed + analyzerPassed;
 
             result.Insert(0,
@@ -105,6 +105,16 @@ namespace Smart_Report
 
             AppendAnalyzerResult(result, "Analyzer ultrasound image + Lt FL biometry", leftFemurOk, leftFemurResult);
             if (leftFemurOk) passed++;
+
+            string geFemurRaw = "Voluson\" E10 Saber, Fatemeh 03/21/1999 Tls <0.1 10/04/2026 TIb <0.1 6:15:54 PM 266691 MI 1.1 C1-5-D 名 27Hz/15.6cm Voluson 65°/2.4 E10 HI Penetration/OB X HIP 4.80 - 4.00 Gn -1 C7/M7 FF2/E1 SRI II 3/CRI 3 FL 29.61mm GA 19w1d";
+            string geFemurResult = analyzer.Analyze(builder.Build(geFemurRaw));
+
+            bool geFemurOk =
+                geFemurResult.Contains("ContentType = UltrasoundImage") &&
+                geFemurResult.Contains("Category=OB | Section=FetalBiometry | Field=FL | Text=FL 29.61mm GA 19w1d");
+
+            AppendAnalyzerResult(result, "Analyzer GE Voluson ultrasound image + FL biometry", geFemurOk, geFemurResult);
+            if (geFemurOk) passed++;
 
             return passed;
         }
