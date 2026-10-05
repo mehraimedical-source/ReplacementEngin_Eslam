@@ -62,6 +62,53 @@ namespace Smart_Report
 
                 if (currentCategory == "PatientData")
                 {
+                    int ratioHeaderIndex = IndexOf(text, "Ratio Value Normal Range");
+
+                    // بعضی صفحات Report فقط Patient Header + یک Section تخصصی دارند
+                    // و [OB] روی تصویر چاپ نشده است.
+                    // اگر Marker تخصصی داخل همان Block بیمار دیده شد، متن قبل از Marker
+                    // همچنان PatientData است و از Marker به بعد وارد Category=OB می‌شویم.
+                    if (ratioHeaderIndex >= 0)
+                    {
+                        string patientPart = text.Substring(0, ratioHeaderIndex).Trim();
+
+                        if (patientPart.Length > 0)
+                        {
+                            AppendResult(
+                                output,
+                                i,
+                                patientPart,
+                                "PatientData",
+                                "",
+                                DetectPatientField(patientPart));
+                        }
+
+                        currentCategory = "OB";
+                        currentSection = "Ratio";
+
+                        AppendResult(
+                            output,
+                            i,
+                            "Ratio Value Normal Range",
+                            currentCategory,
+                            currentSection,
+                            "SectionMarker");
+
+                        string afterRatioHeader = text.Substring(
+                            ratioHeaderIndex + "Ratio Value Normal Range".Length).Trim();
+
+                        if (afterRatioHeader.Length > 0)
+                        {
+                            AnalyzeObBlock(
+                                output,
+                                i,
+                                afterRatioHeader,
+                                ref currentSection);
+                        }
+
+                        continue;
+                    }
+
                     AppendResult(
                         output,
                         i,
@@ -89,11 +136,13 @@ namespace Smart_Report
         }
 
         // ContentType کلی را از مجموعه Blockها حدس می‌زند.
-        // اگر هم OB و هم شواهد Biometry/EFW/Fetal HR وجود داشته باشد،
-        // آن را UltrasoundReport در نظر می‌گیریم.
+        // بعضی صفحات Report فقط یک Sub-Section مثل Ratio را نشان می‌دهند و [OB] ندارند.
+        // بنابراین برای UltrasoundReport بودن، وجود [OB] الزامی نیست؛
+        // ترکیب Patient Header + شواهد تخصصی Report نیز کافی است.
         private string DetectContentType(List<OcrBlock> blocks)
         {
             bool hasOb = false;
+            bool hasPatientHeader = false;
             bool hasReportData = false;
 
             for (int i = 0; i < blocks.Count; i++)
@@ -106,19 +155,35 @@ namespace Smart_Report
                 if (IsObMarker(text))
                     hasOb = true;
 
+                if (Contains(text, "Name") &&
+                    Contains(text, "ID") &&
+                    Contains(text, "Exam. Date"))
+                {
+                    hasPatientHeader = true;
+                }
+
                 if (Contains(text, "Fetal Biom") ||
+                    Contains(text, "Fetal Long") ||
                     Contains(text, "BPD") ||
                     Contains(text, "HC") ||
                     Contains(text, "AC") ||
                     Contains(text, "EFW") ||
-                    Contains(text, "Fetal HR"))
+                    Contains(text, "Fetal HR") ||
+                    Contains(text, "Ratio Value Normal Range") ||
+                    Contains(text, "FL/AC") ||
+                    Contains(text, "FL/BPD") ||
+                    Contains(text, "FL/HC") ||
+                    Contains(text, "HC/AC"))
                 {
                     hasReportData = true;
                 }
             }
 
-            if (hasOb && hasReportData)
+            if ((hasOb && hasReportData) ||
+                (hasPatientHeader && hasReportData))
+            {
                 return "UltrasoundReport";
+            }
 
             return "Unknown";
         }
