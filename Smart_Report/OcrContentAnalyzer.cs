@@ -416,7 +416,7 @@ namespace Smart_Report
         // آن را حذف نمی‌کنیم و با Label مستقل نگه می‌داریم.
         private bool IsFetalBiometryTableHeader(string text)
         {
-            if (String.IsNullOrWhiteSpace(text))
+            if (String.IsNullOrEmpty (text))
                 return false;
 
             string value = text.Trim();
