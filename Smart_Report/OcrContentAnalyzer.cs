@@ -339,6 +339,7 @@ namespace Smart_Report
             {
                 if (StartsWith(text, "EDD(GA)")) return "EDD_GA";
                 if (StartsWith(text, "EDD(AUA)")) return "EDD_AUA";
+                if (StartsWith(text, "EDD(LMP)")) return "EDD_LMP";
                 if (StartsWith(text, "AUA")) return "AUA";
                 if (StartsWith(text, "EFW")) return "EFW";
                 if (StartsWith(text, "GA(EFW)")) return "GA_EFW";
