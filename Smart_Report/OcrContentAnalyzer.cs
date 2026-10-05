@@ -98,6 +98,24 @@ namespace Smart_Report
                     continue;
                 }
 
+                // Generic femur length on an ultrasound image. Do not infer left/right
+                // when the device prints only FL.
+                if (isUltrasoundImage && IsFemurMeasurement(text))
+                {
+                    currentCategory = "OB";
+                    currentSection = "FetalBiometry";
+
+                    AppendResult(
+                        output,
+                        i,
+                        text,
+                        currentCategory,
+                        currentSection,
+                        "FL");
+
+                    continue;
+                }
+
                 if (currentCategory == "PatientData")
                 {
                     int ratioHeaderIndex = IndexOf(text, "Ratio Value Normal Range");
@@ -239,6 +257,23 @@ namespace Smart_Report
             if (Contains(allText, "SV ") || Contains(allText, "SVD ")) imageEvidence++;
 
             if (imageEvidence >= 4)
+                return "UltrasoundImage";
+
+            // GE Voluson overlays use a different set of machine markers than Samsung.
+            // Keep this path deliberately narrow until more GE samples are collected.
+            int geImageEvidence = 0;
+
+            if (Contains(allText, "Voluson")) geImageEvidence++;
+            if (Contains(allText, "E10")) geImageEvidence++;
+            if (Contains(allText, "TIs") || Contains(allText, "Tls")) geImageEvidence++;
+            if (Contains(allText, "TIb")) geImageEvidence++;
+            if (Contains(allText, " MI ")) geImageEvidence++;
+            if (Regex.IsMatch(allText, @"\bC[0-9]+-[0-9]+-[A-Z]\b", RegexOptions.IgnoreCase)) geImageEvidence++;
+            if (Regex.IsMatch(allText, @"\b[0-9]+Hz\s*/\s*[0-9]+(?:[\.,][0-9]+)?cm\b", RegexOptions.IgnoreCase)) geImageEvidence++;
+            if (Contains(allText, "HI Penetration/OB")) geImageEvidence++;
+            if (Contains(allText, "SRI") && Contains(allText, "CRI")) geImageEvidence++;
+
+            if (geImageEvidence >= 5)
                 return "UltrasoundImage";
 
             return "Unknown";
@@ -546,6 +581,17 @@ namespace Smart_Report
             return Regex.IsMatch(
                 text.Trim(),
                 @"^Lt\.?\s+FL\s+[+-]?[0-9]+(?:[\.,][0-9]+)?\s*(?:mm|cm)\b",
+                RegexOptions.IgnoreCase);
+        }
+
+        private bool IsFemurMeasurement(string text)
+        {
+            if (String.IsNullOrEmpty(text))
+                return false;
+
+            return Regex.IsMatch(
+                text.Trim(),
+                @"^FL\s+[+-]?[0-9]+(?:[\.,][0-9]+)?\s*(?:mm|cm)\b",
                 RegexOptions.IgnoreCase);
         }
 
