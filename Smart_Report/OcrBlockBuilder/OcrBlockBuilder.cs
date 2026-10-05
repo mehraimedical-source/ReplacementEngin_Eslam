@@ -401,7 +401,7 @@ namespace Smart_Report
         // 2GD and malformed compact OCR such as 1{2D137.04 mm.
         private void FindIndexedDMeasurement(string text, List<BlockStart> result)
         {
-            string pattern = @"(?<![A-Z0-9])[0-9]D\\s+[+-]?[0-9]+(?:[\\.,][0-9]+)?\\s*(?:mm|cm)(?![A-Z])";
+            string pattern = @"(?<![A-Z0-9])[0-9]D\s+[+-]?[0-9]+(?:[\.,][0-9]+)?\s*(?:mm|cm)(?![A-Z])";
 
             MatchCollection matches = Regex.Matches(text, pattern, RegexOptions.IgnoreCase);
 
