@@ -142,6 +142,18 @@ namespace Smart_Report
                 "SAMSUNG 57402(1999-04-14) DR. HEMATI CLINIC 2026-09-28 Javadi, Leyla 18:00:05 Fetal Heart / CA1-7S / 12.0cm/65Hz TIs 0.2 / TIb 0.2 / MI 1.0 SAMSUNG [2D] V8 Gen Gn 35 DR 106 FA 2 P 90% 七中 5 D 2.78 mm",
                 "[SAMSUNG 57402(1999-04-14) DR. HEMATI CLINIC 2026-09-28 Javadi, Leyla 18:00:05 Fetal Heart / CA1-7S / 12.0cm/65Hz TIs 0.2 / TIb 0.2 / MI 1.0 SAMSUNG [2D] V8 Gen Gn 35 DR 106 FA 2 P 90% 七中 5]\n[D 2.78 mm]"));
 
+            t.Add(Case("Samsung indexed D measurement attached ordinal",
+                "SAMSUNG Renal [2D] Gen Gn 50 DR 90 P 90% 1D 5.77 mm",
+                "[SAMSUNG Renal [2D] Gen Gn 50 DR 90 P 90% 1]\n[D 5.77 mm]"));
+
+            t.Add(Case("Samsung indexed D measurement upper one-digit boundary",
+                "SAMSUNG Renal [2D] 9D 4.31 mm",
+                "[SAMSUNG Renal [2D] 9]\n[D 4.31 mm]"));
+
+            t.Add(Case("Indexed D guards preserve non-measurement contexts",
+                "SAMSUNG [2D] 2D Calculations 2D Measurements SVD 6.4cm 2GD 21.91 mm 1{2D137.04 mm 12D 5.77 mm 1D5.77 mm",
+                "[SAMSUNG [2D] 2D Calculations 2D Measurements SVD 6.4cm 2GD 21.91 mm 1{2D137.04 mm 12D 5.77 mm 1D5.77 mm]"));
+
             t.Add(Case("Samsung LVOT remains unsplit",
                 "SAMSUNG 57402 (1999-04-14) DR. HEMATI CLINIC 2026-09-28 Javadi, Leyla 18:01:35 1st FetalHeart / CA1-7S / 12.0cm / 62Hz TIs 0.2/ TIb 0.2 /MI 1.0 SAMSUNG [2D] Gen Gn 33 DR 100 FA 4 D 90% 5 LVOT",
                 "[SAMSUNG 57402 (1999-04-14) DR. HEMATI CLINIC 2026-09-28 Javadi, Leyla 18:01:35 1st FetalHeart / CA1-7S / 12.0cm / 62Hz TIs 0.2/ TIb 0.2 /MI 1.0 SAMSUNG [2D] Gen Gn 33 DR 100 FA 4 D 90% 5 LVOT]"));
