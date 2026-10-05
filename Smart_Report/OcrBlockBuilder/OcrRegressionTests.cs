@@ -47,7 +47,7 @@ namespace Smart_Report
             }
 
             int analyzerPassed = RunAnalyzerRegressionTests(builder, result);
-            int total = tests.Count + 2;
+            int total = tests.Count + 3;
             int totalPassed = passed + analyzerPassed;
 
             result.Insert(0,
@@ -85,6 +85,16 @@ namespace Smart_Report
 
             AppendAnalyzerResult(result, "Analyzer truncated Fetal Biom fallback", fallbackOk, fallbackResult);
             if (fallbackOk) passed++;
+
+            string imageRaw = "SAMSUNG 57520(2005-03-21) DR. HEMATICLINIC 2026-10-04 Nasrollahi, Fateme 15:37:14 3rd Trimester / CV1-8A/ 16.0cmHAR Tls 0.7/TIb 1.7/ML 0.43 [2D] SAMSUNG Vg Pen1 Gn 36 DR 112 FA 5 P 5 92% [PW] Gen Gn 50 PRF 4.16kHz WF 89Hz P 90% SV 2.0mm A 0° SVD 6.6cm 10 二50 -40 -30 20 10 cm/s -10 -20 -30 -40 1 Fetaļ HR 141 bpm";
+            string imageResult = analyzer.Analyze(builder.Build(imageRaw));
+
+            bool imageOk =
+                imageResult.Contains("ContentType = UltrasoundImage") &&
+                imageResult.Contains("Category=OB | Section=FetalHR | Field=FHR | Text=Fetaļ HR 141 bpm");
+
+            AppendAnalyzerResult(result, "Analyzer ultrasound image + Fetaļ HR section", imageOk, imageResult);
+            if (imageOk) passed++;
 
             return passed;
         }
