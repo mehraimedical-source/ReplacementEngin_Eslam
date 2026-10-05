@@ -46,13 +46,64 @@ namespace Smart_Report
                 result.Append(Environment.NewLine);
             }
 
+            int analyzerPassed = RunAnalyzerRegressionTests(builder, result);
+            int total = tests.Count + 2;
+            int totalPassed = passed + analyzerPassed;
+
             result.Insert(0,
-                "Tests: " + tests.Count +
-                "   Passed: " + passed +
-                "   Failed: " + (tests.Count - passed) +
+                "Tests: " + total +
+                "   Passed: " + totalPassed +
+                "   Failed: " + (total - totalPassed) +
                 Environment.NewLine + Environment.NewLine);
 
             return result.ToString();
+        }
+
+        private int RunAnalyzerRegressionTests(OcrBlockBuilder builder, StringBuilder result)
+        {
+            int passed = 0;
+            OcrContentAnalyzer analyzer = new OcrContentAnalyzer();
+
+            string fullRaw = "DR. HEMATI CLINIC ID 57530 Name Zolghadri, Soheila Exam Date 2026-10-04 OB Fetal Biometry m1 m2 m3 GA GP Lt FL 66.74 mm BPD 84.58 mm";
+            string fullResult = analyzer.Analyze(builder.Build(fullRaw));
+
+            bool fullOk =
+                fullResult.Contains("Section=FetalBiometry | Field=SectionMarker | Text=Fetal Biometry") &&
+                fullResult.Contains("Section=FetalBiometry | Field=TableHeader | Text=m1 m2 m3 GA GP") &&
+                !fullResult.Contains("Text=etry ");
+
+            AppendAnalyzerResult(result, "Analyzer full Fetal Biometry marker + TableHeader", fullOk, fullResult);
+            if (fullOk) passed++;
+
+            string fallbackRaw = "Name Test ID 1 Exam. Date 2025-06-01 [OB] Fetal Biom... Last 1 2 3 GA Pctl. BPD 3.96 cm";
+            string fallbackResult = analyzer.Analyze(builder.Build(fallbackRaw));
+
+            bool fallbackOk =
+                fallbackResult.Contains("Section=FetalBiometry | Field=SectionMarker | Text=Fetal Biometry") &&
+                fallbackResult.Contains("Section=FetalBiometry | Field=TableHeader | Text=Last 1 2 3 GA Pctl.") &&
+                fallbackResult.Contains("Section=FetalBiometry | Field=BPD");
+
+            AppendAnalyzerResult(result, "Analyzer truncated Fetal Biom fallback", fallbackOk, fallbackResult);
+            if (fallbackOk) passed++;
+
+            return passed;
+        }
+
+        private void AppendAnalyzerResult(StringBuilder result, string name, bool ok, string actual)
+        {
+            result.Append(ok ? "PASS  " : "FAIL  ");
+            result.Append(name);
+            result.Append(Environment.NewLine);
+
+            if (!ok)
+            {
+                result.Append("Actual Analyzer Output:");
+                result.Append(Environment.NewLine);
+                result.Append(actual);
+                result.Append(Environment.NewLine);
+            }
+
+            result.Append(Environment.NewLine);
         }
 
         private string Normalize(string value)
