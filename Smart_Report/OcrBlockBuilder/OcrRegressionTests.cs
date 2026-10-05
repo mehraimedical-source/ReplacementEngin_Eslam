@@ -152,7 +152,7 @@ namespace Smart_Report
 
             t.Add(Case("Indexed D guards preserve non-measurement contexts",
                 "SAMSUNG [2D] 2D Calculations 2D Measurements SVD 6.4cm 2GD 21.91 mm 1{2D137.04 mm 12D 5.77 mm 1D5.77 mm",
-                "[SAMSUNG [2D] 2D Calculations 2D Measurements SVD 6.4cm 2GD 21.91 mm 1{2D137.04 mm 12D 5.77 mm 1D5.77 mm]"));
+                "[SAMSUNG [2D]]\n[2D Calculations]\n[2D Measurements SVD 6.4cm 2GD 21.91 mm 1{2D137.04 mm 12D 5.77 mm 1D5.77 mm]"));
 
             t.Add(Case("Samsung LVOT remains unsplit",
                 "SAMSUNG 57402 (1999-04-14) DR. HEMATI CLINIC 2026-09-28 Javadi, Leyla 18:01:35 1st FetalHeart / CA1-7S / 12.0cm / 62Hz TIs 0.2/ TIb 0.2 /MI 1.0 SAMSUNG [2D] Gen Gn 33 DR 100 FA 4 D 90% 5 LVOT",
